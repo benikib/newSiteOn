@@ -39,6 +39,142 @@
     .price-table tbody tr:hover {
         background-color: rgba(13, 110, 253, 0.03);
     }
+
+    /* Styles pour la galerie photo */
+    .gallery-section {
+        margin-top: 2rem;
+        padding: 2rem 0;
+        background-color: #f8f9fa;
+        border-radius: 1rem;
+    }
+
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .gallery-item {
+        position: relative;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        aspect-ratio: 1;
+        cursor: pointer;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .gallery-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .gallery-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .gallery-item:hover img {
+        transform: scale(1.05);
+    }
+
+    .gallery-item .overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+        padding: 1rem;
+        color: white;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .gallery-item:hover .overlay {
+        opacity: 1;
+    }
+
+    /* Modal de la galerie */
+    .gallery-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.9);
+        z-index: 1000;
+        padding: 2rem;
+    }
+
+    .gallery-modal.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        max-width: 90%;
+        max-height: 90vh;
+        position: relative;
+    }
+
+    .modal-content img {
+        max-width: 100%;
+        max-height: 90vh;
+        object-fit: contain;
+    }
+
+    .modal-close {
+        position: absolute;
+        top: -2rem;
+        right: 0;
+        color: white;
+        font-size: 2rem;
+        cursor: pointer;
+        background: none;
+        border: none;
+        padding: 0.5rem;
+    }
+
+    .modal-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255,255,255,0.1);
+        color: white;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+    .modal-nav:hover {
+        background: rgba(255,255,255,0.2);
+    }
+
+    .modal-prev { left: 1rem; }
+    .modal-next { right: 1rem; }
+
+    .gallery-title {
+        position: relative;
+        margin-bottom: 2rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .gallery-title::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 50px;
+        height: 3px;
+        background: var(--primary-color, #0d6efd);
+    }
 </style>
 @section('content')
     <div class="container py-4 py-lg-5">
@@ -183,6 +319,48 @@
         </div>
     </div>
 
+    <!-- Section Galerie Photo -->
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="gallery-section">
+                    <h3 class="gallery-title">Galerie Photo</h3>
+                    <div class="gallery-grid">
+                        @forelse ($etablissement->photos as $photo)
+                            <div class="gallery-item" onclick="openGallery({{ $loop->index }})">
+                                <img src="{{ asset('storage/' . str_replace('public/', '', $photo->image_path)) }}"
+                                     alt="{{ $photo->titre }}"
+                                     loading="lazy"
+                                     onerror="this.src='/placeholder.jpg';">
+                                <div class="overlay">
+                                    <p class="mb-0">{{ $photo->titre }}</p>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="col-12 text-center text-muted">
+                                <p>Aucune photo disponible</p>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Galerie -->
+    <div class="gallery-modal" id="galleryModal">
+        <button class="modal-close" onclick="closeGallery()">&times;</button>
+        <button class="modal-nav modal-prev" onclick="prevImage()">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="modal-nav modal-next" onclick="nextImage()">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+        <div class="modal-content">
+            <img id="modalImage" src="" alt="">
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Activation des tooltips Bootstrap
@@ -201,6 +379,66 @@
                 promoBadge.addEventListener('mouseleave', function() {
                     this.classList.remove('animate__animated', 'animate__pulse');
                 });
+            }
+        });
+
+        // Script pour la galerie
+        let currentImageIndex = 0;
+        const photos = @json($etablissement->photos);
+        const modal = document.getElementById('galleryModal');
+        const modalImage = document.getElementById('modalImage');
+
+        function openGallery(index) {
+            currentImageIndex = index;
+            updateModalImage();
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeGallery() {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function updateModalImage() {
+            if (photos[currentImageIndex]) {
+                const imagePath = photos[currentImageIndex].image_path.replace('public/', '');
+                modalImage.src = `/storage/${imagePath}`;
+                modalImage.alt = photos[currentImageIndex].titre;
+            }
+        }
+
+        function prevImage() {
+            currentImageIndex = (currentImageIndex - 1 + photos.length) % photos.length;
+            updateModalImage();
+        }
+
+        function nextImage() {
+            currentImageIndex = (currentImageIndex + 1) % photos.length;
+            updateModalImage();
+        }
+
+        // Navigation au clavier
+        document.addEventListener('keydown', function(e) {
+            if (!modal.classList.contains('active')) return;
+
+            switch(e.key) {
+                case 'Escape':
+                    closeGallery();
+                    break;
+                case 'ArrowLeft':
+                    prevImage();
+                    break;
+                case 'ArrowRight':
+                    nextImage();
+                    break;
+            }
+        });
+
+        // Fermer la modal en cliquant en dehors de l'image
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeGallery();
             }
         });
     </script>
