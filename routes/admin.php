@@ -1,0 +1,57 @@
+<?php
+
+
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\EtablissementController;
+use App\Http\Controllers\PubliciteController;
+use App\Http\Controllers\TypeEtablissementController;
+use App\Http\Controllers\userController;
+use App\Models\Etablissement;
+use App\Models\Publicite;
+use App\Models\User;
+use App\Http\Controllers\AdminController;
+
+Route::middleware(['auth', 'admins'])->group(function () {
+   Route::get('/etablissement',[EtablissementController::class, 'index']) ->name('etablissements.index');
+Route::get('/etablissement/create', [EtablissementController::class, 'create'])->name('etablissements.create');
+Route::post('/etablissement', [EtablissementController::class, 'store'])->name('etablissements.store');
+Route::get('/etablissement/{id}/edit', [EtablissementController::class, 'edit'])->name('etablissements.edit');
+Route::put('/etablissement/{id}', [EtablissementController::class, 'update'])->name('etablissements.update');
+
+Route::delete('/etablissement/{id}', [EtablissementController::class, 'destroy'])->name('etablissements.destroy');
+Route::get('/etablissement/{id}', [EtablissementController::class, 'show'])->name('etablissements.show');
+
+Route::get('/type', [TypeEtablissementController::class, 'index'])->name('type_etablissements.index');
+Route::get('/type/create', [TypeEtablissementController::class, 'create'])->name('type_etablissements.create');
+Route::post('/type', [TypeEtablissementController::class, 'store'])->name('type_etablissements.store');
+Route::get('/type/{id}/edit', [TypeEtablissementController::class, 'edit'])->name('type_etablissements.edit');
+Route::put('/type/{id}', [TypeEtablissementController::class, 'update'])->name('type_etablissements.update');
+
+// service
+Route::get('/service/{etablissement}', [\App\Http\Controllers\ServiceController::class, 'index'])->name('services.index');
+Route::get('/service/create/{etablissement}', [\App\Http\Controllers\ServiceController::class, 'create'])->name('services.create');
+Route::post('/service/{service}', [\App\Http\Controllers\ServiceController::class, 'store'])->name('services.store');
+Route::get('/service/{service}/edit', [\App\Http\Controllers\ServiceController::class, 'edit'])->name('services.edit');
+Route::put('/service/{service}', [\App\Http\Controllers\ServiceController::class, 'update'])->name('services.update');
+Route::delete('/service/{service}', [\App\Http\Controllers\ServiceController::class, 'destroy'])->name('services.destroy');
+
+Route::get('/users',[UserController::class,'index'])->name("users.index");
+Route::post('/users', [UserController::class,'store'])->name('users.store');
+Route::put( 'user/{user}',[UserController::class,'update'])->name('users.update');
+Route::get('/dashboard',[UserController::class, 'repportingAdmins'])->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::get('/publicites',[PubliciteController::class,'index'])->name("publicites.index");
+Route::post('/publicites', [PubliciteController::class,'store'])->name('publicites.store');
+Route::put( 'publicites/{user}',[PubliciteController::class,'update'])->name('publicites.update');
+
+
+Route::get('/users_ets/{ets}',[UserController::class,'users_ets'])->name("users_ets.index");
+Route::post('/users_ets', [UserController::class,'store_ets'])->name('users_ets.store');
+Route::put( 'user_ets/{user}',[UserController::class,'update_ets'])->name('users_ets.update');
+
+
+});
+
+
+
