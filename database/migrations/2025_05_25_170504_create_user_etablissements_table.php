@@ -11,16 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-     Schema::create('user_etablissements', function (Blueprint $table) {
-    $table->id();
-    $table->unsignedBigInteger('user_id');
-    $table->unsignedBigInteger('etablissement_id');
-
-    $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-    $table->foreign('etablissement_id')->references('id')->on('etablissements')->onDelete('cascade');
-
-    $table->timestamps();
-});
+        Schema::create('user_etablissements', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')
+                ->constrained('users')
+                ->onDelete('cascade');
+            $table->foreignId('etablissement_id')
+                ->constrained('etablissements')
+                ->onDelete('cascade');
+            $table->timestamps();
+        });
     }
 
     /**
