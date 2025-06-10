@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EtablissementController;
 use App\Http\Controllers\PubliciteController;
 use App\Http\Controllers\TypeEtablissementController;
-use App\Http\Controllers\userController;
+use App\Http\Controllers\UserController;
 use App\Models\Etablissement;
 use App\Models\Publicite;
 use App\Models\User;
