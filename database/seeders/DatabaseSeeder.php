@@ -27,24 +27,52 @@ class DatabaseSeeder extends Seeder
 
         // Créer les utilisateurs
         $this->command->info('Création des utilisateurs...');
-        $admin = User::factory()->admin()->create([
-            'name' => 'Admin',
-            'email' => 'admin@example.com',
-            'password' => bcrypt('password'),
-        ]);
+        $admin = User::updateOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => 'Admin',
+                'password' => bcrypt('password'),
+                'role' => 'admin',
+                'telephone' => fake()->phoneNumber(),
+                'email_verified_at' => now(),
+            ]
+        );
 
-        $gerant = User::factory()->gerant()->create([
-            'name' => 'Gérant',
-            'email' => 'gerant@example.com',
-            'password' => bcrypt('password'),
-        ]);
+        $gerant = User::updateOrCreate(
+            ['email' => 'gerant@example.com'],
+            [
+                'name' => 'Gérant',
+                'password' => bcrypt('password'),
+                'role' => 'gerant',
+                'telephone' => fake()->phoneNumber(),
+                'email_verified_at' => now(),
+            ]
+        );
 
         User::factory()->count(5)->gerant()->create();
         User::factory()->count(20)->create();
 
         // Créer les types d'établissements
         $this->command->info('Création des types d\'établissements...');
-        $types = TypeEtablissement::factory()->count(10)->create();
+        $typesList = [
+            'Hôtel' => 'Établissement offrant des chambres et services hôteliers',
+            'Restaurant' => 'Établissement proposant des repas et boissons',
+            'Bar' => 'Établissement spécialisé dans les boissons',
+            'Café' => 'Établissement proposant café et pâtisseries',
+            'Club' => 'Établissement de divertissement nocturne',
+            'Auberge' => 'Petit établissement hôtelier familial',
+            'Guest House' => 'Maison d\'hôtes avec services personnalisés',
+            'Lodge' => 'Hébergement en pleine nature',
+            'Villa' => 'Location de villas de luxe',
+            'Appartement' => 'Location d\'appartements meublés',
+        ];
+        $types = collect();
+        foreach ($typesList as $nom => $description) {
+            $types->push(TypeEtablissement::updateOrCreate(
+                ['nom' => $nom],
+                ['description' => $description]
+            ));
+        }
 
         // Créer les établissements avec leurs relations
         $this->command->info('Création des établissements...');
@@ -90,12 +118,6 @@ class DatabaseSeeder extends Seeder
             if (rand(0, 1)) {
                 Publicite::factory()
                     ->count(rand(1, 2))
-                    ->active()
-                    ->create(['etablissement_id' => $etablissement->id]);
-
-                Publicite::factory()
-                    ->count(rand(1, 2))
-                    ->expiree()
                     ->create(['etablissement_id' => $etablissement->id]);
             }
         }
@@ -104,8 +126,6 @@ class DatabaseSeeder extends Seeder
         $this->command->info('Création de publicités supplémentaires...');
         Publicite::factory()
             ->count(5)
-            ->active()
-            ->hautePriorite()
             ->create();
 
         $this->command->info('Base de données peuplée avec succès !');

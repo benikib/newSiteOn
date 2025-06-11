@@ -30,7 +30,7 @@ class ServiceFactory extends Factory
             'Location de salle' => 'Location de salle pour événements privés'
         ];
 
-        $service = fake()->unique()->randomElement(array_keys($typesServices));
+        $service = fake()->randomElement(array_keys($typesServices));
 
         return [
             'nom' => $service,

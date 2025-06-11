@@ -29,7 +29,7 @@ class TypeEtablissementFactory extends Factory
             'Appartement' => 'Location d\'appartements meublés'
         ];
 
-        $type = fake()->unique()->randomElement(array_keys($types));
+        $type = fake()->randomElement(array_keys($types));
 
         return [
             'nom' => $type,

@@ -34,6 +34,11 @@ class PromotionFactory extends Factory
         $dateDebut = fake()->dateTimeBetween('now', '+1 month');
         $dateFin = fake()->dateTimeBetween($dateDebut, '+3 months');
 
+        // Générer un code promo unique
+        do {
+            $codePromo = strtoupper(fake()->bothify('PROMO-####'));
+        } while (\App\Models\Promotion::where('code_promo', $codePromo)->exists());
+
         return [
             'titre' => $type,
             'description' => $typesPromotions[$type],
@@ -42,7 +47,7 @@ class PromotionFactory extends Factory
             'date_debut' => $dateDebut,
             'date_fin' => $dateFin,
             'conditions' => fake()->paragraph(),
-            'code_promo' => strtoupper(fake()->bothify('PROMO-####')),
+            'code_promo' => $codePromo,
             'nombre_utilisations' => fake()->numberBetween(10, 1000),
             'nombre_utilisations_restantes' => fake()->numberBetween(0, 1000),
             'est_active' => true,
