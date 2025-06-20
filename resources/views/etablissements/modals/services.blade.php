@@ -99,7 +99,7 @@
         </div>
     </div>
 </div>
-@include('etablissements.modals.promotions', ['etablissement' => $etablissement])
+{{-- @include('etablissements.modals.promotions', ['etablissement' => $etablissement]) --}}
 <!-- Modals d'édition de service -->
 @foreach ($etablissement->services as $service)
     <div class="modal fade" id="editServiceModal{{ $service->id }}" tabindex="-1"

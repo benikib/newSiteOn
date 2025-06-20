@@ -43,7 +43,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Gérant',
                 'password' => bcrypt('password'),
-                'role' => 'gerant',
+                'role' => 'etablissement',
                 'telephone' => fake()->phoneNumber(),
                 'email_verified_at' => now(),
             ]
@@ -80,57 +80,58 @@ class DatabaseSeeder extends Seeder
             ->count(15)
             ->sequence(fn($sequence) => [
                 'type_etablissement_id' => $types->random()->id,
-                'user_id' => User::where('role', 'gerant')->inRandomOrder()->first()->id,
+                
             ])
             ->create();
 
-        // Pour chaque établissement, créer des services, photos, promotions et publicités
-        $this->command->info('Création des services, photos, promotions et publicités...');
-        foreach ($etablissements as $etablissement) {
-            // Services
-            Service::factory()
-                ->count(rand(3, 8))
-                ->create(['etablissement_id' => $etablissement->id]);
+    //     // Pour chaque établissement, créer des services, photos, promotions et publicités
+    //     $this->command->info('Création des services, photos, promotions et publicités...');
+    //     foreach ($etablissements as $etablissement) {
+    //         // Services
+    //         Service::factory()
+    //             ->count(rand(3, 8))
+    //             ->create(['etablissement_id' => $etablissement->id]);
 
-            // Photos
-            Photo::factory()
-                ->count(rand(5, 15))
-                ->sequence(fn($sequence) => [
-                    'etablissement_id' => $etablissement->id,
-                    'est_principale' => $sequence->index === 0,
-                ])
-                ->create();
+    //         // Photos
+    //         Photo::factory()
+    //             ->count(rand(5, 15))
+    //             ->sequence(fn($sequence) => [
+    //                 'etablissement_id' => $etablissement->id,
+    //                 'est_principale' => $sequence->index === 0,
+    //             ])
+    //             ->create();
 
-            // Promotions
-            if (rand(0, 1)) {
-                Promotion::factory()
-                    ->count(rand(1, 3))
-                    ->active()
-                    ->create(['etablissement_id' => $etablissement->id]);
+    //         // Promotions
+    //         if (rand(0, 1)) {
+    //             Promotion::factory()
+    //                 ->count(rand(1, 3))
+    //                 ->active()
+    //                 ->create(['etablissement_id' => $etablissement->id]);
 
-                Promotion::factory()
-                    ->count(rand(1, 2))
-                    ->expiree()
-                    ->create(['etablissement_id' => $etablissement->id]);
+    //             Promotion::factory()
+    //                 ->count(rand(1, 2))
+    //                 ->expiree()
+    //                 ->create(['etablissement_id' => $etablissement->id]);
+    //         }
+
+    //         // Publicités
+    //         if (rand(0, 1)) {
+    //             Publicite::factory()
+    //                 ->count(rand(1, 2))
+    //                 ->create(['etablissement_id' => $etablissement->id]);
+    //         }
+    //     }
+
+    //     // Créer quelques publicités supplémentaires
+    //     $this->command->info('Création de publicités supplémentaires...');
+    //     Publicite::factory()
+    //         ->count(5)
+    //         ->create();
+
+    //     $this->command->info('Base de données peuplée avec succès !');
+    //     $this->command->info('Comptes de test :');
+    //     $this->command->info('Admin - Email: admin@example.com / Mot de passe: password');
+    //     $this->command->info('Gérant - Email: gerant@example.com / Mot de passe: password');
+    // }
             }
-
-            // Publicités
-            if (rand(0, 1)) {
-                Publicite::factory()
-                    ->count(rand(1, 2))
-                    ->create(['etablissement_id' => $etablissement->id]);
-            }
-        }
-
-        // Créer quelques publicités supplémentaires
-        $this->command->info('Création de publicités supplémentaires...');
-        Publicite::factory()
-            ->count(5)
-            ->create();
-
-        $this->command->info('Base de données peuplée avec succès !');
-        $this->command->info('Comptes de test :');
-        $this->command->info('Admin - Email: admin@example.com / Mot de passe: password');
-        $this->command->info('Gérant - Email: gerant@example.com / Mot de passe: password');
-    }
 }

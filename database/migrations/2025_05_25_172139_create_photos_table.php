@@ -19,6 +19,10 @@ return new class extends Migration {
                 ->nullable()
                 ->constrained('etablissements')
                 ->onDelete('cascade');
+                $table->foreignId('service_id')
+                ->nullable()
+                ->constrained('service')
+                ->onDelete('cascade');
             $table->integer('ordre')->default(0);
             $table->boolean('est_principale')->default(false);
             $table->boolean('est_publique')->default(true);

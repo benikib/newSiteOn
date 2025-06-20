@@ -32,7 +32,7 @@ public function promotion()
    $etablissements = Etablissement::whereHas('users', function($query) use ($user) {
         $query->where('user_id', $user->id);
     })->with(['services']);
-    
+
 
     return view('etablissements.promotions.index', compact('etablissements'));
 }

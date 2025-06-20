@@ -70,7 +70,8 @@
                                                 <div class="card h-100">
                                                     <div class="image-container"
                                                         style="height: 180px; overflow: hidden;">
-                                                        <img src="{{ asset('storage/' . str_replace('public/', '', $photo->image_path)) }}"
+
+                                                        <img src="{{ asset('storage/' . str_replace('public/photos', '', $photo->image_path)) }}"
                                                             class="img-fluid w-100 h-100 object-fit-cover"
                                                             alt="{{ $photo->titre }}">
                                                     </div>

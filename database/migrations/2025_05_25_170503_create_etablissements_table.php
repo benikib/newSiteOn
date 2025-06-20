@@ -18,14 +18,12 @@ return new class extends Migration {
             $table->string('email')->nullable();
             $table->string('website')->nullable();
             $table->string('ville', 255)->nullable();
+              $table->string('quartier', 255)->nullable();
             $table->string('commune', 255)->nullable();
             $table->string('avenue', 255)->nullable();
             $table->string('numero', 100)->nullable();
             $table->foreignId('type_etablissement_id')
                 ->constrained('type_etablissements')
-                ->onDelete('cascade');
-            $table->foreignId('user_id')
-                ->constrained('users')
                 ->onDelete('cascade');
             $table->string('statut')->default('en_attente');
             $table->float('note_moyenne')->default(0);

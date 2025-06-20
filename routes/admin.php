@@ -43,7 +43,8 @@ Route::get('/dashboard',[UserController::class, 'repportingAdmins'])->middleware
 
 Route::get('/publicites',[PubliciteController::class,'index'])->name("publicites.index");
 Route::post('/publicites', [PubliciteController::class,'store'])->name('publicites.store');
-Route::put( 'publicites/{user}',[PubliciteController::class,'update'])->name('publicites.update');
+Route::post('/publicite', [PubliciteController::class,'store'])->name('publicits.store');
+Route::put( 'publicites/{user}/etablissement',[PubliciteController::class,'update'])->name('publicites.update');
 
 
 Route::get('/users_ets/{ets}',[UserController::class,'users_ets'])->name("users_ets.index");

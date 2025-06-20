@@ -16,6 +16,7 @@ class Etablissement extends Model
         'avenue',
         'quartier',
         'numero',
+        'user_id',
         'description',
         'latitude',
         'longitude',

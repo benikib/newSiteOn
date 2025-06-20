@@ -33,7 +33,6 @@ class EtablissementFactory extends Factory
             'avenue' => fake()->randomElement($avenues),
             'numero' => fake()->buildingNumber(),
             'type_etablissement_id' => TypeEtablissement::factory(),
-            'user_id' => User::factory()->gerant(),
             'statut' => fake()->randomElement(['actif', 'inactif', 'en_attente']),
             'note_moyenne' => fake()->randomFloat(1, 1, 5),
             'nombre_avis' => fake()->numberBetween(0, 100),

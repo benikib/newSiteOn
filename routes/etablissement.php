@@ -43,6 +43,7 @@ Route::get('users/promotion/', [UserEtablissementController::class, 'promotion']
 Route::put('/ets/{id}', [EtablissementController::class, 'update'])->name('ets.update');
 Route::post('/ets', [EtablissementController::class, 'store'])->name('ets.store');
 Route::post('/ets/services/', [\App\Http\Controllers\ServiceController::class, 'store'])->name('service.store');
+Route::post('/glerys', [\App\Http\Controllers\PhotoController::class, 'store'])->name('galleries.store');
 Route::resource('/galleries', PhotoController::class)->only([
     'store', 'destroy'
 ]);

@@ -29,7 +29,7 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => Hash::make('password'),
             'telephone' => fake()->phoneNumber(),
-            'role' => fake()->randomElement(['client', 'admin', 'gerant']),
+            'role' => fake()->randomElement(['client', 'admin', 'etablissement']),
             'remember_token' => Str::random(10),
         ];
     }
@@ -54,7 +54,7 @@ class UserFactory extends Factory
     public function gerant(): static
     {
         return $this->state(fn(array $attributes) => [
-            'role' => 'gerant',
+            'role' => 'etablissement',
         ]);
     }
 }

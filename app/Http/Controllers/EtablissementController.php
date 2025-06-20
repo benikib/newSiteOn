@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Etablissement;
+use App\Models\Photo;
 use App\Models\Promotion;
 use App\Models\TypeEtablissement;
 use App\Models\User;
@@ -20,6 +21,7 @@ class EtablissementController extends Controller
     {
         $etablissements = Etablissement::all();
         $typeEtablissements = TypeEtablissement::all();
+       
         return view('admins.etablissements.index', compact('etablissements', 'typeEtablissements'));
     }
 
@@ -50,7 +52,6 @@ class EtablissementController extends Controller
                 'latitude' => 'nullable|numeric',
                 'longitude' => 'nullable|numeric',
                 'telephone' => 'nullable|string|max:20',
-
                 'type_etablissement_id' => 'required|exists:type_etablissements,id',
                 'user_name' => 'nuLlable|string|max:100',
                 'user_email' => 'nullable|email|max:100|unique:users,email',
@@ -162,7 +163,7 @@ public function dashboard()
     $etablissements = Etablissement::withCount('services')
                         ->orderBy('created_at', 'desc')
                         ->paginate(10);
-                        
+
 
     return view('etablissements.dashboard', compact('stats', 'etablissements', 'typeEtablissements'));
 }

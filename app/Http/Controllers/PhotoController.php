@@ -36,6 +36,7 @@ class PhotoController extends Controller
 {
 
    try {
+
         $validated = $request->validate([
         'titre' => 'required|string|max:255',
         'description' => 'nullable|string',
@@ -45,6 +46,7 @@ class PhotoController extends Controller
         'promotion_id' => 'nullable|exists:promotions,id',
         'status' => 'required|in:active,inactive,pending'
     ]);
+
 
   //  // Méthode CORRECTE pour WAMP/Windows :
     $path = $request->file('image')->store('photos', 'public');
@@ -56,12 +58,13 @@ class PhotoController extends Controller
     // $path = $request->file('image')->store('photos'); // Sans 'public/'
     // $validated['image_path'] = $path;
 
-    $validated['url'] = Str::uuid()->toString();
-    // Génération d'une URL unique
-    $validated['url'] = Str::uuid()->toString();
+
+
+
 
 
     // Création de la photo
+
     $photo = Photo::create($validated);
 
 

@@ -13,7 +13,7 @@ class Photo extends Model
         'titre',
         'description',
         'image_path',
-        'url',
+       
         'alt_text',
         'status',
         'etablissement_id',
