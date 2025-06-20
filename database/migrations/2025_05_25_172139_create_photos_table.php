@@ -21,7 +21,7 @@ return new class extends Migration {
                 ->onDelete('cascade');
                 $table->foreignId('service_id')
                 ->nullable()
-                ->constrained('service')
+                ->constrained('services')
                 ->onDelete('cascade');
             $table->integer('ordre')->default(0);
             $table->boolean('est_principale')->default(false);
