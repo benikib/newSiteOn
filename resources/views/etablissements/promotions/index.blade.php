@@ -46,6 +46,7 @@
                                             Actions</th>
                                     </tr>
                                 <tbody>
+                                    {{ dd($etablissements) }}
                                     @foreach ($etablissements->services as $service)
                                         <tr>
                                             <td class="text-xs font-weight-bold">{{ $loop->iteration }}</td>

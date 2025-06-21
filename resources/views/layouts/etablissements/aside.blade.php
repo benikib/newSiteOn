@@ -36,7 +36,7 @@
                     <span class="nav-link-text ms-1">Établissements</span>
                 </a>
             </li>
-            <li class="nav-item">
+            {{-- <li class="nav-item">
                 <a class="nav-link" href="{{ route('users.promotions') }}"
                     class="{{ request()->routeIs('users.promotions.*') ? 'active' : '' }}">
                     <div
@@ -45,7 +45,7 @@
                     </div>
                     <span class="nav-link-text ms-1">Promotions</span>
                 </a>
-            </li>
+            </li> --}}
 
 
             <li class="nav-item">

@@ -20,11 +20,11 @@
                         <i class="fas fa-home me-1"></i> Accueil
                     </a>
                 </li>
-                <li class="nav-item">
+                {{-- <li class="nav-item">
                     <a class="nav-link" href="#">
                         <i class="fas fa-map-marker-alt me-1"></i> Emplacement
                     </a>
-                </li>
+                </li> --}}
                 <li class="nav-item">
                     <a class="nav-link" href="#">
                         <i class="fas fa-envelope me-1"></i> Contactez-nous
