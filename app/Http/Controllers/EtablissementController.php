@@ -8,6 +8,8 @@ use App\Models\Promotion;
 use App\Models\TypeEtablissement;
 use App\Models\User;
 use App\Models\UserEtablissement;
+use App\Models\Service;
+use App\Models\Publicite;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -19,9 +21,12 @@ class EtablissementController extends Controller
      */
     public function index()
     {
-        $etablissements = Etablissement::all();
+        $etablissements =  $etablissements = Etablissement::withCount(['services', 'promotions', 'publicites', 'photos'])
+            ->with(['typeEtablissement', 'services', 'promotions'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
         $typeEtablissements = TypeEtablissement::all();
-       
+
         return view('admins.etablissements.index', compact('etablissements', 'typeEtablissements'));
     }
 
@@ -60,32 +65,31 @@ class EtablissementController extends Controller
             ]);
 
 
-if(Auth::user()->role === 'admin'){
-    $etablissements=Etablissement::create($request->all());
-            $user = User::create([
-    'name' => $request->user_name,
-    'email' => $request->user_email,
-    'password' => Hash::make($request->user_password),
-    'role' => $request->user_role,
-        ]);
-             UserEtablissement::create([
-                'user_id' => $user->id,
-                'etablissement_id' => $etablissements->id,
-            ]);
-} elseif(Auth::user()->role === 'etablissement') {
+            if (Auth::user()->role === 'admin') {
+                $etablissements = Etablissement::create($request->all());
+                $user = User::create([
+                    'name' => $request->user_name,
+                    'email' => $request->user_email,
+                    'password' => Hash::make($request->user_password),
+                    'role' => $request->user_role,
+                ]);
+                UserEtablissement::create([
+                    'user_id' => $user->id,
+                    'etablissement_id' => $etablissements->id,
+                ]);
+            } elseif (Auth::user()->role === 'etablissement') {
 
-     $etablissements=Etablissement::create($request->all());
-     UserEtablissement::create([
-                'user_id' => Auth::user()->id,
-                'etablissement_id' => $etablissements->id,
-            ]);
+                $etablissements = Etablissement::create($request->all());
+                UserEtablissement::create([
+                    'user_id' => Auth::user()->id,
+                    'etablissement_id' => $etablissements->id,
+                ]);
 
-}
-else {
-    dd(Auth::user()->role);
-    return redirect()->back()->withErrors(['error' => 'Vous n\'êtes pas autorisé à créer un établissement.']);
-}
- return redirect()->back()->with('success', 'Établissement créé avec succès.');
+            } else {
+                dd(Auth::user()->role);
+                return redirect()->back()->withErrors(['error' => 'Vous n\'êtes pas autorisé à créer un établissement.']);
+            }
+            return redirect()->back()->with('success', 'Établissement créé avec succès.');
 
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -114,13 +118,13 @@ else {
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request,  $id)
+    public function update(Request $request, $id)
     {
         try {
             $etablissement = Etablissement::findOrFail($id);
 
             $request->validate([
-                  'nom' => 'required|string|max:100',
+                'nom' => 'required|string|max:100',
                 'ville' => 'required|string|max:100',
                 'commune' => 'required|string|max:100',
                 'avenue' => 'nullable|string|max:100',
@@ -134,7 +138,7 @@ else {
 
             ]);
 
-          $etablissemen  = $etablissement->update($request->all());
+            $etablissemen = $etablissement->update($request->all());
 
 
             return redirect()->back()->with('success', 'Établissement mis à jour avec succès.');
@@ -151,21 +155,29 @@ else {
         //
     }
     // EtablissementController.php
-public function dashboard()
-{
-    $stats = [
-        'total_etablissements' => Etablissement::count(),
-        //'promotions_actives' => Promotion::where('statut', 'actif')->count(),
-        // 'reservations' => Reservation::where('created_at', '>=', now()->subDays(30))->count(),
-        // 'revenus' => Paiement::where('created_at', '>=', now()->subDays(30))->sum('montant')
-    ];
-    $typeEtablissements= TypeEtablissement::all();
-    $etablissements = Etablissement::withCount('services')
-                        ->orderBy('created_at', 'desc')
-                        ->paginate(10);
+    public function dashboard()
+    {
+        $stats = [
+            'total_etablissements' => Etablissement::count(),
+            'promotions_actives' => Promotion::where('date_fin', '>=', now())->count(),
+            'total_services' => Service::count(),
+            'total_publicites' => Publicite::count(),
+            'etablissements_recents' => Etablissement::where('created_at', '>=', now()->subDays(30))->count(),
+            'services_recents' => Service::where('created_at', '>=', now()->subDays(30))->count(),
+            'promotions_recents' => Promotion::where('created_at', '>=', now()->subDays(30))->count(),
+            'publicites_recents' => Publicite::where('created_at', '>=', now()->subDays(30))->count(),
+        ];
 
+        $typeEtablissements = TypeEtablissement::all();
+        $etablissements = Etablissement::withCount(['services', 'promotions', 'publicites', 'photos'])
+            ->with(['typeEtablissement', 'services', 'promotions'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
 
-    return view('etablissements.dashboard', compact('stats', 'etablissements', 'typeEtablissements'));
-}
+        // Statistiques par type d'établissement
+        $statsParType = TypeEtablissement::withCount('etablissements')->get();
+
+        return view('etablissements.dashboard', compact('stats', 'etablissements', 'typeEtablissements', 'statsParType'));
+    }
 }
 

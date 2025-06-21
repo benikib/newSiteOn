@@ -31,83 +31,129 @@
 
 
         <!-- Tableau -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card mb-4">
-                    <div class="card-header pb-0">
-                        <h6>Gestion d'Etablissement</h6>
-                    </div>
-                    <div class="card-body px-0 pt-0 pb-2">
-                        <div class="table-responsive p-0">
-                            <table class="table align-items-center justify-content-center mb-0">
-                                <thead>
-                                    <tr>
-                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">N°
-                                        </th>
-                                        <th
-                                            class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
-                                            Nom</th>
-                                        <th
-                                            class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
-                                            Description</th>
-                                        <th
-                                            class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
-                                            Type D'etab</th>
-                                        <th
-                                            class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
-                                            Télèphone</th>
-                                        <th
-                                            class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
-                                            Adresse</th>
-                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                                            Actions</th>
-                                    </tr>
-                                <tbody>
-                                    @foreach ($etablissements as $etablissement)
-                                        <tr>
-                                            <td class="text-xs font-weight-bold">{{ $loop->iteration }}</td>
-                                            <td class="text-xs font-weight-bold">{{ $etablissement->nom }}</td>
-                                            <td class="text-xs font-weight-bold">{{ $etablissement->description }}</td>
-                                            <td class="text-xs font-weight-bold">
-                                                {{ $etablissement->typeEtablissement->nom }}</td>
-                                            <td class="text-xs font-weight-bold">{{ $etablissement->telephone }}</td>
-                                            <td class="text-xs font-weight-bold">{{ $etablissement->ville }}
-                                                {{ $etablissement->commune }} {{ $etablissement->quartier }}
-                                                {{ $etablissement->avenue }} {{ $etablissement->numero }}</td>
-                                            <td class="align-middle">
-                                                <a href="#" class="text-secondary font-weight-bold text-xs me-2"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#editModal{{ $etablissement->id }}" title="Modifier">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-
-                                                <a href="{{ route('services.index', $etablissement) }}"
-                                                    class="btn btn-primary btn-sm me-2" title="Gérer les services">
-                                                    <i class="fas fa-cogs me-1"></i> Services
-                                                </a>
-
-                                                <a href="{{ route('users_ets.index', $etablissement) }}"
-                                                    class="btn btn-primary btn-sm" title="Gérer les utilisateurs">
-                                                    <i class="fas fa-users me-1"></i> Utilisateurs
-                                                </a>
-                                                <!-- Include the edit modal for each etablissement -->
-                                                {{-- @include('admins.etablissements.edit', ['etablissement' => $etablissement]) --}}
-                                            </td>
-                                        </tr>
-                                    @endforeach
-
-                                </tbody>
-                            </table>
-
-                            <!-- Modals - Placé après la table -->
-                            @include('admins.etablissements.edit')
+        <!-- Tableau des Établissements -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">Liste des Établissements</h5>
+                    <div class="d-flex gap-2">
+                        <div class="input-group" style="width: 300px;">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="fas fa-search text-muted"></i>
+                            </span>
+                            <input type="text" class="form-control border-start-0" id="searchInput"
+                                placeholder="Rechercher un établissement...">
                         </div>
+                        <button class="btn btn-outline-secondary" type="button">
+                            <i class="fas fa-filter me-1"></i>Filtrer
+                        </button>
                     </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="dataTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="border-0 px-4 py-3 fw-semibold">Nom</th>
+                                <th class="border-0 px-4 py-3 fw-semibold">Type</th>
+                                <th class="border-0 px-4 py-3 fw-semibold">Ville</th>
+                                <th class="border-0 px-4 py-3 fw-semibold">Statistiques</th>
+                                <th class="border-0 px-4 py-3 fw-semibold">Note</th>
+                                <th class="border-0 px-4 py-3 fw-semibold text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($etablissements ?? [] as $etablissement)
+                                <tr>
+                                    <td class="px-4 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                                                <i class="fas fa-building text-primary"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold">{{ $etablissement->nom }}</div>
+                                                {{-- <div class="text-muted small">{{ $etablissement->description }}</div> --}}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <span
+                                            class="badge bg-light text-dark">{{ $etablissement->typeEtablissement->nom ?? 'N/A' }}</span>
+                                    </td>
+                                    <td class="px-4 py-3">{{ $etablissement->ville ?? 'N/A' }}</td>
+                                    <td class="px-4 py-3">
+                                        <div class="d-flex align-items-center gap-1">
+                                            <span class="badge bg-success">{{ $etablissement->services_count ?? 0 }}
+                                                services</span>
+                                            <span class="badge bg-info">{{ $etablissement->promotions_count ?? 0 }}
+                                                promotions</span>
+                                            <span class="badge bg-warning">{{ $etablissement->publicites_count ?? 0 }}
+                                                publicités</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="text-warning me-2">
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star-o"></i>
+                                            </div>
+                                            <span class="text-muted small">(4.0)</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 text-end">
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-primary" title="Voir">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary" title="Modifier">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="text-center py-5">
+                                        <div class="text-muted">
+                                            <i class="fas fa-building fa-3x mb-3"></i>
+                                            <h5>Aucun établissement trouvé</h5>
+                                            <p>Commencez par ajouter votre premier établissement</p>
+                                            <button class="btn btn-primary" data-bs-toggle="modal"
+                                                data-bs-target="#addEtablissementModal">
+                                                <i class="fas fa-plus me-2"></i>Ajouter un établissement
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const tableRows = document.querySelectorAll('#dataTable tbody tr');
 
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+
+                tableRows.forEach(function(row) {
+                    const rowText = row.textContent.toLowerCase();
+                    row.style.display = rowText.includes(query) ? '' : 'none';
+                });
+            });
+        });
+    </script>
     <!-- Script -->
 
 

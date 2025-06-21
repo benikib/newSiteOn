@@ -80,7 +80,7 @@ class DatabaseSeeder extends Seeder
             ->count(15)
             ->sequence(fn($sequence) => [
                 'type_etablissement_id' => $types->random()->id,
-                
+
             ])
             ->create();
 
