@@ -1,7 +1,7 @@
-<div class="modal fade" id="repportingModal" tabindex="-1" aria-labelledby="repportingModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+<div class="modal fade " id="repportingModal" tabindex="-1" aria-labelledby="repportingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered ">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header bg-gradient-success">
                 <h5 class="modal-title" id="repportingModalLabel">Ajouter un établissement</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
             </div>
@@ -109,6 +109,16 @@
                         <div class="tab-pane fade" id="localisation" role="tabpanel"
                             aria-labelledby="localisation-tab">
                             <div class="mb-3">
+                                <label for="numero" class="form-label">Numéro*</label>
+                                <input type="text" name="numero" id="numero" class="form-control"
+                                    placeholder="Ex: 123, 456, etc." required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="avenue" class="form-label">Avenue*</label>
+                                <input type="text" name="avenue" id="avenue" class="form-control"
+                                    placeholder="Ex: Avenue des Champs-Élysées" required>
+                            </div>
+                            <div class="mb-3">
                                 <label for="quartier" class="form-label">Quartier*</label>
                                 <input type="text" name="quartier" id="quartier" class="form-control"
                                     placeholder="Ex: Quartier Latin, Montmartre, etc." required>
@@ -120,11 +130,7 @@
                                     placeholder="Ex: Paris, Lyon, etc." required>
                             </div>
 
-                            <div class="mb-3">
-                                <label for="avenue" class="form-label">Avenue*</label>
-                                <input type="text" name="avenue" id="avenue" class="form-control"
-                                    placeholder="Ex: Avenue des Champs-Élysées" required>
-                            </div>
+
 
                             <div class="mb-3">
                                 <label for="ville" class="form-label">Ville*</label>
@@ -132,11 +138,7 @@
                                     placeholder="Ex: Paris, Lyon, etc." required>
                             </div>
 
-                            <div class="mb-3">
-                                <label for="numero" class="form-label">Numéro*</label>
-                                <input type="text" name="numero" id="numero" class="form-control"
-                                    placeholder="Ex: 123, 456, etc." required>
-                            </div>
+
 
                             <div id="statusMessage" class="alert alert-danger d-none" role="alert">
                                 <p class="mb-0"></p>

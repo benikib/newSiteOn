@@ -15,6 +15,7 @@ class Publicite extends Model
         'date',
         'etablissement_id',
         'dure',
+        'image_path'
     ];
     public function etablissement()
     {

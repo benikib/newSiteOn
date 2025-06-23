@@ -3,181 +3,161 @@
 @section('content')
 
     <div class="container-fluid py-4">
-        <div class="row">
+        <div class="row justify-content-center">
             <!-- Statistiques Utilisateurs -->
-            <div class="col-lg-3 col-md-6 col-12">
-                <div class="card">
-                    <div class="card-body p-3 position-relative">
-                        <div class="row">
-                            <div class="col-8 text-start">
-                                <div class="icon icon-shape bg-white shadow text-center border-radius-2xl">
-                                    <i class="ni ni-circle-08 text-dark text-gradient text-lg opacity-10"
-                                        aria-hidden="true"></i>
-                                </div>
-                                <h5 class="text-dark font-weight-bolder mb-0 mt-3">
-                                    {{ $users->count() }}
-                                </h5>
-                                <span class="text-dark text-sm">Utilisateurs</span>
+            <div class="col-lg-3 col-md-6 col-12 mb-4">
+                <div class="card h-100">
+                    <div class="card-body p-3 text-center">
+                        <div class="icon icon-shape bg-white shadow text-center border-radius-2xl mx-auto">
+                            <i class="ni ni-circle-08 text-dark text-gradient text-lg opacity-10" aria-hidden="true"></i>
+                        </div>
+                        <h5 class="text-dark font-weight-bolder mb-0 mt-3">
+                            {{ $users->count() }}
+                        </h5>
+                        <span class="text-dark text-sm">Utilisateurs</span>
+
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="dropdown ms-auto">
+                                <a href="javascript:;" class="cursor-pointer" id="dropdownUsers1" data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                    <i class="fa fa-ellipsis-h text-dark"></i>
+                                </a>
+                                <ul class="dropdown-menu px-2 py-3" aria-labelledby="dropdownUsers1">
+                                    <li><a class="dropdown-item border-radius-md" href="{{ route('users.index') }}">Voir
+                                            tous</a></li>
+                                </ul>
                             </div>
-                            <div class="col-4">
-                                <div class="dropdown text-end mb-6">
-                                    <a href="javascript:;" class="cursor-pointer" id="dropdownUsers1"
-                                        data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="fa fa-ellipsis-h text-dark"></i>
-                                    </a>
-                                    <ul class="dropdown-menu px-2 py-3" aria-labelledby="dropdownUsers1">
-                                        <li><a class="dropdown-item border-radius-md" href="{{ route('users.index') }}">Voir
-                                                tous</a></li>
-                                    </ul>
-                                </div>
-                                @php
-                                    $newUsersLastMonth = $users
-                                        ->filter(function ($user) {
-                                            return $user->created_at >= now()->subMonth();
-                                        })
-                                        ->count();
-                                    $percentage = $users->count()
-                                        ? round(($newUsersLastMonth / $users->count()) * 100)
-                                        : 0;
-                                @endphp
-                                <p class="text-dark text-sm text-end font-weight-bolder mt-auto mb-0">+{{ $percentage }}%
-                                </p>
-                            </div>
+                            @php
+                                $newUsersLastMonth = $users
+                                    ->filter(function ($user) {
+                                        return $user->created_at >= now()->subMonth();
+                                    })
+                                    ->count();
+                                $percentage = $users->count() ? round(($newUsersLastMonth / $users->count()) * 100) : 0;
+                            @endphp
+                            <span class="badge bg-gradient-success ms-2">+{{ $percentage }}%</span>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Statistiques Etablissements -->
-            <div class="col-lg-3 col-md-6 col-12 mt-4 mt-md-0">
-                <div class="card">
-                    <div class="card-body p-3 position-relative">
-                        <div class="row">
-                            <div class="col-8 text-start">
-                                <div class="icon icon-shape bg-white shadow text-center border-radius-2xl">
-                                    <i class="ni ni-building text-dark text-gradient text-lg opacity-10"
-                                        aria-hidden="true"></i>
-                                </div>
-                                <h5 class="text-dark font-weight-bolder mb-0 mt-3">
-                                    {{ $etablissements->count() }}
-                                </h5>
-                                <span class="text-dark text-sm">Établissements</span>
+            <div class="col-lg-3 col-md-6 col-12 mb-4">
+                <div class="card h-100">
+                    <div class="card-body p-3 text-center">
+                        <div class="icon icon-shape bg-white shadow text-center border-radius-2xl mx-auto">
+                            <i class="ni ni-building text-dark text-gradient text-lg opacity-10" aria-hidden="true"></i>
+                        </div>
+                        <h5 class="text-dark font-weight-bolder mb-0 mt-3">
+                            {{ $etablissements->count() }}
+                        </h5>
+                        <span class="text-dark text-sm">Établissements</span>
+
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="dropdown ms-auto">
+                                <a href="javascript:;" class="cursor-pointer" id="dropdownUsers2" data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                    <i class="fa fa-ellipsis-h text-dark"></i>
+                                </a>
+                                <ul class="dropdown-menu px-2 py-3" aria-labelledby="dropdownUsers2">
+                                    <li><a class="dropdown-item border-radius-md"
+                                            href="{{ route('etablissements.index') }}">Voir tous</a></li>
+                                </ul>
                             </div>
-                            <div class="col-4">
-                                <div class="dropstart text-end mb-6">
-                                    <a href="javascript:;" class="cursor-pointer" id="dropdownUsers2"
-                                        data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="fa fa-ellipsis-h text-dark"></i>
-                                    </a>
-                                    <ul class="dropdown-menu px-2 py-3" aria-labelledby="dropdownUsers2">
-                                        <li><a class="dropdown-item border-radius-md"
-                                                href="{{ route('etablissements.index') }}">Voir tous</a></li>
-                                    </ul>
-                                </div>
-                                @php
-                                    $newEtabLastMonth = $etablissements
-                                        ->filter(function ($etab) {
-                                            return $etab->created_at >= now()->subMonth();
-                                        })
-                                        ->count();
-                                    $percentage = $etablissements->count()
-                                        ? round(($newEtabLastMonth / $etablissements->count()) * 100)
-                                        : 0;
-                                @endphp
-                                <p class="text-dark text-sm text-end font-weight-bolder mt-auto mb-0">+{{ $percentage }}%
-                                </p>
-                            </div>
+                            @php
+                                $newEtabLastMonth = $etablissements
+                                    ->filter(function ($etab) {
+                                        return $etab->created_at >= now()->subMonth();
+                                    })
+                                    ->count();
+                                $percentage = $etablissements->count()
+                                    ? round(($newEtabLastMonth / $etablissements->count()) * 100)
+                                    : 0;
+                            @endphp
+                            <span class="badge bg-gradient-success ms-2">+{{ $percentage }}%</span>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Statistiques Publicités -->
-            <div class="col-lg-3 col-md-6 col-12 mt-4 mt-md-0">
-                <div class="card">
-                    <div class="card-body p-3 position-relative">
-                        <div class="row">
-                            <div class="col-8 text-start">
-                                <div class="icon icon-shape bg-white shadow text-center border-radius-2xl">
-                                    <i class="ni ni-notification-70 text-dark text-gradient text-lg opacity-10"
-                                        aria-hidden="true"></i>
-                                </div>
-                                <h5 class="text-dark font-weight-bolder mb-0 mt-3">
-                                    {{ $publicites->count() }}
-                                </h5>
-                                <span class="text-dark text-sm">Publicités</span>
+            <div class="col-lg-3 col-md-6 col-12 mb-4">
+                <div class="card h-100">
+                    <div class="card-body p-3 text-center">
+                        <div class="icon icon-shape bg-white shadow text-center border-radius-2xl mx-auto">
+                            <i class="ni ni-notification-70 text-dark text-gradient text-lg opacity-10"
+                                aria-hidden="true"></i>
+                        </div>
+                        <h5 class="text-dark font-weight-bolder mb-0 mt-3">
+                            {{ $publicites->count() }}
+                        </h5>
+                        <span class="text-dark text-sm">Publicités</span>
+
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="dropdown ms-auto">
+                                <a href="javascript:;" class="cursor-pointer" id="dropdownUsers3" data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                    <i class="fa fa-ellipsis-h text-dark"></i>
+                                </a>
+                                <ul class="dropdown-menu px-2 py-3" aria-labelledby="dropdownUsers3">
+                                    <li><a class="dropdown-item border-radius-md"
+                                            href="{{ route('publicites.index') }}">Voir tous</a></li>
+                                </ul>
                             </div>
-                            <div class="col-4">
-                                <div class="dropdown text-end mb-6">
-                                    <a href="javascript:;" class="cursor-pointer" id="dropdownUsers3"
-                                        data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="fa fa-ellipsis-h text-dark"></i>
-                                    </a>
-                                    <ul class="dropdown-menu px-2 py-3" aria-labelledby="dropdownUsers3">
-                                        <li><a class="dropdown-item border-radius-md"
-                                                href="{{ route('publicites.index') }}">Voir tous</a></li>
-                                    </ul>
-                                </div>
-                                @php
-                                    $activePub = $publicites
-                                        ->filter(function ($pub) {
-                                            if (!$pub->date || !$pub->dure) {
-                                                return false;
-                                            } // Skip if missing data
-                                            $date = \Carbon\Carbon::parse($pub->date);
-                                            return $date <= now() && $date->copy()->addDays($pub->dure) >= now();
-                                        })
-                                        ->count();
-                                    $percentage = $publicites->count()
-                                        ? round(($activePub / $publicites->count()) * 100)
-                                        : 0;
-                                @endphp
-                                <p class="text-dark text-sm text-end font-weight-bolder mt-auto mb-0">{{ $percentage }}%
-                                    actives</p>
-                            </div>
+                            @php
+                                $activePub = $publicites
+                                    ->filter(function ($pub) {
+                                        if (!$pub->date || !$pub->dure) {
+                                            return false;
+                                        }
+                                        $date = \Carbon\Carbon::parse($pub->date);
+                                        return $date <= now() && $date->copy()->addDays($pub->dure) >= now();
+                                    })
+                                    ->count();
+                                $percentage = $publicites->count()
+                                    ? round(($activePub / $publicites->count()) * 100)
+                                    : 0;
+                            @endphp
+                            <span class="badge bg-gradient-info ms-2">{{ $percentage }}% actives</span>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Statistiques Types Etablissements -->
-            <div class="col-lg-3 col-md-6 col-12 mt-4 mt-md-0">
-                <div class="card">
-                    <div class="card-body p-3 position-relative">
-                        <div class="row">
-                            <div class="col-8 text-start">
-                                <div class="icon icon-shape bg-white shadow text-center border-radius-2xl">
-                                    <i class="ni ni-tag text-dark text-gradient text-lg opacity-10" aria-hidden="true"></i>
-                                </div>
-                                <h5 class="text-dark font-weight-bolder mb-0 mt-3">
-                                    {{ $typeEtablissements->count() }}
-                                </h5>
-                                <span class="text-dark text-sm">Types d'Ets</span>
+            <div class="col-lg-3 col-md-6 col-12 mb-4">
+                <div class="card h-100">
+                    <div class="card-body p-3 text-center">
+                        <div class="icon icon-shape bg-white shadow text-center border-radius-2xl mx-auto">
+                            <i class="ni ni-tag text-dark text-gradient text-lg opacity-10" aria-hidden="true"></i>
+                        </div>
+                        <h5 class="text-dark font-weight-bolder mb-0 mt-3">
+                            {{ $typeEtablissements->count() }}
+                        </h5>
+                        <span class="text-dark text-sm">Types d'Ets</span>
+
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="dropdown ms-auto">
+                                <a href="javascript:;" class="cursor-pointer" id="dropdownUsers4" data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                    <i class="fa fa-ellipsis-h text-dark"></i>
+                                </a>
+                                <ul class="dropdown-menu px-2 py-3" aria-labelledby="dropdownUsers4">
+                                    <li><a class="dropdown-item border-radius-md"
+                                            href="{{ route('type_etablissements.index') }}">Voir tous</a></li>
+                                </ul>
                             </div>
-                            <div class="col-4">
-                                <div class="dropstart text-end mb-6">
-                                    <a href="javascript:;" class="cursor-pointer" id="dropdownUsers4"
-                                        data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="fa fa-ellipsis-h text-dark"></i>
-                                    </a>
-                                    <ul class="dropdown-menu px-2 py-3" aria-labelledby="dropdownUsers4">
-                                        <li><a class="dropdown-item border-radius-md"
-                                                href="{{ route('type_etablissements.index') }}">Voir tous</a></li>
-                                    </ul>
-                                </div>
-                                @php
-                                    $mostCommonType = $typeEtablissements
-                                        ->sortByDesc(function ($type) use ($etablissements) {
-                                            return $etablissements->where('type_etablissement_id', $type->id)->count();
-                                        })
-                                        ->first();
-                                    $count = $mostCommonType
-                                        ? $etablissements->where('type_etablissement_id', $mostCommonType->id)->count()
-                                        : 0;
-                                @endphp
-                                <p class="text-dark text-sm text-end font-weight-bolder mt-auto mb-0">{{ $count }}
-                                    top</p>
-                            </div>
+                            @php
+                                $mostCommonType = $typeEtablissements
+                                    ->sortByDesc(function ($type) use ($etablissements) {
+                                        return $etablissements->where('type_etablissement_id', $type->id)->count();
+                                    })
+                                    ->first();
+                                $count = $mostCommonType
+                                    ? $etablissements->where('type_etablissement_id', $mostCommonType->id)->count()
+                                    : 0;
+                            @endphp
+                            <span class="badge bg-gradient-warning ms-2">{{ $count }} top</span>
                         </div>
                     </div>
                 </div>

@@ -1,4 +1,5 @@
-<aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 bg-white"
+<aside
+    class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 bg-gradient-success"
     id="sidenav-main">
     <div class="sidenav-header">
         <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none"
@@ -113,10 +114,10 @@
     </div> --}}
 
             <!-- Footer optionnel -->
-            <div class="sidenav-footer px-4 py-3">
+            {{-- <div class="sidenav-footer px-4 py-3">
                 <div class="text-xs font-weight-bold text-uppercase opacity-6">Version</div>
                 <span class="text-xs">{{ config('app.version', '1.0.0') }}</span>
-            </div>
+            </div> --}}
 </aside>
 
 <style>

@@ -1,11 +1,11 @@
 <div class="modal fade" id="repportingModal" tabindex="-1" aria-labelledby="repportingModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header bg-gradient-success">
                 <h5 class="modal-title" id="repportingModalLabel">Ajouter une publicite</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
             </div>
-            <form action="{{ route('publicits.store') }}" method="POST">
+            <form action="{{ route('publicits.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body">
                     <div class="mb-3">
@@ -25,6 +25,11 @@
                         <label for="duree" class="form-label">Durée (en jours)</label>
                         <input type="number" class="form-control" id="duree" name="dure" min="1"
                             required>
+                    </div>
+                     <div class="mb-3">
+                        <label class="form-label">Image</label>
+                        <input type="file" name="image" class="form-control" accept="image/*" required>
+                        <small class="text-muted">Formats acceptés: JPG, PNG, GIF (Max: 2MB)</small>
                     </div>
                     <div class="mb-3">
                         <label for="etablissement_id" class="form-label">Établissement</label>

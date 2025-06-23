@@ -2,58 +2,37 @@
 @section('title', 'Etablissement')
 @section('content')
 
-
     <div class="container py-4">
-        <!-- Bouton Retour -->
-        <div class="mb-3">
-            <a href="{{ url()->previous() }}" class="btn btn-outline-secondary d-inline-flex align-items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                    class="bi bi-arrow-left me-2" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd"
-                        d="M15 8a.5.5 0 0 1-.5.5H2.707l4.147 4.146a.5.5 0 0 1-.708.708l-5-5a.5.5 0 0 1 0-.708l5-5a.5.5 0 1 1 .708.708L2.707 7.5H14.5A.5.5 0 0 1 15 8z" />
-                </svg>
-                Retour
-            </a>
-        </div>
-
-        <!-- En-tête + bouton -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h4 text-dark">Etablissements</h1>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#repportingModal">
-                Ajouter un Etablissement
+      <!-- En-tête + bouton -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+            <h1 class="h4 text-dark mb-0">Etablissements</h1>
+            <button type="button" class="btn btn-primary w-100 w-md-auto" data-bs-toggle="modal"
+                data-bs-target="#repportingModal">
+                <i class="fas fa-plus d-md-none me-2"></i>
+                <span class="d-none d-md-inline">Ajouter un Etablissement</span>
+                <span class="d-md-none">Ajouter</span>
             </button>
-
         </div>
 
         <!-- Modal Ajout -->
         @include('admins.etablissements.create')
 
-
-
-        <!-- Tableau -->
-        <!-- Tableau des Établissements -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-0 py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold">Liste des Établissements</h5>
-                    <div class="d-flex gap-2">
-                        <div class="input-group" style="width: 300px;">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="fas fa-search text-muted"></i>
-                            </span>
-                            <input type="text" class="form-control border-start-0" id="searchInput"
-                                placeholder="Rechercher un établissement...">
-                        </div>
-                        <button class="btn btn-outline-secondary" type="button">
-                            <i class="fas fa-filter me-1"></i>Filtrer
-                        </button>
-                    </div>
+        <!-- Barre de recherche -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-3">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" class="form-control border-start-0" id="searchInput"
+                        placeholder="Rechercher par nom, ville ou type...">
                 </div>
             </div>
+        </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0" id="dataTable">
-                        <thead class="table-light">
+                        <thead>
                             <tr>
                                 <th class="border-0 px-4 py-3 fw-semibold">Nom</th>
                                 <th class="border-0 px-4 py-3 fw-semibold">Type</th>
@@ -73,7 +52,6 @@
                                             </div>
                                             <div>
                                                 <div class="fw-semibold">{{ $etablissement->nom }}</div>
-                                                {{-- <div class="text-muted small">{{ $etablissement->description }}</div> --}}
                                             </div>
                                         </div>
                                     </td>
@@ -136,29 +114,46 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Message aucun résultat -->
+                <div id="noResultsMessage" class="text-center text-muted py-4 d-none">
+                    <i class="fas fa-search fa-2x mb-2"></i>
+                    <p>Aucun établissement ne correspond à votre recherche.</p>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Script JS pour recherche -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('searchInput');
             const tableRows = document.querySelectorAll('#dataTable tbody tr');
+            const noResultsMessage = document.getElementById('noResultsMessage');
+
+            // Fonction pour normaliser les accents
+            function normalize(str) {
+                return str
+                    ?.normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .toLowerCase() || '';
+            }
 
             searchInput.addEventListener('input', function() {
-                const query = this.value.toLowerCase();
+                const search = normalize(this.value);
+                let visibleCount = 0;
 
                 tableRows.forEach(function(row) {
-                    const rowText = row.textContent.toLowerCase();
-                    row.style.display = rowText.includes(query) ? '' : 'none';
+                    const text = normalize(row.textContent);
+                    const match = text.includes(search);
+                    row.style.display = match ? '' : 'none';
+                    if (match) visibleCount++;
                 });
+
+                // Afficher ou masquer le message "Aucun résultat"
+                noResultsMessage.classList.toggle('d-none', visibleCount > 0);
             });
         });
     </script>
-    <!-- Script -->
-
-
-
-
-
 
 @endsection

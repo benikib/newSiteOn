@@ -26,6 +26,7 @@ class EtablissementController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
         $typeEtablissements = TypeEtablissement::all();
+        
 
         return view('admins.etablissements.index', compact('etablissements', 'typeEtablissements'));
     }

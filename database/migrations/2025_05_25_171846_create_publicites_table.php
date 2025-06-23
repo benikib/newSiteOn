@@ -21,7 +21,7 @@ return new class extends Migration
                   ->onDelete('cascade');
             $table->integer( 'dure');
             $table->string('status')->nullable(); // Statut de la publicité (actif/inactif/etc.)
-
+            $table->string('image_path');
             $table->timestamps();
         });
     }

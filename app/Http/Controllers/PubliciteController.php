@@ -15,7 +15,7 @@ class PubliciteController extends Controller
     {
         $publicites = Publicite::all();
         $etablissements = Etablissement::all();
-        
+
         return view('admins.publicites.index', compact('publicites', 'etablissements'));
     }
 
@@ -32,18 +32,28 @@ class PubliciteController extends Controller
      */
     public function store(Request $request)
     {
-        
+
         try {
-            
-            $request->validate([
+
+         $validated =  $request->validate([
                 'titre' => 'required|string|max:100',
                 'description' => 'nullable|string|max:255',
                 'date' => 'required|date',
                 'etablissement_id' => 'required|exists:etablissements,id',
                 'dure' => 'required|integer|min:1',
+                'image' => 'required'
             ]);
+             $path = $request->file('image')->store('photos', 'public');
 
-            Publicite::create($request->all());
+    // Enregistrez le chemin RELATIF sans 'public/'
+    $validated['image_path'] = $path; // 'photos/filename.jpg'
+
+    // Solution 2 - Si vous préférez garder l'ancienne structure
+    // $path = $request->file('image')->store('photos'); // Sans 'public/'
+    // $validated['image_path'] = $path;
+
+
+            Publicite::create($validated);
 
             return redirect()->back()->with('success', 'Publicité créée avec succès.');
         } catch (\Exception $e) {
@@ -74,10 +84,10 @@ class PubliciteController extends Controller
     public function update(Request $request, $id)
 
     {
-        
+
         try {
             $publicite = Publicite::findOrFail($id);
-            
+
             $request->validate([
                 'titre' => 'required|string|max:100',
                 'description' => 'nullable|string|max:255',

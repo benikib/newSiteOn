@@ -5,7 +5,7 @@
 
     <div class="container py-4">
         <!-- Bouton Retour -->
-        <div class="mb-3">
+        {{-- <div class="mb-3">
             <a href="{{ url()->previous() }}" class="btn btn-outline-secondary d-inline-flex align-items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                     class="bi bi-arrow-left me-2" viewBox="0 0 16 16">
@@ -14,7 +14,7 @@
                 </svg>
                 Retour
             </a>
-        </div>
+        </div> --}}
 
         <!-- En-tête + bouton -->
         <div class="d-flex justify-content-between align-items-center mb-4">
