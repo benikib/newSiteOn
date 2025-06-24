@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Etablissement;
 use App\Models\Service;
+use App\Models\TypeEtablissement;
 use App\Models\User;
 use App\Models\UserEtablissement;
 use Illuminate\Http\Request;
@@ -132,7 +133,7 @@ public function repportingAdmins()
         }
         $user->telephone = $request->telephone;
         $user->role = $request->role;
-        
+
 
 
         $user->save();
@@ -203,25 +204,26 @@ public function repportingAdmins()
     public function ets_info($etablissement_id)
     {
         $etablissement = \App\Models\Etablissement::with('typeEtablissement')->findOrFail($etablissement_id);
+        $typesEtablissement =TypeEtablissement::all();
         if (!$etablissement) {
             return redirect()->back()->with('error', 'Etablissement not found.');
         }
-        return view('partials.resultatseach', compact('etablissement'));
+        return view('partials.resultatseach', compact('etablissement', 'typesEtablissement'));
     }
     public function ets(Request $request)
 {
     $query = $request->input('query');
-    
+
     // Recherche dans les établissements
     $etablissements = Etablissement::where('nom', 'like', "%{$query}%")
         ->orWhere('description', 'like', "%{$query}%")
         ->get();
-    
+
     // Recherche dans les services
     $services = Service::where('nom', 'like', "%{$query}%")
         ->orWhere('description', 'like', "%{$query}%")
         ->get();
-    
+
     return view('partials.resultat', compact('etablissements', 'services', 'query'));
 }
 public function search(Request $request)
@@ -274,7 +276,7 @@ public function search(Request $request)
         //     });
         // })
         ->with(['typeEtablissement', 'services', 'photos', 'promotions', 'publicites'])
-        
+
         ->paginate(10);
 
     return view('partials.resultat', [

@@ -13,7 +13,7 @@ class ServiceController extends Controller
      */
     public function index($etablissement)
     {
-        
+
         $services = Service::where('etablissement_id', $etablissement)->get();
         $etablissement = Etablissement::findOrFail($etablissement);
         if (!$etablissement) {
@@ -22,10 +22,10 @@ class ServiceController extends Controller
 
         return view('admins.services.index', compact('services','etablissement'));
     }
-    
+
       public function indexEtablissement($etablissement)
     {
-        
+
         $services = Service::where('etablissement_id', $etablissement)->get();
         $etablissement = Etablissement::findOrFail($etablissement);
         if (!$etablissement) {
@@ -34,8 +34,8 @@ class ServiceController extends Controller
 
         return view('etablissements.services.index', compact('services','etablissement'));
     }
-        
-    
+
+
 
     /**
      * Show the form for creating a new resource.
@@ -106,8 +106,8 @@ class ServiceController extends Controller
 
             $service->update($request->all());
 
-            return redirect()->route('services.index', ['etablissement' => $service->etablissement_id])
-                             ->with('success', 'Service mis à jour avec succès.');
+            return  back()->with('success', 'Service ajouté avec succès');
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()->withErrors($e->validator)->withInput();
         }

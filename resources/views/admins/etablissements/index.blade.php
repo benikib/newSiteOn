@@ -1,9 +1,9 @@
 @extends('layouts.base')
-@section('title', 'Etablissement')
+
 @section('content')
 
     <div class="container py-4">
-      <!-- En-tête + bouton -->
+        <!-- En-tête + bouton -->
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
             <h1 class="h4 text-dark mb-0">Etablissements</h1>
             <button type="button" class="btn btn-primary w-100 w-md-auto" data-bs-toggle="modal"
@@ -29,99 +29,99 @@
                 </div>
             </div>
         </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0" id="dataTable">
-                        <thead>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="dataTable">
+                    <thead>
+                        <tr>
+                            <th class="border-0 px-4 py-3 fw-semibold">Nom</th>
+                            <th class="border-0 px-4 py-3 fw-semibold">Type</th>
+                            <th class="border-0 px-4 py-3 fw-semibold">Ville</th>
+                            <th class="border-0 px-4 py-3 fw-semibold">Statistiques</th>
+                            <th class="border-0 px-4 py-3 fw-semibold">Note</th>
+                            <th class="border-0 px-4 py-3 fw-semibold text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($etablissements ?? [] as $etablissement)
                             <tr>
-                                <th class="border-0 px-4 py-3 fw-semibold">Nom</th>
-                                <th class="border-0 px-4 py-3 fw-semibold">Type</th>
-                                <th class="border-0 px-4 py-3 fw-semibold">Ville</th>
-                                <th class="border-0 px-4 py-3 fw-semibold">Statistiques</th>
-                                <th class="border-0 px-4 py-3 fw-semibold">Note</th>
-                                <th class="border-0 px-4 py-3 fw-semibold text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($etablissements ?? [] as $etablissement)
-                                <tr>
-                                    <td class="px-4 py-3">
-                                        <div class="d-flex align-items-center">
-                                            <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
-                                                <i class="fas fa-building text-primary"></i>
-                                            </div>
-                                            <div>
-                                                <div class="fw-semibold">{{ $etablissement->nom }}</div>
-                                            </div>
+                                <td class="px-4 py-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class=" bg-opacity-10 rounded-circle p-2 me-3">
+                                            <i class="fas fa-building "></i>
                                         </div>
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        <span
-                                            class="badge bg-light text-dark">{{ $etablissement->typeEtablissement->nom ?? 'N/A' }}</span>
-                                    </td>
-                                    <td class="px-4 py-3">{{ $etablissement->ville ?? 'N/A' }}</td>
-                                    <td class="px-4 py-3">
-                                        <div class="d-flex align-items-center gap-1">
-                                            <span class="badge bg-success">{{ $etablissement->services_count ?? 0 }}
-                                                services</span>
-                                            <span class="badge bg-info">{{ $etablissement->promotions_count ?? 0 }}
-                                                promotions</span>
-                                            <span class="badge bg-warning">{{ $etablissement->publicites_count ?? 0 }}
-                                                publicités</span>
+                                        <div>
+                                            <div class="fw-semibold">{{ $etablissement->nom }}</div>
                                         </div>
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        <div class="d-flex align-items-center">
-                                            <div class="text-warning me-2">
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star-o"></i>
-                                            </div>
-                                            <span class="text-muted small">(4.0)</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span
+                                        class="badge bg-light text-dark">{{ $etablissement->typeEtablissement->nom ?? 'N/A' }}</span>
+                                </td>
+                                <td class="px-4 py-3">{{ $etablissement->ville ?? 'N/A' }}</td>
+                                <td class="px-4 py-3">
+                                    <div class="d-flex align-items-center gap-1">
+                                        <span class="badge bg-success">{{ $etablissement->services_count ?? 0 }}
+                                            services</span>
+                                        <span class="badge bg-info">{{ $etablissement->promotions_count ?? 0 }}
+                                            promotions</span>
+                                        <span class="badge bg-warning">{{ $etablissement->publicites_count ?? 0 }}
+                                            publicités</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="text-warning me-2">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star-o"></i>
                                         </div>
-                                    </td>
-                                    <td class="px-4 py-3 text-end">
-                                        <div class="btn-group" role="group">
-                                            <button class="btn btn-sm btn-outline-primary" title="Voir">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-secondary" title="Modifier">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger" title="Supprimer">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="text-center py-5">
-                                        <div class="text-muted">
-                                            <i class="fas fa-building fa-3x mb-3"></i>
-                                            <h5>Aucun établissement trouvé</h5>
-                                            <p>Commencez par ajouter votre premier établissement</p>
-                                            <button class="btn btn-primary" data-bs-toggle="modal"
-                                                data-bs-target="#addEtablissementModal">
-                                                <i class="fas fa-plus me-2"></i>Ajouter un établissement
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                                        <span class="text-muted small">(4.0)</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-end">
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ route('etablissement.show', $etablissement->id) }}"
+                                            class="btn btn-sm btn-outline-primary" title="Voir">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
 
-                <!-- Message aucun résultat -->
-                <div id="noResultsMessage" class="text-center text-muted py-4 d-none">
-                    <i class="fas fa-search fa-2x mb-2"></i>
-                    <p>Aucun établissement ne correspond à votre recherche.</p>
-                </div>
+
+                                        <button class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="fas fa-building fa-3x mb-3"></i>
+                                        <h5>Aucun établissement trouvé</h5>
+                                        <p>Commencez par ajouter votre premier établissement</p>
+                                        <button class="btn btn-primary" data-bs-toggle="modal"
+                                            data-bs-target="#addEtablissementModal">
+                                            <i class="fas fa-plus me-2"></i>Ajouter un établissement
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Message aucun résultat -->
+            <div id="noResultsMessage" class="text-center text-muted py-4 d-none">
+                <i class="fas fa-search fa-2x mb-2"></i>
+                <p>Aucun établissement ne correspond à votre recherche.</p>
             </div>
         </div>
+    </div>
     </div>
 
     <!-- Script JS pour recherche -->

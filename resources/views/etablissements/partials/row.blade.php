@@ -21,11 +21,11 @@
     <td class="align-middle text-center">
         <div class="btn-group" role="group">
             <!-- Bouton Détails -->
-            <button class="btn btn-info btn-sm px-2" data-bs-toggle="modal"
-                data-bs-target="#etablissementInfoModal{{ $etablissement->id }}" data-bs-toggle="tooltip"
-                title="Détails">
+            <a href='{{ route('etablissements.show', $etablissement->id) }}' class="btn btn-info btn-sm px-2"
+                data-bs-toggle="tooltip" title="Détails">
                 <i class="fas fa-info-circle fa-fw"></i>
-            </button>
+            </a>
+
 
             <!-- Bouton Modifier -->
             <button class="btn btn-warning btn-sm px-2" data-bs-toggle="modal"

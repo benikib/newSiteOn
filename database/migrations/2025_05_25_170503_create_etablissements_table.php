@@ -17,6 +17,12 @@ return new class extends Migration {
             $table->string('telephone', 25)->nullable();
             $table->string('email')->nullable();
             $table->string('website')->nullable();
+               $table->string('facebook')->nullable();
+
+    $table->string('twitter')->nullable();
+    $table->string('instagram')->nullable();
+               $table->string(column: 'image_path')->nullable();
+
             $table->string('ville', 255)->nullable();
               $table->string('quartier', 255)->nullable();
             $table->string('commune', 255)->nullable();

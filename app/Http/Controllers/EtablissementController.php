@@ -104,9 +104,25 @@ class EtablissementController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Etablissement $etablissement)
+    public function show( $etablissement)
     {
-        //
+           $etablissement = \App\Models\Etablissement::with('typeEtablissement')->findOrFail($etablissement);
+            $typesEtablissement =TypeEtablissement::all();
+        if (!$etablissement) {
+            return redirect()->back()->with('error', 'Etablissement not found.');
+        }
+
+    return view('admins.etablissements.show', compact('etablissement', 'typesEtablissement'));
+    }
+     public function showOne( $etablissement)
+    {
+           $etablissement = \App\Models\Etablissement::with('typeEtablissement')->findOrFail($etablissement);
+            $typesEtablissement =TypeEtablissement::all();
+        if (!$etablissement) {
+            return redirect()->back()->with('error', 'Etablissement not found.');
+        }
+
+    return view('etablissements.partials.show', compact('etablissement', 'typesEtablissement'));
     }
 
     /**
@@ -180,6 +196,94 @@ class EtablissementController extends Controller
         $statsParType = TypeEtablissement::withCount('etablissements')->get();
 
         return view('etablissements.dashboard', compact('stats', 'etablissements', 'typeEtablissements', 'statsParType'));
+    }
+    public function updatetitre(Request $request, Etablissement $etablissement)
+    {
+
+        $validated = $request->validate([
+            'nom' => 'required|string|max:255',
+            'type_etablissement_id' => 'required|exists:type_etablissements,id'
+        ]);
+
+        $etablissement->update($validated);
+
+        return back()->with('success', 'Profil mis à jour avec succès');
+    }
+
+    public function updatePhoto(Request $request, Etablissement $etablissement)
+    {
+        $request->validate([
+            'photo' => 'required|image|max:2048'
+        ]);
+
+        // Supprimer l'ancienne photo si elle existe
+        if ($etablissement->photos->isNotEmpty()) {
+            // Ici vous devriez implémenter la suppression du fichier physique
+            $etablissement->photos()->delete();
+        }
+
+        // Enregistrer la nouvelle photo
+        $path = $request->file('photo')->store('photos', 'public');
+
+        $etablissement->photos()->create([
+            'image_path' => $path,
+            'titre' => 'Photo de profil'
+        ]);
+
+
+        return back()->with('success', 'Photo de profil mise à jour');
+    }
+
+    public function updateContact(Request $request, Etablissement $etablissement)
+    {
+
+        $validated = $request->validate([
+            'telephone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'website' => 'nullable|url|max:255'
+        ]);
+
+        $etablissement->update($validated);
+
+        return back()->with('success', 'Contacts mis à jour');
+    }
+
+    public function updateDescription(Request $request, Etablissement $etablissement)
+    {
+        $validated = $request->validate([
+            'description' => 'nullable|string'
+        ]);
+
+        $etablissement->update($validated);
+
+        return back()->with('success', 'Description mise à jour');
+    }
+
+    public function updateAddress(Request $request, Etablissement $etablissement)
+    {
+        $validated = $request->validate([
+            'ville' => 'required|string|max:255',
+            'commune' => 'required|string|max:255',
+            'avenue' => 'required|string|max:255',
+            'numero' => 'required|string|max:20'
+        ]);
+
+        $etablissement->update($validated);
+
+        return back()->with('success', 'Adresse mise à jour');
+    }
+
+    public function updateSocial(Request $request, Etablissement $etablissement)
+    {
+        $validated = $request->validate([
+            'facebook' => 'nullable|url|max:255',
+            'twitter' => 'nullable|url|max:255',
+            'instagram' => 'nullable|url|max:255'
+        ]);
+
+        $etablissement->update($validated);
+
+        return back()->with('success', 'Réseaux sociaux mis à jour');
     }
 }
 

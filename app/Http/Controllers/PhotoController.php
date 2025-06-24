@@ -20,7 +20,47 @@ class PhotoController extends Controller
         // Retourner la vue avec les photos
         return view('welcome', compact('photos'));
     }
+public function storeets(Request $request)
+    {
+        $request->validate([
+            'etablissement_id' => 'required|exists:etablissements,id',
+            'photos.*' => 'required|image|max:5120', // 5MB max
+            'titre' => 'nullable|string|max:255'
+        ]);
 
+        if ($request->hasFile('photos')) {
+            foreach ($request->file('photos') as $photo) {
+                $path = $photo->store('public/photos');
+
+                Photo::create([
+                    'etablissement_id' => $request->etablissement_id,
+                    'image_path' => $path,
+                    'titre' => $request->titre ?? 'Photo'
+                ]);
+            }
+        }
+
+        return back()->with('success', 'Photos ajoutées avec succès');
+    }
+
+    public function updatetitre(Request $request, Photo $photo)
+    {
+        $validated = $request->validate([
+            'titre' => 'required|string|max:255'
+        ]);
+
+        $photo->update($validated);
+
+        return back()->with('success', 'Photo mise à jour');
+    }
+
+    public function destroyphoto(Photo $photo)
+    {
+        // Supprimer le fichier physique ici si nécessaire
+        $photo->delete();
+
+        return back()->with('success', 'Photo supprimée');
+    }
     /**
      * Show the form for creating a new resource.
      */
@@ -32,19 +72,38 @@ class PhotoController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-   public function store(Request $request)
+
+   public function stores(Request $request)
+    {
+        $request->validate([
+            'etablissement_id' => 'required|exists:etablissements,id',
+            'photos.*' => 'required|image|max:5120', // 5MB max
+            'titre' => 'nullable|string|max:255'
+        ]);
+
+        if ($request->hasFile('photos')) {
+            foreach ($request->file('photos') as $photo) {
+                $path = $photo->store('photos', 'public');
+
+                Photo::create([
+                    'etablissement_id' => $request->etablissement_id,
+                    'image_path' => $path,
+                    'titre' => $request->titre ?? 'Photo'
+                ]);
+            }
+        }
+
+        return back()->with('success', 'Photos ajoutées avec succès');
+    }
+
+     public function store(Request $request)
 {
 
    try {
 
         $validated = $request->validate([
         'titre' => 'required|string|max:255',
-        'description' => 'nullable|string',
-        'image' => 'required|image|max:2048',
-        'etablissement_id' => 'required|exists:etablissements,id',
-        'service_id' => 'nullable|exists:services,id',
-        'promotion_id' => 'nullable|exists:promotions,id',
-        'status' => 'required|in:active,inactive,pending'
+
     ]);
 
 
@@ -94,24 +153,24 @@ public function destroye( $gallery)
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Photo $photo)
-    {
-        //
-    }
 
-    /**
-     * Update the specified resource in storage.
-     */
+
     public function update(Request $request, Photo $photo)
     {
-        //
+        $validated = $request->validate([
+            'titre' => 'required|string|max:255'
+        ]);
+
+        $photo->update($validated);
+
+        return back()->with('success', 'Photo mise à jour');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Photo $photo)
     {
-        //
+        // Supprimer le fichier physique ici si nécessaire
+        $photo->delete();
+
+        return back()->with('success', 'Photo supprimée');
     }
 }

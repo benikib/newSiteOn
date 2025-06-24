@@ -50,7 +50,7 @@ Route::resource('/galleries', PhotoController::class)->only([
 Route::resource('/promotions', PromotionController::class)->only([
     'store', 'destroy'
 ]);
-
+ Route::get('/{etablissement}', [EtablissementController::class, 'showOne'])->name('etablissements.show');
 
 Route::post('/publicites', [PubliciteController::class,'store'])->name('publicite.store');
 Route::put( 'publicites/{user}',[PubliciteController::class,'update'])->name('publicite.update');

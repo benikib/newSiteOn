@@ -14,6 +14,8 @@ class Etablissement extends Model
         'ville',
         'commune',
         'avenue',
+        'website',
+        'email',
         'quartier',
         'numero',
         'description',
@@ -21,6 +23,9 @@ class Etablissement extends Model
         'longitude',
         'telephone',
         'type_etablissement_id',
+        'image_path',
+        'facebook', 'twitter', 'instagram'
+        
     ];
     protected $table = 'etablissements';
     public function typeEtablissement()
