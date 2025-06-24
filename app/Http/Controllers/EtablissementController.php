@@ -26,7 +26,7 @@ class EtablissementController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
         $typeEtablissements = TypeEtablissement::all();
-        
+
 
         return view('admins.etablissements.index', compact('etablissements', 'typeEtablissements'));
     }
@@ -67,13 +67,14 @@ class EtablissementController extends Controller
 
 
             if (Auth::user()->role === 'admin') {
-                $etablissements = Etablissement::create($request->all());
+
                 $user = User::create([
                     'name' => $request->user_name,
                     'email' => $request->user_email,
                     'password' => Hash::make($request->user_password),
                     'role' => $request->user_role,
                 ]);
+                $etablissements = Etablissement::create($request->all());
                 UserEtablissement::create([
                     'user_id' => $user->id,
                     'etablissement_id' => $etablissements->id,
@@ -87,7 +88,7 @@ class EtablissementController extends Controller
                 ]);
 
             } else {
-                dd(Auth::user()->role);
+
                 return redirect()->back()->withErrors(['error' => 'Vous n\'êtes pas autorisé à créer un établissement.']);
             }
             return redirect()->back()->with('success', 'Établissement créé avec succès.');
