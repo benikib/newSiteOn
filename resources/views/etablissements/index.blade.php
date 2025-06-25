@@ -2,13 +2,7 @@
 @section('title', 'Etablissements')
 @section('content')
     <div class="container-fluid py-4">
-        <!-- Bouton Retour -->
-        <div class="mb-3">
-            <a href="{{ url()->previous() }}" class="btn btn-outline-secondary d-inline-flex align-items-center">
-                <i class="fas fa-arrow-left me-2"></i>
-                Retour
-            </a>
-        </div>
+
 
         <!-- En-tête + bouton -->
         <div class="d-flex justify-content-between align-items-center mb-4">
