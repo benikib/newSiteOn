@@ -208,8 +208,7 @@
                                                                 data-service-price="{{ $service->prix }}">
                                                                 <i class="fas fa-edit"></i>
                                                             </button>
-                                                            <form
-                                                                action="{{ route('etablissements.services.destroy', $service->id) }}"
+                                                            <form action="{{ route('services.destroy', $service->id) }}"
                                                                 method="POST">
                                                                 @csrf
                                                                 @method('DELETE')
@@ -495,7 +494,7 @@
                     <h5 class="modal-title">Ajouter un service</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ route('etablissements.services.store', [$etablissement->id]) }}" method="POST">
+                <form action="{{ route('services.store', [$etablissement->id]) }}" method="POST">
                     @csrf
                     <input type="hidden" name="etablissement_id" value="{{ $etablissement->id }}">
                     <div class="modal-body">
