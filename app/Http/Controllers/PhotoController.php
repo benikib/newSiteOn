@@ -17,10 +17,14 @@ class PhotoController extends Controller
         // Récupérer toutes les photos
         $photos = Photo::all();
 
+        // Si vous souhaitez filtrer les photos par établissement, vous pouvez le faire ici
+        // Par exemple, si vous avez un paramètre de requête 'etablissement_id', vous pouvez filtrer comme suit :
+        // $photos = Photo::where('etablissement_id', $request->query('etablissement_id'))->get();
+
         // Retourner la vue avec les photos
         return view('welcome', compact('photos'));
     }
-public function storeets(Request $request)
+public function storess(Request $request)
     {
         $request->validate([
             'etablissement_id' => 'required|exists:etablissements,id',

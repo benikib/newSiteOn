@@ -5,6 +5,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TypeEtablissementController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\EtablissementController;
+use App\Http\Controllers\ServiceController;
 
 Route::get('/', [PhotoController::class, 'index'])->name('welcome');
 Route::get('/grilles', function() {
@@ -25,8 +27,7 @@ Route::get('/desc/ets/{etablissement}',[UserController::class,'ets_info'])->name
 
 
 
-use App\Http\Controllers\EtablissementController;
-use App\Http\Controllers\ServiceController;
+
 
 
 // Routes pour les établissements
@@ -78,9 +79,7 @@ Route::prefix('photos')->group(function () {
 });
 
 // Vous pouvez aussi ajouter une route pour la page d'accueil si nécessaire
-Route::get('/', function () {
-    return view('welcome');
-});
+
 
 // Route de fallback (optionnelle)
 Route::fallback(function () {
