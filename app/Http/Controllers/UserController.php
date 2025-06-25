@@ -234,6 +234,10 @@ public function search(Request $request)
     $commune = $request->input('commune');
     $quartier = $request->input('quartier');
     $noteMin = $request->input('note_min');
+    
+    $budgetMax = $request->input('budget_max');
+    // $hasPublicite = $request->input('has_publicite');
+    // $hasPromotion = $request->input('has_promotion');
     $hasPromotion = $request->boolean('has_promotion');
     $hasPublicite = $request->boolean('has_publicite');
 
@@ -259,6 +263,12 @@ public function search(Request $request)
         ->when($commune, function($q) use ($commune) {
             $q->where('commune', 'like', "%{$commune}%");
         })
+      ->when($budgetMax, function($q) use ($budgetMax) {
+    $q->whereHas('services', function($subQuery) use ($budgetMax) {
+        $subQuery->where('prix', '<=', $budgetMax);
+    });
+})
+        
         ->when($quartier, function($q) use ($quartier) {
             $q->where('quartier', 'like', "%{$quartier}%");
         })

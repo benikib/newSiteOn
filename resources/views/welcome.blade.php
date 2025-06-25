@@ -404,7 +404,8 @@
                                     <select class="form-select border-primary" name="type_etablissement">
                                         <option value="">Tous types</option>
                                         @foreach (\App\Models\TypeEtablissement::all() as $type)
-                                            <option value="{{ $type->nom }}" {{ request('type_etablissement') == $type->nom ? 'selected' : '' }}>
+                                            <option value="{{ $type->nom }}"
+                                                {{ request('type_etablissement') == $type->nom ? 'selected' : '' }}>
                                                 {{ $type->nom }}
                                             </option>
                                         @endforeach
@@ -442,24 +443,36 @@
                                     </select>
                                 </div>
                                 <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Budget (max)</label>
+                                    <div class="input-group">
+                                        <input type="number" name="budget_max" class="form-control border-primary"
+                                            value="{{ request('budget_max') }}" placeholder="Montant maximum">
+                                        <span class="input-group-text">$</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
                                     <div class="form-check mt-4 pt-2">
                                         <input class="form-check-input" type="checkbox" name="has_promotion"
-                                            id="hasPromotion" value="1" {{ request('has_promotion') ? 'checked' : '' }}>
+                                            id="hasPromotion" value="1"
+                                            {{ request('has_promotion') ? 'checked' : '' }}>
                                         <label class="form-check-label fw-semibold" for="hasPromotion">
                                             Avec promotions actives
                                         </label>
                                     </div>
                                 </div>
+                            </div>
+                            {{-- <div class="row g-3 mb-4">
                                 <div class="col-md-4">
                                     <div class="form-check mt-4 pt-2">
                                         <input class="form-check-input" type="checkbox" name="has_publicite"
-                                            id="hasPublicite" value="1" {{ request('has_publicite') ? 'checked' : '' }}>
+                                            id="hasPublicite" value="1"
+                                            {{ request('has_publicite') ? 'checked' : '' }}>
                                         <label class="form-check-label fw-semibold" for="hasPublicite">
                                             Avec publicités actives
                                         </label>
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
                             <div class="d-flex justify-content-center">
                                 <button type="submit" class="btn btn-primary px-4 me-3">
                                     <i class="fas fa-search me-2"></i>Appliquer
@@ -478,7 +491,7 @@
     <!-- Bootstrap JS + Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             // Carrousel Publicitaire
             const track = document.querySelector('.ad-track');
             const slides = document.querySelectorAll('.ad-slide');
@@ -590,7 +603,8 @@
                     clearTimeout(resizeTimer);
                     resizeTimer = setTimeout(() => {
                         const newSlideWidth = slides[0].offsetWidth + 24;
-                        const centerOffset = -(currentIndex * newSlideWidth) + (track.offsetWidth / 2) - (newSlideWidth / 2);
+                        const centerOffset = -(currentIndex * newSlideWidth) + (track.offsetWidth /
+                            2) - (newSlideWidth / 2);
                         track.style.transform = `translateX(${centerOffset}px)`;
                     }, 250);
                 });
@@ -602,7 +616,7 @@
             const hideAdvanced = document.getElementById('hideAdvanced');
 
             if (advancedBtn && advancedSearch && hideAdvanced) {
-                advancedBtn.addEventListener('click', function () {
+                advancedBtn.addEventListener('click', function() {
                     advancedSearch.style.display = 'block';
                     advancedSearch.style.opacity = '0';
                     advancedSearch.style.transform = 'translateY(20px)';
@@ -619,7 +633,7 @@
                     });
                 });
 
-                hideAdvanced.addEventListener('click', function () {
+                hideAdvanced.addEventListener('click', function() {
                     advancedSearch.style.opacity = '0';
                     advancedSearch.style.transform = 'translateY(20px)';
 
@@ -632,12 +646,12 @@
             // Animation des inputs au focus
             const inputs = document.querySelectorAll('.form-control, .form-select');
             inputs.forEach(input => {
-                input.addEventListener('focus', function () {
+                input.addEventListener('focus', function() {
                     this.parentElement.style.transform = 'translateY(-2px)';
                     this.parentElement.style.transition = 'transform 0.3s ease';
                 });
 
-                input.addEventListener('blur', function () {
+                input.addEventListener('blur', function() {
                     this.parentElement.style.transform = 'translateY(0)';
                 });
             });
