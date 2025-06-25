@@ -36,16 +36,39 @@
                                     <i class="fas fa-lock"></i>
                                 </span>
                                 <input type="password" class="form-control @error('password') is-invalid @enderror"
-                                    id="password" name="password" placeholder="••••••••" required
+                                    id="password" name="password" placeholder="Entrez votre mot de passe" required
                                     autocomplete="current-password">
-                                <button class="btn btn-outline-secondary toggle-password" type="button">
+                                <button class="btn btn-outline-secondary toggle-password" type="button"
+                                    aria-label="Afficher/masquer le mot de passe">
                                     <i class="fas fa-eye"></i>
+                                    <span class="visually-hidden">Afficher le mot de passe</span>
                                 </button>
                                 @error('password')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
+                            <small class="text-muted">Minimum 8 caractères avec des chiffres et lettres</small>
                         </div>
+
+                        <!-- Script pour basculer la visibilité du mot de passe -->
+                        <script>
+                            document.querySelectorAll('.toggle-password').forEach(button => {
+                                button.addEventListener('click', function() {
+                                    const passwordInput = this.previousElementSibling;
+                                    const icon = this.querySelector('i');
+
+                                    if (passwordInput.type === 'password') {
+                                        passwordInput.type = 'text';
+                                        icon.classList.replace('fa-eye', 'fa-eye-slash');
+                                        this.setAttribute('aria-label', 'Masquer le mot de passe');
+                                    } else {
+                                        passwordInput.type = 'password';
+                                        icon.classList.replace('fa-eye-slash', 'fa-eye');
+                                        this.setAttribute('aria-label', 'Afficher le mot de passe');
+                                    }
+                                });
+                            });
+                        </script>
 
                         <!-- Remember Me & Forgot Password -->
                         <div class="d-flex justify-content-between align-items-center mb-4">
