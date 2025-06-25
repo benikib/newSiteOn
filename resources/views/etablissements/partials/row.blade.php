@@ -28,7 +28,7 @@
 
 
             <!-- Bouton Modifier -->
-            <button class="btn btn-warning btn-sm px-2" data-bs-toggle="modal"
+            {{-- <button class="btn btn-warning btn-sm px-2" data-bs-toggle="modal"
                 data-bs-target="#editEtablissementModal{{ $etablissement->id }}" data-bs-toggle="tooltip"
                 title="Modifier">
                 <i class="fas fa-edit fa-fw"></i>
@@ -57,7 +57,7 @@
             <button class="btn btn-secondary btn-sm px-2" data-bs-toggle="modal"
                 data-bs-target="#galleryModal{{ $etablissement->id }}" data-bs-toggle="tooltip" title="Galerie">
                 <i class="fas fa-images fa-fw"></i>
-            </button>
+            </button> --}}
 
             <!-- Bouton Supprimer -->
             <form action="{{ route('etablissements.destroy', $etablissement->id) }}" method="POST" class="d-inline">
