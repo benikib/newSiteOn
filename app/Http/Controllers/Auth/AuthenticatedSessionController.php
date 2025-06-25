@@ -33,7 +33,7 @@ class AuthenticatedSessionController extends Controller
         // Redirection personnalisée si ce n'est pas un admin
         return redirect()->route('users.etablissements'); // Remplace par ta vraie route
     }
-
+       
     // Redirection par défaut
     return redirect()->intended(route('dashboard', absolute: false));
 }

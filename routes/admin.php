@@ -39,7 +39,7 @@ Route::delete('/service/{service}', [\App\Http\Controllers\ServiceController::cl
 Route::get('/users',[UserController::class,'index'])->name("users.index");
 Route::post('/users', [UserController::class,'store'])->name('users.store');
 Route::put( 'user/{user}',[UserController::class,'update'])->name('users.update');
-Route::get('/dashboard',[UserController::class, 'repportingAdmins'])->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard',[UserController::class, 'repportingAdmins'])->name('dashboard');
 
 Route::get('/publicites',[PubliciteController::class,'index'])->name("publicites.index");
 Route::post('/publicites', [PubliciteController::class,'store'])->name('publicites.store');
