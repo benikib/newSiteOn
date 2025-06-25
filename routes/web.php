@@ -57,13 +57,13 @@ Route::prefix('etablissements')->group(function () {
 // Routes pour les services
 Route::prefix('services')->group(function () {
     // Ajouter un nouveau service
-    Route::post('/', [ServiceController::class, 'store'])->name('etablissements.services.store');
+    Route::post('/ets', [ServiceController::class, 'store'])->name('etablissements.services.store');
 
     // Mettre à jour un service
     Route::put('/ets/{service}', [ServiceController::class, 'update'])->name('etablissements.services.update');
 
     // Supprimer un service
-    Route::delete('/{service}', [ServiceController::class, 'destroy'])->name('etablissements.services.destroy');
+    Route::delete('/ets/{service}', [ServiceController::class, 'destroy'])->name('etablissements.services.destroy');
 });
 
 // Routes pour les photos
