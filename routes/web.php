@@ -57,7 +57,7 @@ Route::prefix('etablissements')->group(function () {
 // Routes pour les services
 Route::prefix('services')->group(function () {
     // Ajouter un nouveau service
-    Route::post('/ets', [ServiceController::class, 'store'])->name('etablissements.services.store');
+    Route::post('/etablissements/ets', [ServiceController::class, 'store'])->name('etablissements.services.store');
 
     // Mettre à jour un service
     Route::put('/ets/{service}', [ServiceController::class, 'update'])->name('etablissements.services.update');
