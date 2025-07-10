@@ -2,8 +2,17 @@
     <td>
         <div class="d-flex px-2 align-items-center">
             <div class="me-3">
-                <img src="{{ asset('assets/img/small-logos/logo-spotify.svg') }}" class="avatar avatar-sm rounded-circle"
-                    alt="logo">
+
+                @if ($etablissement->photos->isNotEmpty())
+                    <img src="{{ asset('storage/' . str_replace('public/', '', $etablissement->photos->first()->image_path)) }}"
+                        class="avatar avatar-sm rounded-circle" alt="logo">
+                @else
+                    <img src="{{ asset('assets/img/small-logos/logo-ct.png') }}" class="avatar avatar-sm rounded-circle"
+                        alt="logo">
+                @endif
+
+
+
             </div>
             <div>
                 <h6 class="mb-0 text-sm">{{ $etablissement->nom }}</h6>

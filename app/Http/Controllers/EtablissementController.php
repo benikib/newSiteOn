@@ -12,6 +12,7 @@ use App\Models\Service;
 use App\Models\Publicite;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class EtablissementController extends Controller
@@ -206,31 +207,91 @@ public function note_moyenne(Request $request, Etablissement $etablissement)
             return redirect()->back()->withErrors(['error' => 'Erreur lors de la suppression de l\'établissement.']);
         }
     }
-    // EtablissementController.php
-    public function dashboard()
-    {
-        $stats = [
-            'total_etablissements' => Etablissement::count(),
-            'promotions_actives' => Promotion::where('date_fin', '>=', now())->count(),
-            'total_services' => Service::count(),
-            'total_publicites' => Publicite::count(),
-            'etablissements_recents' => Etablissement::where('created_at', '>=', now()->subDays(30))->count(),
-            'services_recents' => Service::where('created_at', '>=', now()->subDays(30))->count(),
-            'promotions_recents' => Promotion::where('created_at', '>=', now()->subDays(30))->count(),
-            'publicites_recents' => Publicite::where('created_at', '>=', now()->subDays(30))->count(),
-        ];
+    // EtablissementController.phpuse App\Models\Etablissement;
 
-        $typeEtablissements = TypeEtablissement::all();
-        $etablissements = Etablissement::withCount(['services', 'promotions', 'publicites', 'photos'])
-            ->with(['typeEtablissement', 'services', 'promotions'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
 
-        // Statistiques par type d'établissement
-        $statsParType = TypeEtablissement::withCount('etablissements')->get();
+public function dashboard()
+{
+    $userId = auth()->id();
+    
+    // Statistiques de base
+    $stats = [
+        'total_etablissements' => Etablissement::whereHas('users', function ($query) use ($userId) {
+            $query->where('users.id', $userId);
+        })->count(),
+        
+        'promotions_actives' => Service::whereNotNull('promotion')
+            ->where('promotion', '>', 0)
+            ->where('date_debut_promo', '<=', now())
+            ->where('date_fin_promo', '>=', now())
+            ->whereHas('etablissement', function($query) use ($userId) {
+                $query->whereHas('users', function($q) use ($userId) {
+                    $q->where('users.id', $userId);
+                });
+            })->count(),
+            
+        'total_services' => Service::whereHas('etablissement', function($query) use ($userId) {
+            $query->whereHas('users', function($q) use ($userId) {
+                $q->where('users.id', $userId);
+            });
+        })->count(),
+        
+        'total_publicites' => Publicite::whereHas('etablissement.users', function($query) use ($userId) {
+            $query->where('users.id', $userId);
+        })->count(),
+    ];
 
-        return view('etablissements.dashboard', compact('stats', 'etablissements', 'typeEtablissements', 'statsParType'));
+    // Données pour le graphique d'évolution mensuelle (6 derniers mois)
+    $monthlyData = [
+        'labels' => [],
+        'etablissements' => [],
+        'services' => [],
+        'publicites' => []
+    ];
+
+    for ($i = 5; $i >= 0; $i--) {
+        $date = now()->subMonths($i);
+        $monthYear = $date->translatedFormat('M Y');
+        
+        $monthlyData['labels'][] = $monthYear;
+        
+        $monthlyData['etablissements'][] = Etablissement::whereHas('users', function($q) use ($userId) {
+                $q->where('users.id', $userId);
+            })
+            ->whereYear('created_at', $date->year)
+            ->whereMonth('created_at', $date->month)
+            ->count();
+            
+        $monthlyData['services'][] = Service::whereHas('etablissement.users', function($q) use ($userId) {
+                $q->where('users.id', $userId);
+            })
+            ->whereYear('created_at', $date->year)
+            ->whereMonth('created_at', $date->month)
+            ->count();
+            
+        $monthlyData['publicites'][] = Publicite::whereHas('etablissement.users', function($q) use ($userId) {
+                $q->where('users.id', $userId);
+            })
+            ->whereYear('created_at', $date->year)
+            ->whereMonth('created_at', $date->month)
+            ->count();
     }
+
+    // Données pour le graphique de répartition par catégorie
+     $categories = Etablissement::whereHas('users', function($q) use ($userId) {
+        $q->where('users.id', $userId);
+    })
+    ->join('type_etablissements', 'type_etablissements.id', '=', 'etablissements.type_etablissement_id')
+    ->select('type_etablissements.nom', DB::raw('count(*) as total'))
+    ->groupBy('type_etablissements.nom')
+    ->pluck('total', 'nom');
+
+    return view('etablissements.dashboard', [
+        'stats' => $stats,
+        'monthlyData' => $monthlyData,
+        'categories' => $categories
+    ]);
+}
     public function updatetitre(Request $request, Etablissement $etablissement)
     {
 

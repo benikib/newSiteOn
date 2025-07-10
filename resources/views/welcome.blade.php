@@ -328,29 +328,32 @@
     <!-- Carrousel Publicitaire -->
     <div class="container mt-4">
         <div class="ad-carousel-container">
-            <h3 class="text-center mb-4 fw-semibold">Publicités </h3>
-            <div class="ad-track">
-                @forelse ($photos as $pub)
-                    <a href="{{ route('ets.info', [$pub->etablissement_id]) }}" class="ad-slide">
-                        <img src="{{ asset('storage/' . str_replace('public/', '', $pub->image_path)) }}" class="ad-image"
-                            alt="{{ $pub->titre }}" loading="lazy" onerror="this.src='/placeholder.jpg';">
-                        @if ($pub->titre)
-                            <div class="ad-title">{{ $pub->titre }}</div>
-                        @endif
-                    </a>
-                @empty
-                    <div class="text-center mb-4 fw-semibold">
-                        <p class="text-center mb-4 fw-semibold">Aucune publicité active pour le moment.</p>
-                    </div>
-                @endforelse
-            </div>
-            <button class="carousel-nav prev" aria-label="Précédent">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            <button class="carousel-nav next" aria-label="Suivant">
-                <i class="fas fa-chevron-right"></i>
-            </button>
-            <div class="indicators"></div>
+
+
+            @if (isset($photos) && $photos->isNotEmpty())
+            <h3 class="text-center mb-4 fw-semibold">Publicités</h3>
+                <div class="ad-track">
+                    @foreach ($photos as $pub)
+                        <a href="{{ route('ets.info', [$pub->etablissement_id]) }}" class="ad-slide">
+                            <img src="{{ asset('storage/' . str_replace('public/', '', $pub->image_path)) }}" class="ad-image"
+                                alt="{{ $pub->titre }}" loading="lazy" onerror="this.src='/placeholder.jpg';">
+                            @if ($pub->titre)
+                                <div class="ad-title">{{ $pub->titre }}</div>
+                            @endif
+                        </a>
+                    @endforeach
+                </div>
+
+                <button class="carousel-nav prev" aria-label="Précédent">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="carousel-nav next" aria-label="Suivant">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <div class="indicators"></div>
+            @else
+
+            @endif
         </div>
     </div>
 
