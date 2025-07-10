@@ -5,7 +5,7 @@
         <div class="w-100" style="max-width: 420px;">
             <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
                 <div class="card-header bg-primary text-white py-4">
-                    <h1 class="h4 text-center mb-0">{{ __('Login') }}</h1>
+                    <h1 class="h4 text-center mb-0">{{ __('Connexion') }}</h1>
                 </div>
 
                 <div class="card-body p-4">
@@ -14,13 +14,13 @@
 
                         <!-- Email Address -->
                         <div class="mb-3">
-                            <label for="email" class="form-label fw-medium">{{ __('Email Address') }}</label>
+                            <label for="email" class="form-label fw-medium">{{ __('Adresse e-mail') }}</label>
                             <div class="input-group">
                                 <span class="input-group-text">
                                     <i class="fas fa-envelope"></i>
                                 </span>
                                 <input type="email" class="form-control @error('email') is-invalid @enderror"
-                                    id="email" name="email" value="{{ old('email') }}" placeholder="your@email.com"
+                                    id="email" name="email" value="{{ old('email') }}" placeholder="votre@email.com"
                                     required autofocus autocomplete="email">
                                 @error('email')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -30,7 +30,7 @@
 
                         <!-- Password -->
                         <div class="mb-3">
-                            <label for="password" class="form-label fw-medium">{{ __('Password') }}</label>
+                            <label for="password" class="form-label fw-medium">{{ __('Mot de passe') }}</label>
                             <div class="input-group">
                                 <span class="input-group-text">
                                     <i class="fas fa-lock"></i>
@@ -74,7 +74,7 @@
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="remember_me" name="remember">
-                                <label class="form-check-label" for="remember_me">{{ __('Remember me') }}</label>
+                                <label class="form-check-label" for="remember_me">{{ __(' Se souvenir de moi') }}</label>
                             </div>
 
                             @if (Route::has('password.request'))

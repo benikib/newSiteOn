@@ -5,12 +5,14 @@ use App\Http\Controllers\PubliciteController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EtablissementController;
 use App\Http\Controllers\PhotoController;
+use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\TypeEtablissementController;
 use App\Http\Controllers\userController;
 use App\Http\Controllers\UserEtablissementController;
 use App\Models\Etablissement;
 use App\Models\Promotion;
 use App\Models\Publicite;
+use App\Models\Service;
 use App\Models\User;
 Route::middleware(['auth', 'etablissements'])->group(function () {
 Route::get('etablissement/services/{etablissement}', [\App\Http\Controllers\ServiceController::class, 'indexEtablissement'])->name('etablissements.services.index');
@@ -35,6 +37,10 @@ Route::get('etablissement/promotion/{promotion}/edit', [\App\Http\Controllers\Pr
 Route::put('etablissement/promotion/{promotion}', [\App\Http\Controllers\PromotionController::class, 'update'])->name('etablissements.promotions.update');
 Route::delete('etablissement/promotion/{promotion}', [\App\Http\Controllers\PromotionController::class, 'destroy'])->name('etablissements.promotions.destroy');
 Route::get('etablissement/{etablissement}/edit', [EtablissementController::class, 'edit'])->name('etablissements.edit');
+Route::post('/promotions/{service}', [ServiceController::class, 'promotion'])->name('services.promotion');
+Route::get('etablissements/utilisateurs', [EtablissementController::class, 'users_ets'])->name('etablissemensts.users.index');
+
+
 
 Route::get('users/etablissments', [UserEtablissementController::class, 'index'])->name('users.etablissements');
 Route::get('users/dashboard', [EtablissementController::class, 'dashboard'])->name('dashboard_ets');
@@ -42,7 +48,7 @@ Route::get('users/promotion/', [UserEtablissementController::class, 'promotion']
 
 Route::put('/ets/{id}', [EtablissementController::class, 'update'])->name('ets.update');
 Route::post('/ets', [EtablissementController::class, 'store'])->name('ets.store');
-Route::post('/ets/services/', [\App\Http\Controllers\ServiceController::class, 'store'])->name('service.store');
+Route::post('/ets/services/', [ServiceController::class, 'store'])->name('service.store');
 Route::post('/glerys', [\App\Http\Controllers\PhotoController::class, 'store'])->name('galleries.store');
 Route::resource('/galleries', PhotoController::class)->only([
     'store', 'destroy'

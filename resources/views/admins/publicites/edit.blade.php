@@ -25,6 +25,7 @@
                         <label for="dure{{ $publicite->id }}" class="form-label">Durée (en jours)</label>
                         <input type="number" class="form-control" id="dure{{ $publicite->id }}" name="dure" value="{{ $publicite->dure }}" min="1" required>
                     </div>
+                       <input type="hidden" name="status" value="active">
                     <div class="mb-3">
                         <label for="etablissement_id{{ $publicite->id }}" class="form-label">Établissement</label>
                         <select class="form-select" id="etablissement_id{{ $publicite->id }}" name="etablissement_id" required>

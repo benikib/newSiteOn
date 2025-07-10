@@ -1,7 +1,6 @@
 @extends('layouts.base')
 
 @section('content')
-
     <div class="container py-4">
         <!-- En-tête + bouton -->
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
@@ -60,28 +59,46 @@
                                         class="badge bg-light text-dark">{{ $etablissement->typeEtablissement->nom ?? 'N/A' }}</span>
                                 </td>
                                 <td class="px-4 py-3">{{ $etablissement->ville ?? 'N/A' }}</td>
+                                <!-- Colonne des statistiques -->
                                 <td class="px-4 py-3">
-                                    <div class="d-flex align-items-center gap-1">
-                                        <span class="badge bg-success">{{ $etablissement->services_count ?? 0 }}
-                                            services</span>
-                                        <span class="badge bg-info">{{ $etablissement->promotions_count ?? 0 }}
-                                            promotions</span>
-                                        <span class="badge bg-warning">{{ $etablissement->publicites_count ?? 0 }}
-                                            publicités</span>
+                                    <div class="d-flex flex-wrap align-items-center gap-2">
+                                        <span class="badge bg-success">
+                                            {{ $etablissement->services_count ?? 0 }} services
+                                        </span>
+                                        <span class="badge bg-info">
+                                            {{ $etablissement->promotions_count ?? 0 }} promotions
+                                        </span>
+                                        <span class="badge bg-warning text-dark">
+                                            {{ $etablissement->publicites_count ?? 0 }} publicités
+                                        </span>
                                     </div>
                                 </td>
+
+                                <!-- Colonne de la note et bouton -->
                                 <td class="px-4 py-3">
-                                    <div class="d-flex align-items-center">
-                                        <div class="text-warning me-2">
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star-o"></i>
+                                    <div class="d-flex flex-column align-items-start gap-1">
+                                        <div class="d-flex align-items-center text-warning">
+                                            @php
+                                                $note = round($etablissement->note_moyenne ?? 0);
+                                            @endphp
+                                            @for ($i = 1; $i <= 5; $i++)
+                                                @if ($i <= $note)
+                                                    <i class="fas fa-star"></i>
+                                                @else
+                                                    <i class="far fa-star"></i>
+                                                @endif
+                                            @endfor
+                                            <span
+                                                class="text-muted ms-2 small">({{ number_format($etablissement->note_moyenne, 1) }})</span>
                                         </div>
-                                        <span class="text-muted small">(4.0)</span>
+
+                                        <button class="btn btn-sm btn-outline-primary mt-1" data-bs-toggle="modal"
+                                            data-bs-target="#modalNote{{ $etablissement->id }}">
+                                            Noter
+                                        </button>
                                     </div>
                                 </td>
+
                                 <td class="px-4 py-3 text-end">
                                     <div class="btn-group" role="group">
                                         <a href="{{ route('etablissement.show', $etablissement->id) }}"
@@ -90,12 +107,79 @@
                                         </a>
 
 
-                                        <button class="btn btn-sm btn-outline-danger" title="Supprimer">
-                                            <i class="fas fa-trash"></i>
+                                        <!-- Bouton de suppression -->
+                                        <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+                                            data-bs-target="#modalDelete{{ $etablissement->id }}" title="Supprimer">
+                                            <i class="bi bi-trash"></i>
                                         </button>
+
                                     </div>
                                 </td>
                             </tr>
+                            <!-- Modal d'ajout de note -->
+                            <div class="modal fade" id="modalNote{{ $etablissement->id }}" tabindex="-1"
+                                aria-labelledby="modalNoteLabel{{ $etablissement->id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <form action="{{ route('etablissements.note_moyenne', $etablissement->id) }}"
+                                            method="POST">
+                                            @csrf
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="modalNoteLabel{{ $etablissement->id }}">Ajouter
+                                                    une
+                                                    note</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Fermer"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <input type="hidden" name="etablissement_id"
+                                                    value="{{ $etablissement->id }}">
+
+                                                <div class="mb-3">
+                                                    <label for="note_moyenne" class="form-label">Note (0 à 5)</label>
+                                                    <input type="number" step="0.1" min="0" max="5"
+                                                        class="form-control" name="note_moyenne" required>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Annuler</button>
+                                                <button type="submit" class="btn btn-primary">Enregistrer</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Modal de confirmation -->
+                            <div class="modal fade" id="modalDelete{{ $etablissement->id }}" tabindex="-1"
+                                aria-labelledby="modalDeleteLabel{{ $etablissement->id }}" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="modalDeleteLabel{{ $etablissement->id }}">
+                                                Confirmation de suppression</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Fermer"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Voulez-vous vraiment supprimer cet élément ?
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">Annuler</button>
+
+                                            <form action="{{ route('etablissements.destroy', $etablissement->id) }}"
+                                                method="POST">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger">Supprimer</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                         @empty
                             <tr>
                                 <td colspan="6" class="text-center py-5">
@@ -155,5 +239,4 @@
             });
         });
     </script>
-
 @endsection

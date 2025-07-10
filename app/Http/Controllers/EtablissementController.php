@@ -30,6 +30,17 @@ class EtablissementController extends Controller
 
         return view('admins.etablissements.index', compact('etablissements', 'typeEtablissements'));
     }
+    public function users_ets()
+    {
+       
+       $userEtablissements = UserEtablissement::with('user') 
+            ->where('etablissement_id', Auth::user()->usersEtablissements->first()?->etablissement_id)    
+            ->get();
+         
+
+            return view('etablissements.users_etablissements.index', compact('userEtablissements'));
+        
+        }
 
     /**
      * Show the form for creating a new resource.
@@ -168,9 +179,32 @@ class EtablissementController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Etablissement $etablissement)
+public function note_moyenne(Request $request, Etablissement $etablissement)
     {
-        //
+        
+        $request->validate([
+            'note_moyenne' => 'required|numeric|min:1|max:5',
+        ]);
+
+        try {
+            $etablissement->update([
+                
+                'note_moyenne' => $request->note_moyenne,
+            ]);
+
+            return redirect()->back()->with('success', 'Note ajoutée avec succès.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Erreur lors de l\'ajout de la note.']);
+        }
+    }
+     public function destroy(Etablissement $etablissement)
+    {
+        try {
+            $etablissement->delete();
+            return redirect()->back()->with('success', 'Établissement supprimé avec succès.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Erreur lors de la suppression de l\'établissement.']);
+        }
     }
     // EtablissementController.php
     public function dashboard()

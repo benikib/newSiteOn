@@ -174,7 +174,7 @@
                             <!-- Services Section -->
                             <div class="mb-4">
                                 <h4 class="section-title h5 mb-3">
-                                    Tarifs
+                                    Services
                                     <button class="btn btn-sm btn-primary add-btn" data-bs-toggle="modal"
                                         data-bs-target="#addServiceModal">
                                         <i class="fas fa-plus"></i> Ajouter
@@ -187,7 +187,7 @@
                                             <tr>
                                                 <th>Type</th>
                                                 <th>Description</th>
-                                                <th>Prix/jour</th>
+                                                <th>Tarifs</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -197,7 +197,39 @@
                                                     <td>{{ $service->nom }}</td>
                                                     <td>{{ $service->description ? Str::limit($service->description, 50, '...') : 'Aucune description' }}
                                                     </td>
-                                                    <td>{{ number_format($service->prix, 2) }} $</td>
+                                                    @php
+                                                        $prixInitial = $service->prix;
+                                                        $promotion = $service->promotion ?? 0;
+                                                        $dateFinPromo = $service->date_fin_promo ?? null;
+                                                        $promoValide =
+                                                            $promotion > 0 &&
+                                                            (!$dateFinPromo ||
+                                                                \Carbon\Carbon::parse($dateFinPromo)->isFuture());
+
+                                                        $reductionMontant = $promoValide
+                                                            ? ($prixInitial * $promotion) / 100
+                                                            : 0;
+                                                        $prixReduit = $prixInitial - $reductionMontant;
+                                                    @endphp
+
+                                                    <td>
+                                                        <div>
+                                                            <strong>{{ number_format($prixInitial, 2) }} $</strong>
+
+                                                            @if ($promoValide)
+                                                                <br>
+                                                                <span class="text-danger">
+                                                                    -{{ $promotion }}%
+                                                                    ({{ number_format($reductionMontant, 2) }} $)
+                                                                </span>
+                                                                <br>
+                                                                <span class="text-success fw-bold">
+                                                                    = {{ number_format($prixReduit, 2) }} $
+                                                                </span>
+                                                            @endif
+                                                        </div>
+                                                    </td>
+
                                                     <td>
                                                         <div class="d-flex gap-2">
                                                             <button class="btn btn-sm btn-outline-primary"
@@ -207,7 +239,16 @@
                                                                 data-service-desc="{{ $service->description }}"
                                                                 data-service-price="{{ $service->prix }}">
                                                                 <i class="fas fa-edit"></i>
+
                                                             </button>
+
+                                                            <button class="btn btn-sm btn-outline-secondary"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#servicePromotionsModal{{ $service->id }}">
+                                                                <i class="fas fa-tag"></i>
+                                                            </button>
+
+
                                                             <form
                                                                 action="{{ route('etablissements.services.destroy', $service->id) }}"
                                                                 method="POST">
@@ -221,6 +262,62 @@
                                                         </div>
                                                     </td>
                                                 </tr>
+                                                <!-- Modal de promotion -->
+                                                <div class="modal fade" id="servicePromotionsModal{{ $service->id }}"
+                                                    tabindex="-1" aria-labelledby="promoModalLabel{{ $service->id }}"
+                                                    aria-hidden="true">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <form action="{{ route('services.promotion', $service->id) }}"
+                                                                method="POST">
+                                                                @csrf
+                                                                <input type="hidden" name="service_id"
+                                                                    value="{{ $service->id }}">
+
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title"
+                                                                        id="promoModalLabel{{ $service->id }}">Ajouter
+                                                                        une promotion</h5>
+                                                                    <button type="button" class="btn-close"
+                                                                        data-bs-dismiss="modal"
+                                                                        aria-label="Fermer"></button>
+                                                                </div>
+
+                                                                <div class="modal-body">
+                                                                    <div class="mb-3">
+                                                                        <label for="promotion"
+                                                                            class="form-label">Promotion (%)</label>
+                                                                        <input type="number" name="promotion"
+                                                                            class="form-control" min="0"
+                                                                            max="100" step="0.1" required>
+                                                                    </div>
+
+                                                                    <div class="mb-3">
+                                                                        <label for="date_debut_promo"
+                                                                            class="form-label">Date de début</label>
+                                                                        <input type="date" name="date_debut_promo"
+                                                                            class="form-control" required>
+                                                                    </div>
+
+                                                                    <div class="mb-3">
+                                                                        <label for="date_fin_promo"
+                                                                            class="form-label">Date de fin</label>
+                                                                        <input type="date" name="date_fin_promo"
+                                                                            class="form-control" required>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary"
+                                                                        data-bs-dismiss="modal">Annuler</button>
+                                                                    <button type="submit"
+                                                                        class="btn btn-primary">Enregistrer</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                             @empty
                                                 <tr>
                                                     <td colspan="4" class="text-center text-muted py-3">Aucun service
@@ -508,7 +605,7 @@
                             <textarea class="form-control" name="description" rows="3"></textarea>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Prix (par jour)</label>
+                            <label class="form-label">Prix (en $)</label>
                             <input type="number" step="0.01" class="form-control" name="prix" required>
                         </div>
                     </div>
@@ -542,7 +639,7 @@
                             <textarea class="form-control" name="description" id="serviceDesc" rows="3"></textarea>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Prix (par jour)</label>
+                            <label class="form-label">Prix </label>
                             <input type="number" step="0.01" class="form-control" name="prix" id="servicePrice"
                                 required>
                         </div>

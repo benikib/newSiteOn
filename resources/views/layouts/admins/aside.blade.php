@@ -66,7 +66,7 @@
 
             <!-- Administration -->
             <li class="nav-item mt-3">
-                <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Administration</h6>
+                <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Gestion Utilisateur</h6>
             </li>
 
             <li class="nav-item">
@@ -79,6 +79,17 @@
                     <span class="nav-link-text ms-1">Utilisateurs</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admins.*') ? 'active' : '' }}"
+                    href="{{ route('admins.index') }}">
+                    <div
+                        class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-danger text-center me-2 d-flex align-items-center justify-content-center">
+                        <i class="fas fa-users-cog text-white"></i>
+                    </div>
+                    <span class="nav-link-text ms-1">Administrateurs</span>
+                </a>
+            </li>
+
 
             <!-- Compte utilisateur -->
             <li class="nav-item mt-3">

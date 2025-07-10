@@ -325,13 +325,10 @@
 @endsection
 
 @section('content')
-
-
-
     <!-- Carrousel Publicitaire -->
     <div class="container mt-4">
         <div class="ad-carousel-container">
-            <h3 class="text-center mb-4 fw-semibold">Nos Partenaires</h3>
+            <h3 class="text-center mb-4 fw-semibold">Publicités </h3>
             <div class="ad-track">
                 @forelse ($photos as $pub)
                     <a href="{{ route('ets.info', [$pub->etablissement_id]) }}" class="ad-slide">
@@ -342,12 +339,9 @@
                         @endif
                     </a>
                 @empty
-                    @for ($i = 0; $i < 4; $i++)
-                        <div class="ad-slide">
-                            <img src="/placeholder.jpg" class="ad-image" alt="Exemple publicité" loading="lazy">
-                            <div class="ad-title">Publicité {{ $i + 1 }}</div>
-                        </div>
-                    @endfor
+                    <div class="text-center mb-4 fw-semibold">
+                        <p class="text-center mb-4 fw-semibold">Aucune publicité active pour le moment.</p>
+                    </div>
                 @endforelse
             </div>
             <button class="carousel-nav prev" aria-label="Précédent">
@@ -403,7 +397,7 @@
                                     <label class="form-label fw-semibold">Type d'établissement</label>
                                     <select class="form-select border-primary" name="type_etablissement">
                                         <option value="">Tous types</option>
-                                        @foreach (\App\Models\TypeEtablissement::all() as $type)
+                                        @foreach ($typesAvecEtablissements as $type)
                                             <option value="{{ $type->nom }}"
                                                 {{ request('type_etablissement') == $type->nom ? 'selected' : '' }}>
                                                 {{ $type->nom }}
@@ -465,8 +459,7 @@
                                 <div class="col-md-4">
                                     <div class="form-check mt-4 pt-2">
                                         <input class="form-check-input" type="checkbox" name="has_publicite"
-                                            id="hasPublicite" value="1"
-                                            {{ request('has_publicite') ? 'checked' : '' }}>
+                                            id="hasPublicite" value="1" {{ request('has_publicite') ? 'checked' : '' }}>
                                         <label class="form-check-label fw-semibold" for="hasPublicite">
                                             Avec publicités actives
                                         </label>
@@ -657,5 +650,4 @@
             });
         });
     </script>
-
 @endsection

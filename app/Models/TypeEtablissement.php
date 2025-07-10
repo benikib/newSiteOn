@@ -22,6 +22,10 @@ class TypeEtablissement extends Model
     {
         return $this->hasMany(Service::class, 'type_etablissement_id');
     }
-  
+  public function scopeAvecEtablissements($query)
+{
+    return $query->whereHas('etablissements');
+}
+
 
 }

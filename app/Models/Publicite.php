@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class Publicite extends Model
 {
@@ -15,13 +16,23 @@ class Publicite extends Model
         'date',
         'etablissement_id',
         'dure',
-        'image_path'
+        'image_path',
+        'status',
+        'promotion'
     ];
     public function etablissement()
     {
         return $this->belongsTo(Etablissement::class);
     }
-    
+
+
+public function scopeActives($query)
+{
+    return $query->where('status', 'active')
+                 ->whereRaw("DATE_ADD(date, INTERVAL dure DAY) >= ?", [now()->toDateString()]);
+}
+
+
  
    
     

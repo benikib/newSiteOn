@@ -3,7 +3,7 @@
     <div class="container">
         <!-- Brand Logo with Animation -->
         <a class="navbar-brand fw-bold" href="{{ url('/') }}" style="transition: all 0.3s ease;">
-            <i class="fas fa-building me-2"></i>MonSite
+            <i class="fas fa-building me-2"></i>NewSite
         </a>
 
         <!-- Mobile Toggle Button -->
@@ -30,11 +30,7 @@
                         <i class="fas fa-envelope me-1"></i> Contactez-nous
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <i class="fas fa-search me-1"></i> Recherche
-                    </a>
-                </li>
+
             </ul>
 
             <!-- Auth Buttons -->
@@ -44,9 +40,9 @@
                         <i class="fas fa-sign-in-alt me-1"></i> Connexion
                     </a>
                     @if (Route::has('register'))
-                        <a href="{{ route('register') }}" class="btn btn-light text-primary fw-medium">
+                        {{-- <a href="{{ route('register') }}" class="btn btn-light text-primary fw-medium">
                             <i class="fas fa-user-plus me-1"></i> Inscription
-                        </a>
+                        </a> --}}
                     @endif
                 @else
                     <!-- User Dropdown -->

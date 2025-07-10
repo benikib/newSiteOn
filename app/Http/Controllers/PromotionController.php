@@ -91,6 +91,11 @@ class PromotionController extends Controller
      */
     public function destroy(Promotion $promotion)
     {
-        //
+        try {
+            $promotion->delete();
+            return redirect()->back()->with('success', 'Promotion supprimée avec succès.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Erreur lors de la suppression de la promotion.']);
+        }
     }
 }

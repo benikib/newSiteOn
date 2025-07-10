@@ -174,7 +174,7 @@
                             <!-- Services Section -->
                             <div class="mb-4">
                                 <h4 class="section-title h5 mb-3">
-                                    Tarifs
+                                    Services
                                     <button class="btn btn-sm btn-primary add-btn" data-bs-toggle="modal"
                                         data-bs-target="#addServiceModal">
                                         <i class="fas fa-plus"></i> Ajouter
@@ -187,7 +187,7 @@
                                             <tr>
                                                 <th>Type</th>
                                                 <th>Description</th>
-                                                <th>Prix/jour</th>
+                                                <th>Tarifis</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -507,7 +507,7 @@
                             <textarea class="form-control" name="description" rows="3"></textarea>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Prix (par jour)</label>
+                            <label class="form-label">Prix </label>
                             <input type="number" step="0.01" class="form-control" name="prix" required>
                         </div>
                     </div>
@@ -541,7 +541,7 @@
                             <textarea class="form-control" name="description" id="serviceDesc" rows="3"></textarea>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Prix (par jour)</label>
+                            <label class="form-label">Prix </label>
                             <input type="number" step="0.01" class="form-control" name="prix" id="servicePrice"
                                 required>
                         </div>

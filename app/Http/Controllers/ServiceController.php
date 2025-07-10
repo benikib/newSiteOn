@@ -112,12 +112,38 @@ class ServiceController extends Controller
             return redirect()->back()->withErrors($e->validator)->withInput();
         }
     }
+    public function promotion(Request $request, Service $service){
+       
+        try {
+            $request->validate([
+                'promotion' => 'required|numeric|min:0|max:100',
+                'date_debut_promo' => 'required|date',
+                'date_fin_promo' => 'required|date|after_or_equal:date_debut_promo',
+            ]);
+
+           $serviceok = $service->update([
+                'promotion' => $request->input('promotion'),
+                'date_debut_promo' => $request->input('date_debut_promo'),
+                'date_fin_promo' => $request->input('date_fin_promo'),
+            ]);
+       
+
+            return redirect()->back()->with('success', 'Promotion mise à jour avec succès.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()->withErrors($e->validator)->withInput();
+        }
+    }
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(Service $service)
     {
-        //
+        try {
+            $service->delete();
+            return redirect()->back()->with('success', 'Service supprimé avec succès.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Erreur lors de la suppression du service.']);
+        }
     }
 }

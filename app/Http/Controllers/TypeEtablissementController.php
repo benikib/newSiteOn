@@ -95,10 +95,13 @@ class TypeEtablissementController extends Controller
      */
     public function destroy(TypeEtablissement $typeEtablissement)
     {
+      
         try {
+            
             $typeEtablissement->delete();
             return redirect()->route('type_etablissements.index')->with('success', 'Type d\'établissement supprimé avec succès.');
         } catch (\Exception $e) {
+              
             return redirect()->back()->with('error', 'Erreur lors de la suppression du type d\'établissement.');
         }
     }

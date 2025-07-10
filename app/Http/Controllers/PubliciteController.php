@@ -41,7 +41,8 @@ class PubliciteController extends Controller
                 'date' => 'required|date',
                 'etablissement_id' => 'required|exists:etablissements,id',
                 'dure' => 'required|integer|min:1',
-                'image' => 'required'
+                'image' => 'required',
+                'status'    => 'required|', // Ajout de la validation pour le statut
             ]);
              $path = $request->file('image')->store('photos', 'public');
 
@@ -94,6 +95,7 @@ class PubliciteController extends Controller
                 'date' => 'required|date',
                 'etablissement_id' => 'required|exists:etablissements,id',
                 'dure' => 'required|integer|min:1',
+                'status' => 'required|in:active,inactive,planned', // Validation pour le statut
             ]);
 
 

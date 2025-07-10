@@ -26,7 +26,7 @@
                         <input type="number" class="form-control" id="duree" name="dure" min="1"
                             required>
                     </div>
-                     <div class="mb-3">
+                    <div class="mb-3">
                         <label class="form-label">Image</label>
                         <input type="file" name="image" class="form-control" accept="image/*" required>
                         <small class="text-muted">Formats acceptés: JPG, PNG, GIF (Max: 2MB)</small>
@@ -39,7 +39,7 @@
                                 <option value="{{ $etablissement->id }}">{{ $etablissement->nom }}</option>
                             @endforeach
                         </select>
-
+                        <input type="hidden" name="status" value="active">
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>

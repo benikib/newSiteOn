@@ -21,7 +21,7 @@ return new class extends Migration {
                 ->constrained('etablissements')
                 ->onDelete('cascade');
             $table->string('categorie')->nullable();
-            $table->decimal('promotion', 5, 2)->nullable();
+            $table->decimal('promotion')->nullable();
             $table->timestamp('date_debut_promo')->nullable();
             $table->timestamp('date_fin_promo')->nullable();
             $table->timestamps();

@@ -66,7 +66,7 @@
 
     .gallery-item:hover {
         transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     }
 
     .gallery-item img {
@@ -85,7 +85,7 @@
         bottom: 0;
         left: 0;
         right: 0;
-        background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
         padding: 1rem;
         color: white;
         opacity: 0;
@@ -104,7 +104,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(0,0,0,0.9);
+        background: rgba(0, 0, 0, 0.9);
         z-index: 1000;
         padding: 2rem;
     }
@@ -143,7 +143,7 @@
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
-        background: rgba(255,255,255,0.1);
+        background: rgba(255, 255, 255, 0.1);
         color: white;
         border: none;
         width: 40px;
@@ -154,11 +154,16 @@
     }
 
     .modal-nav:hover {
-        background: rgba(255,255,255,0.2);
+        background: rgba(255, 255, 255, 0.2);
     }
 
-    .modal-prev { left: 1rem; }
-    .modal-next { right: 1rem; }
+    .modal-prev {
+        left: 1rem;
+    }
+
+    .modal-next {
+        right: 1rem;
+    }
 
     .gallery-title {
         position: relative;
@@ -177,6 +182,11 @@
     }
 </style>
 @section('content')
+    @php
+        use Carbon\Carbon;
+        $taux = \App\Models\TauxDeChange::where('date', today())->first()?->usd_cdf ?? 2500;
+    @endphp
+
     <div class="container py-4 py-lg-5">
         <div class="row justify-content-center">
             <div class="col-lg-10">
@@ -244,14 +254,25 @@
 
                             <p class="description-text text-muted mb-4">{{ $etablissement->description }}</p>
 
-                            <h4 class="section-title h5 mb-3">Tarifs</h4>
+                            <h4 class="section-title h5 mb-3">Services</h4>
                             <div class="table-responsive mb-4">
+                                <div class="mb-3">
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-outline-primary btn-sm"
+                                            id="btn-usd">Afficher en USD</button>
+                                        <button type="button" class="btn btn-outline-success btn-sm active"
+                                            id="btn-cdf">Afficher en CDF</button>
+                                    </div>
+                                </div>
+
+
                                 <table class="table price-table table-hover table-bordered">
                                     <thead class="table-light">
                                         <tr>
                                             <th scope="col">Type</th>
                                             <th scope="col">Description</th>
-                                            <th scope="col">Prix/jour</th>
+                                            <th scope="col">Tarifs</th>
+                                            <th scope="col">Disponibilites</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -265,14 +286,112 @@
                                                         {{ $service->description ? Str::limit($service->description, 50, '...') : 'Aucune description' }}
                                                     </p>
                                                 </td>
-                                                <td class="fw-bold">{{ number_format($service->prix, 2) }} $</td>
+
+                                                @php
+                                                    $prixInitial = $service->prix;
+                                                    $promotion = $service->promotion ?? 0;
+                                                    $dateFinPromo = $service->date_fin_promo ?? null;
+                                                    $promoValide =
+                                                        $promotion > 0 &&
+                                                        (!$dateFinPromo || Carbon::parse($dateFinPromo)->isFuture());
+
+                                                    $reductionUSD = $promoValide
+                                                        ? ($prixInitial * $promotion) / 100
+                                                        : 0;
+                                                    $prixUSD = $prixInitial - $reductionUSD;
+
+                                                    $prixCDFInitial = $prixInitial * $taux;
+                                                    $reductionCDF = $promoValide
+                                                        ? ($prixCDFInitial * $promotion) / 100
+                                                        : 0;
+                                                    $prixCDF = $prixCDFInitial - $reductionCDF;
+                                                @endphp
+
+                                                <td>
+                                                    <div class="usd-price d-none">
+                                                        @if ($promoValide)
+                                                            <span class="badge bg-danger mb-1">Promo
+                                                                -{{ $promotion }}%</span><br>
+                                                        @endif
+                                                        <strong>{{ number_format($prixUSD, 2) }} $</strong>
+                                                    </div>
+
+                                                    <div class="cdf-price">
+                                                        @if ($promoValide)
+                                                            <span class="badge bg-danger mb-1">Promo
+                                                                -{{ $promotion }}%</span><br>
+                                                        @endif
+                                                        <strong>{{ number_format($prixCDF, 0) }} CDF</strong>
+                                                    </div>
+                                                </td>
+
+
+
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary mb-2" type="button"
+                                                        onclick="toggleCalendar({{ $service->id }})">
+                                                        Voir les dates
+                                                    </button>
+
+                                                    <div id="calendar-wrapper-{{ $service->id }}" class="d-none">
+                                                        <input type="text" class="calendar-{{ $service->id }}"
+                                                            readonly />
+                                                    </div>
+
+                                                    <script>
+                                                        flatpickr(".calendar-{{ $service->id }}", {
+                                                            inline: true,
+                                                            locale: "fr",
+                                                            minDate: "today"
+
+                                                        });
+
+
+
+                                                        function toggleCalendar(id) {
+                                                            const calendar = document.getElementById('calendar-wrapper-' + id);
+                                                            calendar.classList.toggle('d-none');
+                                                        }
+                                                    </script>
+                                                </td>
+
+                                                <style>
+                                                    /* Réduction taille générale */
+                                                    .flatpickr-calendar.inline {
+                                                        max-width: 250px;
+                                                        font-size: 10px;
+                                                        padding: 1px;
+                                                    }
+
+                                                    /* Réduction jours */
+                                                    .flatpickr-day {
+                                                        width: 30px !important;
+                                                        height: 20px !important;
+                                                        line-height: 20px !important;
+                                                        margin: 1px !important;
+                                                        font-size: 10px !important;
+                                                    }
+
+                                                    /* Réduction en-têtes */
+                                                    .flatpickr-months,
+                                                    .flatpickr-weekdays {
+                                                        font-size: 10px !important;
+                                                    }
+
+                                                    .flatpickr-month {
+                                                        padding: 2px 0;
+                                                    }
+                                                </style>
+
+
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="3" class="text-center text-muted py-3">Aucun service
+                                                <td colspan="4" class="text-center text-muted py-3">Aucun service
                                                     disponible</td>
                                             </tr>
                                         @endforelse
+
                                     </tbody>
                                 </table>
                             </div>
@@ -294,23 +413,7 @@
                                     </div>
                                 </div>
 
-                                {{-- <div class="col-md-6">
-                                    <h4 class="section-title h5 mb-3">Horaires</h4>
-                                    <ul class="list-unstyled">
-                                        <li class="d-flex justify-content-between mb-1">
-                                            <span>Lundi - Vendredi</span>
-                                            <span class="fw-bold">08:00 - 18:00</span>
-                                        </li>
-                                        <li class="d-flex justify-content-between mb-1">
-                                            <span>Samedi</span>
-                                            <span class="fw-bold">09:00 - 14:00</span>
-                                        </li>
-                                        <li class="d-flex justify-content-between">
-                                            <span>Dimanche</span>
-                                            <span class="fw-bold">Fermé</span>
-                                        </li>
-                                    </ul>
-                                </div> --}}
+
                             </div>
                         </div>
                     </div>
@@ -329,9 +432,7 @@
                         @forelse ($etablissement->photos as $photo)
                             <div class="gallery-item" onclick="openGallery({{ $loop->index }})">
                                 <img src="{{ asset('storage/' . str_replace('public/', '', $photo->image_path)) }}"
-                                     alt="{{ $photo->titre }}"
-                                     loading="lazy"
-                                     onerror="this.src='/placeholder.jpg';">
+                                    alt="{{ $photo->titre }}" loading="lazy" onerror="this.src='/placeholder.jpg';">
                                 <div class="overlay">
                                     <p class="mb-0">{{ $photo->titre }}</p>
                                 </div>
@@ -360,6 +461,24 @@
             <img id="modalImage" src="" alt="">
         </div>
     </div>
+    <script>
+        const btnUSD = document.getElementById('btn-usd');
+        const btnCDF = document.getElementById('btn-cdf');
+
+        btnUSD.addEventListener('click', () => {
+            btnUSD.classList.add('active');
+            btnCDF.classList.remove('active');
+            document.querySelectorAll('.usd-price').forEach(el => el.classList.remove('d-none'));
+            document.querySelectorAll('.cdf-price').forEach(el => el.classList.add('d-none'));
+        });
+
+        btnCDF.addEventListener('click', () => {
+            btnCDF.classList.add('active');
+            btnUSD.classList.remove('active');
+            document.querySelectorAll('.usd-price').forEach(el => el.classList.add('d-none'));
+            document.querySelectorAll('.cdf-price').forEach(el => el.classList.remove('d-none'));
+        });
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -422,7 +541,7 @@
         document.addEventListener('keydown', function(e) {
             if (!modal.classList.contains('active')) return;
 
-            switch(e.key) {
+            switch (e.key) {
                 case 'Escape':
                     closeGallery();
                     break;

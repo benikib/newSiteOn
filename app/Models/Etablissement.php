@@ -22,6 +22,7 @@ class Etablissement extends Model
         'latitude',
         'longitude',
         'telephone',
+        'note_moyenne',
         'type_etablissement_id',
         'image_path',
         'facebook', 'twitter', 'instagram'

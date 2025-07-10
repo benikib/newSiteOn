@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Photo;
+use App\Models\Publicite;
+use App\Models\TypeEtablissement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -15,14 +17,21 @@ class PhotoController extends Controller
     public function index()
     {
         // Récupérer toutes les photos
-        $photos = Photo::all();
+        $photos = $publicitesActives = Publicite::actives()
+        ->orderBy('id', 'desc')
+        ->get();
+
+
+
+       $typesAvecEtablissements = TypeEtablissement::with('etablissements')->avecEtablissements()->get();
+
 
         // Si vous souhaitez filtrer les photos par établissement, vous pouvez le faire ici
         // Par exemple, si vous avez un paramètre de requête 'etablissement_id', vous pouvez filtrer comme suit :
         // $photos = Photo::where('etablissement_id', $request->query('etablissement_id'))->get();
 
         // Retourner la vue avec les photos
-        return view('welcome', compact('photos'));
+        return view('welcome', compact('photos', 'typesAvecEtablissements'));
     }
 public function storess(Request $request)
     {

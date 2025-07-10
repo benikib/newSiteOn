@@ -11,9 +11,15 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-     public function index()
+     public function admins()
     {
-        $users = User::all();
+        $users = User::where('role', 'admin')->get();
+        return view('admins.users.index',compact("users"));
+
+    }
+      public function index()
+    {
+        $users = User::where('role', '!=', 'admin')->get();
         return view('admins.users.index',compact("users"));
 
     }
@@ -33,6 +39,8 @@ class UserController extends Controller
     }
 public function repportingAdmins()
 {
+     $taux = \App\Models\TauxDeChange::all();
+    
     $users = User::all();
     // Données pour le graphique des inscriptions
     $registrationDates = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai'];
@@ -203,7 +211,7 @@ public function repportingAdmins()
     }
     public function ets_info($etablissement_id)
     {
-        $etablissement = \App\Models\Etablissement::with('typeEtablissement')->findOrFail($etablissement_id);
+        $etablissement = Etablissement::with('typeEtablissement')->findOrFail($etablissement_id);
         $typesEtablissement =TypeEtablissement::all();
         if (!$etablissement) {
             return redirect()->back()->with('error', 'Etablissement not found.');
@@ -226,6 +234,7 @@ public function repportingAdmins()
 
     return view('partials.resultat', compact('etablissements', 'services', 'query'));
 }
+
 public function search(Request $request)
 {
     $query = $request->input('query');
@@ -234,7 +243,7 @@ public function search(Request $request)
     $commune = $request->input('commune');
     $quartier = $request->input('quartier');
     $noteMin = $request->input('note_min');
-    
+
     $budgetMax = $request->input('budget_max');
     // $hasPublicite = $request->input('has_publicite');
     // $hasPromotion = $request->input('has_promotion');
@@ -268,7 +277,7 @@ public function search(Request $request)
         $subQuery->where('prix', '<=', $budgetMax);
     });
 })
-        
+
         ->when($quartier, function($q) use ($quartier) {
             $q->where('quartier', 'like', "%{$quartier}%");
         })

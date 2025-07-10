@@ -5,11 +5,12 @@
     <div class="container-fluid py-4">
         <div class="row justify-content-center">
             <!-- Statistiques Utilisateurs -->
+
             <div class="col-lg-3 col-md-6 col-12 mb-4">
                 <div class="card h-100">
                     <div class="card-body p-3 text-center">
                         <div class="icon icon-shape bg-white shadow text-center border-radius-2xl mx-auto">
-                            <i class="ni ni-circle-08 text-dark text-gradient text-lg opacity-10" aria-hidden="true"></i>
+                            <i class="bi bi-person-circle fs-3 text-dark opacity-75" aria-hidden="true"></i>
                         </div>
                         <h5 class="text-dark font-weight-bolder mb-0 mt-3">
                             {{ $users->count() }}
@@ -20,11 +21,14 @@
                             <div class="dropdown ms-auto">
                                 <a href="javascript:;" class="cursor-pointer" id="dropdownUsers1" data-bs-toggle="dropdown"
                                     aria-expanded="false">
-                                    <i class="fa fa-ellipsis-h text-dark"></i>
+                                    <i class="bi bi-three-dots-vertical text-dark"></i>
                                 </a>
                                 <ul class="dropdown-menu px-2 py-3" aria-labelledby="dropdownUsers1">
-                                    <li><a class="dropdown-item border-radius-md" href="{{ route('users.index') }}">Voir
-                                            tous</a></li>
+                                    <li>
+                                        <a class="dropdown-item border-radius-md" href="{{ route('users.index') }}">
+                                            Voir tous
+                                        </a>
+                                    </li>
                                 </ul>
                             </div>
                             @php
@@ -40,6 +44,7 @@
                     </div>
                 </div>
             </div>
+
 
             <!-- Statistiques Etablissements -->
             <div class="col-lg-3 col-md-6 col-12 mb-4">

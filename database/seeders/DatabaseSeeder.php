@@ -7,6 +7,7 @@ use App\Models\Photo;
 use App\Models\Promotion;
 use App\Models\Publicite;
 use App\Models\Service;
+use App\Models\TauxDeChange;
 use App\Models\TypeEtablissement;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -24,7 +25,11 @@ class DatabaseSeeder extends Seeder
         Storage::deleteDirectory('public/publicites');
         Storage::makeDirectory('public/photos');
         Storage::makeDirectory('public/publicites');
-
+        
+        TauxDeChange::updateOrCreate(
+                ['date' => now()->format('Y-m-d')],
+                ['usd_cdf' => rand(2500, 2800) + rand(0, 99)/100]
+            );
         // Créer les utilisateurs
         $this->command->info('Création des utilisateurs...');
         $admin = User::updateOrCreate(
