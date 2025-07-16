@@ -22,7 +22,7 @@
     </div>
     <!-- Bouton pour ouvrir le modal -->
     @php
-        $taux = \App\Models\TauxDeChange::where('date', today())->first();
+        $taux = \App\Models\TauxDeChange::all()->first();
     @endphp
 
     <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editTauxModal">
@@ -41,7 +41,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
             </div>
             <div class="modal-body">
-                <form method="POST" action="{{ route('taux.update', $taux?->id ?? 0) }}">
+                <form method="POST" action="{{ route('taux.update', $taux?->id ?? 1) }}">
                     @csrf
                     @method('PUT')
 

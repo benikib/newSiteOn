@@ -32,4 +32,8 @@ class Service extends Model
     {
         return $this->hasMany(Photo::class, 'service_id');
     }
+    public function reservations()
+    {
+        return $this->hasMany(Reservation::class, 'service_id');
+    }
 }

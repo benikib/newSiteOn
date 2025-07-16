@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Etablissement;
+use App\Models\Publicite;
 use App\Models\Service;
 use App\Models\TypeEtablissement;
 use App\Models\User;
@@ -211,16 +212,22 @@ public function repportingAdmins()
     }
     public function ets_info($etablissement_id)
     {
-        $etablissement = Etablissement::with('typeEtablissement')->findOrFail($etablissement_id);
+           $photos = $publicitesActives = Publicite::actives()
+        ->orderBy('id', 'desc')
+        ->get();
+     $etablissement = Etablissement::with('typeEtablissement')->findOrFail($etablissement_id);
         $typesEtablissement =TypeEtablissement::all();
         if (!$etablissement) {
             return redirect()->back()->with('error', 'Etablissement not found.');
         }
-        return view('partials.resultatseach', compact('etablissement', 'typesEtablissement'));
+        return view('partials.resultatseach', compact('etablissement', 'typesEtablissement','photos'));
     }
     public function ets(Request $request)
 {
-    $query = $request->input('query');
+    
+    $photos = $publicitesActives = Publicite::actives()
+        ->orderBy('id', 'desc')
+        ->get();
 
     // Recherche dans les établissements
     $etablissements = Etablissement::where('nom', 'like', "%{$query}%")

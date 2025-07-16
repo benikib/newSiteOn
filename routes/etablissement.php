@@ -5,6 +5,7 @@ use App\Http\Controllers\PubliciteController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EtablissementController;
 use App\Http\Controllers\PhotoController;
+use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\TypeEtablissementController;
 use App\Http\Controllers\userController;
@@ -45,6 +46,9 @@ Route::get('etablissements/utilisateurs', [EtablissementController::class, 'user
 Route::get('users/etablissments', [UserEtablissementController::class, 'index'])->name('users.etablissements');
 Route::get('users/dashboard', [EtablissementController::class, 'dashboard'])->name('dashboard_ets');
 Route::get('users/promotion/', [UserEtablissementController::class, 'promotion'])->name('users.promotions');
+Route::post('/reservations/{id}/statut', [App\Http\Controllers\ReservationController::class, 'changerStatut']);
+
+Route::get('/reservation/ets', [ReservationController::class, 'index'])->name('etablissements.reservation.index');
 
 Route::put('/ets/{id}', [EtablissementController::class, 'update'])->name('ets.update');
 Route::post('/ets', [EtablissementController::class, 'store'])->name('ets.store');

@@ -9,6 +9,7 @@ class TauxController extends Controller
 {
     public function update(Request $request, TauxDeChange $taux)
 {
+
     $request->validate([
         'usd_cdf' => 'required|numeric|min:1',
         'date' => 'required|date|unique:taux_de_changes,date,' . $taux->id,

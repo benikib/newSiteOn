@@ -6,6 +6,7 @@ use App\Http\Controllers\TypeEtablissementController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EtablissementController;
+use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\ServiceController;
 
 Route::get('/', [PhotoController::class, 'index'])->name('welcome');
@@ -16,6 +17,9 @@ Route::get('/grilles', function() {
 
 Route::get('/results', [UserController::class,'search'])->
 name('search');
+
+Route::post('/reservations', [ReservationController::class, 'store']);
+
 
 // Route::get('/search', function() {
 //     // Vous pouvez implémenter la logique de recherche ici

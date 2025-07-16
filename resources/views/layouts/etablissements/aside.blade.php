@@ -37,7 +37,18 @@
                     <span class="nav-link-text ms-1">Établissements</span>
                 </a>
             </li>
-              <li class="nav-item">
+            <!-- Réservations -->
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('etablissements.reservation.*') ? 'active' : '' }}"
+                    href="{{ route('etablissements.reservation.index') }}">
+                    <div
+                        class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-danger text-center me-2 d-flex align-items-center justify-content-center">
+                        <i class="fas fa-users-cog text-white"></i>
+                    </div>
+                    <span class="nav-link-text ms-1">Reservation</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('etablissemensts.users.*') ? 'active' : '' }}"
                     href="{{ route('etablissemensts.users.index') }}">
                     <div
@@ -58,16 +69,16 @@
                 </a>
             </li> --}}
 
-
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('logout') }}"
-                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
                     <div
                         class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-secondary text-center me-2 d-flex align-items-center justify-content-center">
                         <i class="fas fa-sign-out-alt text-white"></i>
                     </div>
                     <span class="nav-link-text ms-1">Déconnexion</span>
                 </a>
+
+                <!-- Formulaire caché -->
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                     @csrf
                 </form>
