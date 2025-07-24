@@ -31,6 +31,7 @@ Route::put('etablissement/publicite/{publicite}', [\App\Http\Controllers\Publici
 Route::delete('etablissement/publicite/{publicite}', [\App\Http\Controllers\PubliciteController::class, 'destroy'])->name('etablissements.publicites.destroy');
 
 
+
 Route::get('etablissement/promotions/{etablissement}', [\App\Http\Controllers\PromotionController::class, 'indexEtablissement'])->name('etablissements.promotions.index');
 Route::get('etablissement/promotion/create/{etablissement}', [\App\Http\Controllers\PromotionController::class, 'create'])->name('etablissements.promotions.create');
 Route::post('etablissement/promotion/{promotion}', [\App\Http\Controllers\PromotionController::class, 'store'])->name('etablissements.promotions.store');
@@ -68,3 +69,5 @@ Route::put( 'publicites/{user}',[PubliciteController::class,'update'])->name('pu
 Route::delete('/publicites/{id}', [PubliciteController::class,'destroy'])->name('publicite.destroy');
 Route::resource('promotions', PromotionController::class)->except(['show']);
 });
+
+

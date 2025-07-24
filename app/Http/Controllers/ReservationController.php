@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Etablissement;
 use Illuminate\Http\Request;
-   
+
 use App\Models\Reservation;
+use App\Models\Service;
 
 class ReservationController extends Controller
 {
@@ -14,8 +15,28 @@ class ReservationController extends Controller
 
 public function index()
 {
-    $etablissements = Etablissement::paginate(10);
-    $reservations = Reservation::with('service')->latest()->paginate(10);
+    $etablissements = Etablissement::whereHas('users', function($query) {
+        $query->where('user_id', auth()->id());
+    })->with(['photos', 'services'])->paginate(5);
+    $etablissementIds = Etablissement::whereHas('users', function ($q) {
+        $q->where('users.id', auth()->id());
+    })
+    ->where('statut', '=', 'actif')
+    ->pluck('id');
+
+
+
+$serviceIds = Service::whereIn('etablissement_id', $etablissementIds)->pluck('id');
+Reservation::whereIn('service_id', $serviceIds)
+    ->where('created_at', '<', now()->subHours(48))
+    ->delete();
+
+
+$reservations = Reservation::with(['service', 'service.etablissement'])
+    ->whereIn('service_id', $serviceIds)
+    ->where('created_at', '>=', now()->subHours(48)) // garde seulement les < 48h
+    ->latest()
+    ->paginate(10);
 
     return view('etablissements.reservation.index', compact('etablissements', 'reservations'));
 }
@@ -63,5 +84,5 @@ if ($existe) {
 
     return response()->json(['message' => 'Réservation enregistrée avec succès.']);
 }
- 
+
 }

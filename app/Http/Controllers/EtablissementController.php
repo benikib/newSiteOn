@@ -33,14 +33,14 @@ class EtablissementController extends Controller
     }
     public function users_ets()
     {
-       
-       $userEtablissements = UserEtablissement::with('user') 
-            ->where('etablissement_id', Auth::user()->usersEtablissements->first()?->etablissement_id)    
+
+       $userEtablissements = UserEtablissement::with('user')
+            ->where('etablissement_id', Auth::user()->usersEtablissements->first()?->etablissement_id)
             ->get();
-         
+
 
             return view('etablissements.users_etablissements.index', compact('userEtablissements'));
-        
+
         }
 
     /**
@@ -177,25 +177,46 @@ class EtablissementController extends Controller
         }
     }
 
+
     /**
      * Remove the specified resource from storage.
      */
 public function note_moyenne(Request $request, Etablissement $etablissement)
     {
-        
+
         $request->validate([
             'note_moyenne' => 'required|numeric|min:1|max:5',
         ]);
 
         try {
             $etablissement->update([
-                
+
                 'note_moyenne' => $request->note_moyenne,
             ]);
 
             return redirect()->back()->with('success', 'Note ajoutée avec succès.');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => 'Erreur lors de l\'ajout de la note.']);
+        }
+    }
+
+
+    public function updateStatut(Request $request, Etablissement $etablissement)
+    {
+
+        $request->validate([
+            'statut' => 'required|in:en_attente,actif,desactive'
+        ]);
+
+        try {
+            $etablissement->update([
+
+                'statut' => $request->statut,
+            ]);
+
+            return redirect()->back()->with('success', 'Compte activé avec succès');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Erreur lors de l \' activation']);
         }
     }
      public function destroy(Etablissement $etablissement)
@@ -213,13 +234,13 @@ public function note_moyenne(Request $request, Etablissement $etablissement)
 public function dashboard()
 {
     $userId = auth()->id();
-    
+
     // Statistiques de base
     $stats = [
         'total_etablissements' => Etablissement::whereHas('users', function ($query) use ($userId) {
             $query->where('users.id', $userId);
         })->count(),
-        
+
         'promotions_actives' => Service::whereNotNull('promotion')
             ->where('promotion', '>', 0)
             ->where('date_debut_promo', '<=', now())
@@ -229,13 +250,13 @@ public function dashboard()
                     $q->where('users.id', $userId);
                 });
             })->count(),
-            
+
         'total_services' => Service::whereHas('etablissement', function($query) use ($userId) {
             $query->whereHas('users', function($q) use ($userId) {
                 $q->where('users.id', $userId);
             });
         })->count(),
-        
+
         'total_publicites' => Publicite::whereHas('etablissement.users', function($query) use ($userId) {
             $query->where('users.id', $userId);
         })->count(),
@@ -252,23 +273,23 @@ public function dashboard()
     for ($i = 5; $i >= 0; $i--) {
         $date = now()->subMonths($i);
         $monthYear = $date->translatedFormat('M Y');
-        
+
         $monthlyData['labels'][] = $monthYear;
-        
+
         $monthlyData['etablissements'][] = Etablissement::whereHas('users', function($q) use ($userId) {
                 $q->where('users.id', $userId);
             })
             ->whereYear('created_at', $date->year)
             ->whereMonth('created_at', $date->month)
             ->count();
-            
+
         $monthlyData['services'][] = Service::whereHas('etablissement.users', function($q) use ($userId) {
                 $q->where('users.id', $userId);
             })
             ->whereYear('created_at', $date->year)
             ->whereMonth('created_at', $date->month)
             ->count();
-            
+
         $monthlyData['publicites'][] = Publicite::whereHas('etablissement.users', function($q) use ($userId) {
                 $q->where('users.id', $userId);
             })

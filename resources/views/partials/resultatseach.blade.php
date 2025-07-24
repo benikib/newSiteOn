@@ -543,38 +543,30 @@
 
 
 
-                                                <td>
-                                                    @php
-                                                        // Préparation des dates déjà réservées (version corrigée)
-                                                        $datesConfirmees = $service->reservations
-                                                            ->where('statut', 'confirmé')
-                                                            ->pluck('date')
-                                                            ->map(function ($date) {
-                                                                // Si c'est déjà une string, la retourner directement
-        if (is_string($date)) {
-            return $date;
-        }
-        // Si c'est un objet DateTime/Carbon, le formater
-                                                                return $date->format('Y-m-d');
-                                                            })
-                                                            ->toArray();
-                                                    @endphp
+                                                @php
+                                                    // Dates déjà réservées (confirmées) pour ce service
+                                                    $datesConfirmees = $service->reservations
+                                                        ->where('statut', 'confirmé')
+                                                        ->pluck('date')
+                                                        ->map(function ($date) {
+                                                            return is_string($date) ? $date : $date->format('Y-m-d');
+                                                        })
+                                                        ->values();
+                                                @endphp
 
-                                                    <button class="btn btn-sm btn-outline-primary mb-2"
-                                                        onclick="toggleCalendar({{ $service->id }})">
-                                                        Voir les dates
+                                                <td>
+                                                    {{-- Bouton qui ouvre le modal --}}
+                                                    <button class="btn btn-sm btn-outline-primary reservation-btn"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#reservationModal-{{ $service->id }}"
+                                                        data-service-id="{{ $service->id }}"
+                                                        data-disabled-dates='@json($datesConfirmees)'>
+                                                        Réserver / Voir les dates
                                                     </button>
 
-                                                    <div id="calendar-wrapper-{{ $service->id }}" class="d-none">
-                                                        <input type="text" id="calendar-{{ $service->id }}"
-                                                            class="calendar" readonly />
-                                                        <button class="btn btn-success btn-sm mt-2"
-                                                            onclick="openReservationModal({{ $service->id }})">Réserver</button>
-                                                    </div>
-
-                                                    <!-- Modale de réservation -->
+                                                    <!-- Modal unique : calendrier + formulaire -->
                                                     <div class="modal fade" id="reservationModal-{{ $service->id }}"
-                                                        tabindex="-1">
+                                                        tabindex="-1" aria-hidden="true">
                                                         <div class="modal-dialog">
                                                             <div class="modal-content">
                                                                 <form
@@ -586,9 +578,20 @@
                                                                             data-bs-dismiss="modal"
                                                                             aria-label="Close"></button>
                                                                     </div>
+
                                                                     <div class="modal-body">
-                                                                        <input type="hidden"
-                                                                            id="selected-date-{{ $service->id }}">
+                                                                        {{-- Calendrier --}}
+                                                                        <div class="mb-3">
+                                                                            <label class="form-label">Choisissez une
+                                                                                date</label>
+                                                                            <input type="text"
+                                                                                id="calendar-{{ $service->id }}"
+                                                                                class="form-control" readonly>
+                                                                            <input type="hidden"
+                                                                                id="selected-date-{{ $service->id }}">
+                                                                        </div>
+
+                                                                        {{-- Infos client --}}
                                                                         <div class="mb-3">
                                                                             <label class="form-label">Nom complet</label>
                                                                             <input type="text" class="form-control"
@@ -601,120 +604,127 @@
                                                                                 id="client-phone-{{ $service->id }}"
                                                                                 required>
                                                                         </div>
-
                                                                     </div>
+
                                                                     <div class="modal-footer">
                                                                         <button type="button" class="btn btn-secondary"
                                                                             data-bs-dismiss="modal">Annuler</button>
-                                                                        <button type="submit"
-                                                                            class="btn btn-primary">Confirmer la
-                                                                            réservation</button>
+                                                                        <button type="submit" class="btn btn-primary">
+                                                                            Confirmer la réservation
+                                                                        </button>
                                                                     </div>
                                                                 </form>
                                                             </div>
                                                         </div>
                                                     </div>
+                                                </td>
+                                                <script>
+                                                    // Stocke les instances flatpickr pour éviter des ré-initialisations
+                                                    window.fpInstances = window.fpInstances || {};
+                                                    window.selectedDates = window.selectedDates || {};
 
-                                                    <script>
-                                                        // Initialisation du tableau des dates sélectionnées
-                                                        window.selectedDates = window.selectedDates || {};
+                                                    function showModalMessage(message, title = 'Message') {
+                                                        document.getElementById('messageModalTitle').textContent = title;
+                                                        document.getElementById('messageModalBody').textContent = message;
 
-                                                        // Configuration du calendrier
-                                                        flatpickr("#calendar-{{ $service->id }}", {
-                                                            inline: true,
-                                                            locale: "fr",
-                                                            minDate: "today",
-                                                            dateFormat: "Y-m-d",
-                                                            altInput: true,
-                                                            altFormat: "j F Y",
-                                                            disable: @json($datesConfirmees),
-                                                            onChange: function(selectedDates) {
-                                                                if (selectedDates.length > 0) {
-                                                                    window.selectedDates[{{ $service->id }}] = selectedDates[0];
-                                                                    document.getElementById("selected-date-{{ $service->id }}").value =
-                                                                        selectedDates[0].toISOString().split('T')[0];
-                                                                }
+                                                        const modal = new bootstrap.Modal(document.getElementById('messageModal'));
+                                                        modal.show();
+                                                    }
+
+                                                    // Quand le modal s'ouvre, on initialise (ou met à jour) le calendrier
+                                                    document.querySelectorAll('.reservation-btn').forEach(btn => {
+                                                        btn.addEventListener('click', function() {
+                                                            const serviceId = this.dataset.serviceId;
+                                                            const disabled = JSON.parse(this.dataset.disabledDates);
+
+                                                            const inputId = `calendar-${serviceId}`;
+                                                            const inputEl = document.getElementById(inputId);
+
+                                                            // Si déjà initialisé, on met juste à jour les dates désactivées
+                                                            if (window.fpInstances[inputId]) {
+                                                                window.fpInstances[inputId].set('disable', disabled);
+                                                                return;
                                                             }
-                                                        });
 
-                                                        // Fonction pour afficher/masquer le calendrier
-                                                        function toggleCalendar(id) {
-                                                            const calendarWrapper = document.getElementById('calendar-wrapper-' + id);
-                                                            calendarWrapper.classList.toggle('d-none');
-
-                                                            // Fermer les autres calendriers ouverts
-                                                            document.querySelectorAll('.calendar-wrapper').forEach(wrapper => {
-                                                                if (wrapper.id !== 'calendar-wrapper-' + id && !wrapper.classList.contains('d-none')) {
-                                                                    wrapper.classList.add('d-none');
+                                                            window.fpInstances[inputId] = flatpickr(`#${inputId}`, {
+                                                                inline: true, // visible dans le modal
+                                                                locale: 'fr',
+                                                                minDate: 'today',
+                                                                dateFormat: 'Y-m-d',
+                                                                altInput: true,
+                                                                altFormat: 'j F Y',
+                                                                disable: disabled,
+                                                                onChange: function(selectedDates) {
+                                                                    if (selectedDates.length > 0) {
+                                                                        const ymd = selectedDates[0].toISOString().split('T')[0];
+                                                                        window.selectedDates[serviceId] = ymd;
+                                                                        document.getElementById(`selected-date-${serviceId}`).value = ymd;
+                                                                    }
                                                                 }
                                                             });
+                                                        });
+                                                    });
+
+                                                    // Soumission de la réservation
+                                                    function submitReservation(event, serviceId) {
+                                                        event.preventDefault();
+
+                                                        const date = document.getElementById('selected-date-' + serviceId).value;
+                                                        const name = document.getElementById('client-name-' + serviceId).value.trim();
+                                                        const phone = document.getElementById('client-phone-' + serviceId).value.trim();
+
+                                                        if (!date || !name || !phone) {
+                                                            return alert("Veuillez sélectionner une date et remplir tous les champs obligatoires.");
                                                         }
 
-                                                        // Fonction pour ouvrir la modale de réservation
-                                                        function openReservationModal(serviceId) {
-                                                            const date = window.selectedDates[serviceId];
-                                                            if (!date) {
-                                                                return alert("Veuillez sélectionner une date valide.");
-                                                            }
-
-                                                            const modal = new bootstrap.Modal(document.getElementById('reservationModal-' + serviceId));
-                                                            modal.show();
-                                                        }
-
-                                                        // Fonction pour soumettre la réservation
-                                                        function submitReservation(event, serviceId) {
-                                                            event.preventDefault();
-
-                                                            const date = document.getElementById('selected-date-' + serviceId).value;
-                                                            const name = document.getElementById('client-name-' + serviceId).value.trim();
-                                                            const phone = document.getElementById('client-phone-' + serviceId).value.trim();
-
-
-                                                            if (!date || !name || !phone) {
-                                                                return alert("Veuillez remplir tous les champs obligatoires.");
-                                                            }
-
-                                                            fetch('/reservations', {
-                                                                    method: 'POST',
-                                                                    headers: {
-                                                                        'Content-Type': 'application/json',
-                                                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                                                        'Accept': 'application/json'
-                                                                    },
-                                                                    body: JSON.stringify({
-                                                                        service_id: serviceId,
-                                                                        client_name: name,
-                                                                        client_phone: phone,
-
-                                                                        date: date
-                                                                    })
+                                                        fetch('/reservations', {
+                                                                method: 'POST',
+                                                                headers: {
+                                                                    'Content-Type': 'application/json',
+                                                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                                                    'Accept': 'application/json'
+                                                                },
+                                                                body: JSON.stringify({
+                                                                    service_id: serviceId,
+                                                                    client_name: name,
+                                                                    client_phone: phone,
+                                                                    date: date
                                                                 })
-                                                                .then(response => {
-                                                                    if (!response.ok) {
-                                                                        throw new Error('Erreur réseau');
-                                                                    }
-                                                                    return response.json();
-                                                                })
-                                                                .then(data => {
-                                                                    if (data.success) {
-                                                                        alert("Réservation confirmée avec succès !");
-                                                                        const modal = bootstrap.Modal.getInstance(document.getElementById('reservationModal-' +
-                                                                            serviceId));
-                                                                        modal.hide();
+                                                            })
+                                                            .then(response => {
+                                                                if (!response.ok) {
+                                                                    throw new Error('Erreur réseau');
+                                                                }
+                                                                return response.json();
+                                                            })
+                                                            .then(data => {
+                                                                if (data.success) {
+                                                                    const modalEl = document.getElementById('reservationModal-' + serviceId);
+                                                                    const modal = bootstrap.Modal.getInstance(modalEl);
 
-                                                                        // Recharger la page ou mettre à jour l'interface
+                                                                    modal.hide(); // fermer le modal de réservation
+
+                                                                    // Retirer le focus de l'élément actif dans le modal
+                                                                    setTimeout(() => document.activeElement.blur(), 100);
+
+                                                                    // Afficher le modal de message
+                                                                    showModalMessage("Réservation confirmée avec succès !", "Succès");
+
+                                                                    setTimeout(() => {
                                                                         window.location.reload();
-                                                                    } else {
-                                                                        alert(data.message || "Erreur lors de la réservation");
-                                                                    }
-                                                                })
-                                                                .catch(error => {
-                                                                    console.error('Error:', error);
-                                                                    alert("Une erreur est survenue lors de la réservation.");
-                                                                });
-                                                        }
-                                                    </script>
-                                                </td>
+                                                                    }, 2000);
+                                                                } else {
+                                                                    showModalMessage(data.message || "Erreur lors de la réservation", "Erreur");
+                                                                }
+                                                            })
+
+                                                            .catch(error => {
+                                                                console.error('Error:', error);
+                                                                alert("Une erreur est survenue lors de la réservation.");
+                                                            });
+                                                    }
+                                                </script>
+
 
                                                 <style>
                                                     /* Style personnalisé pour le calendrier */
@@ -790,6 +800,23 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal générique pour afficher les messages -->
+    <div class="modal fade" id="messageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="messageModalTitle">Message</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="messageModalBody">
+                    <!-- Le message sera injecté ici -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
                 </div>
             </div>
         </div>

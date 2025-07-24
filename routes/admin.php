@@ -23,6 +23,10 @@ Route::put('/etablissement/{id}', [EtablissementController::class, 'update'])->n
 Route::delete('/etablissement/{etablissement}', [EtablissementController::class, 'destroy'])->name('etablissements.destroy');
 Route::get('/etablissement/{id}', [EtablissementController::class, 'show'])->name('etablissements.show');
 Route::post('/etablissement/{etablissement}/note_moyenne', [EtablissementController::class, 'note_moyenne'])->name('etablissements.note_moyenne');
+Route::patch('/etablissements/{etablissement}/statut', [EtablissementController::class, 'updateStatut'])
+     ->name('etablissements.updateStatut');
+
+
 
 Route::get('/type', [TypeEtablissementController::class, 'index'])->name('type_etablissements.index');
 Route::get('/type/create', [TypeEtablissementController::class, 'create'])->name('type_etablissements.create');

@@ -3,7 +3,7 @@
     <div class="container">
         <!-- Brand Logo with Animation -->
         <a class="navbar-brand fw-bold" href="{{ url('/') }}" style="transition: all 0.3s ease;">
-            <i class="fas fa-building me-2"></i>NewSite
+            <i class="fas fa-building me-2"></i>Bisika
         </a>
 
         <!-- Mobile Toggle Button -->

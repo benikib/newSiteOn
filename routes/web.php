@@ -28,8 +28,8 @@ Route::post('/reservations', [ReservationController::class, 'store']);
 
 Route::get('/desc/ets/{etablissement}',[UserController::class,'ets_info'])->name('ets.info');
 
-
-
+Route::get('etablissement/paiement', [\App\Http\Controllers\PaiementController::class, 'index'])->name('etablissements.paiements.index');
+Route::post('etablissement/paiement', [\App\Http\Controllers\PaiementController::class, 'store'])->name('etablissements.paiements.store');
 
 
 

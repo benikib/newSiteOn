@@ -42,15 +42,26 @@
                                 </thead>
                                 <tbody>
                                     @forelse ($etablissements as $etablissement)
-                                        @include('etablissements.partials.row', [
-                                            'etablissement' => $etablissement,
-                                        ])
+                                        @if ($etablissement->statut !== 'actif')
+                                            <tr>
+                                                <td colspan="6" class="text-center text-warning py-4">
+                                                    {{ $etablissement->nom }} - <a href="">Passer au
+                                                        paiement</a>
+                                                </td>
+                                            </tr>
+                                        @else
+                                            @include('etablissements.partials.row', [
+                                                'etablissement' => $etablissement,
+                                            ])
+                                        @endif
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="text-center text-muted py-4">Aucun établissement
-                                                trouvé.</td>
+                                            <td colspan="6" class="text-center text-muted py-4">
+                                                Aucun établissement trouvé.
+                                            </td>
                                         </tr>
                                     @endforelse
+
                                 </tbody>
                             </table>
                         </div>

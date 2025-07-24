@@ -41,7 +41,7 @@ class UserController extends Controller
 public function repportingAdmins()
 {
      $taux = \App\Models\TauxDeChange::all();
-    
+
     $users = User::all();
     // Données pour le graphique des inscriptions
     $registrationDates = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai'];
@@ -212,7 +212,7 @@ public function repportingAdmins()
     }
     public function ets_info($etablissement_id)
     {
-           $photos = $publicitesActives = Publicite::actives()
+         $photos = $publicitesActives = Publicite::actives()
         ->orderBy('id', 'desc')
         ->get();
      $etablissement = Etablissement::with('typeEtablissement')->findOrFail($etablissement_id);
@@ -224,7 +224,7 @@ public function repportingAdmins()
     }
     public function ets(Request $request)
 {
-    
+
     $photos = $publicitesActives = Publicite::actives()
         ->orderBy('id', 'desc')
         ->get();

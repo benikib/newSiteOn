@@ -21,6 +21,8 @@ Route::put('/etablissement/{id}', [EtablissementController::class, 'update'])->n
 
 Route::delete('/etablissement/{id}', [EtablissementController::class, 'destroy'])->name('etablissements.destroy');
 Route::get('/etablissement/{id}', [EtablissementController::class, 'show'])->name('etablissements.show');
+Route::put('/etablissement/{id}', [EtablissementController::class, 'activation'])->name('etablissements.activation');
+
 
 Route::get('/type', [TypeEtablissementController::class, 'index'])->name('type_etablissements.index');
 Route::get('/type/create', [TypeEtablissementController::class, 'create'])->name('type_etablissements.create');

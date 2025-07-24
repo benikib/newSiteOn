@@ -5,7 +5,7 @@
         <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none"
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center" href="{{ route('dashboard') }}">
-            <img src="{{ asset('assets/img/logo.png') }}" class="navbar-brand-img h-100" alt="Logo">
+            <img src="{{ asset('assets/img/logo-ct.png') }}" class="navbar-brand-img h-100" alt="Logo">
             <span class="ms-2 font-weight-bold fs-5 text-dark">{{ config('app.name') }}</span>
         </a>
     </div>
@@ -46,6 +46,16 @@
                         <i class="fas fa-users-cog text-white"></i>
                     </div>
                     <span class="nav-link-text ms-1">Reservation</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('etablissements.paiements.*') ? 'active' : '' }}"
+                    href="{{ route('etablissements.paiements.index') }}">
+                    <div
+                        class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-danger text-center me-2 d-flex align-items-center justify-content-center">
+                        <i class="fas fa-users-cog text-white"></i>
+                    </div>
+                    <span class="nav-link-text ms-1">Paiement</span>
                 </a>
             </li>
             <li class="nav-item">

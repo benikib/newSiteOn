@@ -22,11 +22,12 @@ class Etablissement extends Model
         'latitude',
         'longitude',
         'telephone',
+        'statut',
         'note_moyenne',
         'type_etablissement_id',
         'image_path',
         'facebook', 'twitter', 'instagram'
-        
+
     ];
     protected $table = 'etablissements';
     public function typeEtablissement()

@@ -43,7 +43,7 @@
                     </thead>
                     <tbody>
                         @forelse($etablissements ?? [] as $etablissement)
-                            <tr>
+                            <tr class="{{ $etablissement->statut !== 'actif' ? 'table-warning' : '' }}">
                                 <td class="px-4 py-3">
                                     <div class="d-flex align-items-center">
                                         <div class=" bg-opacity-10 rounded-circle p-2 me-3">
@@ -105,6 +105,10 @@
                                             class="btn btn-sm btn-outline-primary" title="Voir">
                                             <i class="fas fa-edit"></i>
                                         </a>
+                                        <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                                            data-bs-target="#modalStatut{{ $etablissement->id }}">
+                                            <i class="bi bi-pencil-square"></i> Changer statut
+                                        </button>
 
 
                                         <!-- Bouton de suppression -->
@@ -150,6 +154,53 @@
                                     </div>
                                 </div>
                             </div>
+                            <!-- Modal de changement de statut -->
+                            <div class="modal fade" id="modalStatut{{ $etablissement->id }}" tabindex="-1"
+                                aria-labelledby="modalStatutLabel{{ $etablissement->id }}" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="modalStatutLabel{{ $etablissement->id }}">
+                                                Changer le statut
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Fermer"></button>
+                                        </div>
+
+                                        <div class="modal-body">
+                                            <form action="{{ route('etablissements.updateStatut', $etablissement->id) }}"
+                                                method="POST">
+                                                @csrf
+                                                @method('PATCH')
+
+                                                <div class="mb-3">
+                                                    <label for="statut{{ $etablissement->id }}"
+                                                        class="form-label">Nouveau statut</label>
+                                                    <select name="statut" id="statut{{ $etablissement->id }}"
+                                                        class="form-control" required>
+                                                        <option value="actif"
+                                                            {{ $etablissement->statut == 'actif' ? 'selected' : '' }}>Actif
+                                                        </option>
+                                                        <option value="desactive"
+                                                            {{ $etablissement->statut == 'desactive' ? 'selected' : '' }}>
+                                                            Désactivé</option>
+                                                        <option value="en_attente"
+                                                            {{ $etablissement->statut == 'en_attente' ? 'selected' : '' }}>
+                                                            En attente</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Annuler</button>
+                                                    <button type="submit" class="btn btn-primary">Changer</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
 
                             <!-- Modal de confirmation -->
                             <div class="modal fade" id="modalDelete{{ $etablissement->id }}" tabindex="-1"

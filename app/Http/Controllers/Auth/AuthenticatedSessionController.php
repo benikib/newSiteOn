@@ -30,10 +30,11 @@ class AuthenticatedSessionController extends Controller
 
     // Vérifie si l'utilisateur est admin
     if (auth()->user()->role !== 'admin') {
-        // Redirection personnalisée si ce n'est pas un admin
+         $id = auth()->user()->usersEtablissements();
+
         return redirect()->route('users.etablissements'); // Remplace par ta vraie route
     }
-       
+
     // Redirection par défaut
     return redirect()->intended(route('dashboard', absolute: false));
 }
