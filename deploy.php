@@ -1,21 +1,37 @@
 <?php
-// $secret = 'votre-secret'; // Si vous utilisez un secret GitHub/GitLab
-$payload = file_get_contents('php://input');
-$headers = getallheaders();
+// Activer le logging des erreurs
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-// Vérification du secret (optionnel)
-// if (isset($headers['X-Hub-Signature'])) {
-//     $githubSig = $headers['X-Hub-Signature'];
-//     $calculatedSig = 'sha1=' . hash_hmac('sha1', $payload, $secret);
-//     if (!hash_equals($githubSig, $calculatedSig)) {
-//         die('Accès refusé : signature invalide.');
-//     }
-// }
+// Logger les erreurs
+file_put_contents('/home/u684456859/domains/bisika.menjidrc.com/deploy_errors.log',
+    date('Y-m-d H:i:s')." - Démarrage\n",
+    FILE_APPEND);
 
-// Exécuter le script de déploiement
-exec('sh domains/menjidrc.com/public_html/bisika/deploy.sh', $output, $returnCode);
+try {
+    // // Votre code existant...
+    // $secret = 'votre-secret';
+    $payload = file_get_contents('php://input');
+    $headers = getallheaders();
 
-// Logs (optionnel)
-file_put_contents('deploy.log', date('Y-m-d H:i:s') . " - Déploiement effectué\n", FILE_APPEND);
+    file_put_contents('/home/u684456859/domains/bisika.menjidrc.com/deploy_errors.log',
+        "Headers: ".print_r($headers, true)."\n",
+        FILE_APPEND);
 
-echo "Déploiement réussi !";
+    // Exécution sécurisée
+    $output = [];
+    $returnCode = 0;
+    exec('/usr/bin/bash /home/u684456859/domains/bisika.menjidrc.com/public_html/deploy.sh 2>&1', $output, $returnCode);
+
+    file_put_contents('/home/u684456859/domains/bisika.menjidrc.com/deploy_errors.log',
+        "Result: ".print_r($output, true)."\nReturn Code: $returnCode\n",
+        FILE_APPEND);
+
+    echo "Déploiement réussi!";
+} catch (Exception $e) {
+    file_put_contents('/home/u684456859/domains/bisika.menjidrc.com/deploy_errors.log',
+        "ERROR: ".$e->getMessage()."\n",
+        FILE_APPEND);
+    http_response_code(500);
+    echo "Erreur de déploiement";
+}

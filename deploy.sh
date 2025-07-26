@@ -6,3 +6,4 @@ git pull  # Remplacer "main" par votre branche
 # npm install && npm run build
 php artisan migrate
 
+
