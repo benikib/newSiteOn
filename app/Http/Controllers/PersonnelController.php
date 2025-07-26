@@ -58,7 +58,6 @@ class PersonnelController extends Controller
      // Assuming you want to use the first etablissement_id from the filtered list
 
             $request->validate([
-
                 'nom' => 'required|string|max:255',
                 'telephone' => 'nullable|string|max:25',
                 'poste' => 'nullable|string|max:100',
@@ -74,7 +73,7 @@ class PersonnelController extends Controller
 
             return redirect()->back()->with('success', 'Personnel créé avec succès.');
         } catch (\Exception $e) {
-            dd($e->getMessage());
+
             return redirect()->back()->withErrors(['error' => $e->getMessage()]);
         }
     }

@@ -43,7 +43,7 @@
                     href="{{ route('etablissements.reservation.index') }}">
                     <div
                         class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-danger text-center me-2 d-flex align-items-center justify-content-center">
-                        <i class="fas fa-users-cog text-white"></i>
+                        <i class="fas fa-calendar-check text-white"></i>
                     </div>
                     <span class="nav-link-text ms-1">Reservation</span>
                 </a>
@@ -53,7 +53,7 @@
                     href="{{ route('etablissements.paiements.index') }}">
                     <div
                         class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-danger text-center me-2 d-flex align-items-center justify-content-center">
-                        <i class="fas fa-users-cog text-white"></i>
+                        <i class="fas fa-credit-card text-white"></i>
                     </div>
                     <span class="nav-link-text ms-1">Paiement</span>
                 </a>
@@ -63,7 +63,7 @@
                     href="{{ route('etablissemensts.users.index') }}">
                     <div
                         class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-danger text-center me-2 d-flex align-items-center justify-content-center">
-                        <i class="fas fa-users-cog text-white"></i>
+                        <i class="fas fa-users text-white"></i>
                     </div>
                     <span class="nav-link-text ms-1">Utilisateurs</span>
                 </a>
@@ -73,9 +73,19 @@
                     href="{{ route('personnels.index') }}">
                     <div
                         class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-danger text-center me-2 d-flex align-items-center justify-content-center">
-                        <i class="fas fa-users-cog text-white"></i>
+                        <i class="fas fa-user-tie text-white"></i>
                     </div>
                     <span class="nav-link-text ms-1">Personnels</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('equipes.*') ? 'active' : '' }}"
+                    href="{{ route('equipes.index') }}">
+                    <div
+                        class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-danger text-center me-2 d-flex align-items-center justify-content-center">
+                        <i class="fas fa-people-group text-white"></i>
+                    </div>
+                    <span class="nav-link-text ms-1">Equipes</span>
                 </a>
             </li>
             {{-- <li class="nav-item">
