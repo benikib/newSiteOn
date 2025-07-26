@@ -38,7 +38,15 @@ $reservations = Reservation::with(['service', 'service.etablissement'])
     ->latest()
     ->paginate(10);
 
-    return view('etablissements.reservation.index', compact('etablissements', 'reservations'));
+    $etablissementIds = Etablissement::whereHas('users', function ($q) {
+        $q->where('users.id', auth()->id());
+    })
+    ->where('statut', '=', 'actif')
+    ->pluck('id');
+
+        $services = Service::where('etablissement_id', $etablissementIds)->get();
+
+    return view('etablissements.reservation.index', compact('etablissements', 'reservations', 'services'));
 }
 public function changerStatut(Request $request, $id)
 {

@@ -43,13 +43,10 @@ $serviceIds = Service::whereIn('etablissement_id', $etablissementIds)->pluck('id
         // Logic to show the form for creating a new payment
         return view('paiements.create');
     }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function paiementReservation(Request $request)
     {
         $request->validate([
+            'reservation_id' => 'required|exists:reservations,id',
             'service_id' => 'required|exists:services,id',
             'client' => 'required|string|max:100',
             'client_phone' => 'nullable|string|max:25',
@@ -59,7 +56,32 @@ $serviceIds = Service::whereIn('etablissement_id', $etablissementIds)->pluck('id
 
         Paiement::create($request->all());
 
-        return redirect()->route('etablissements.paiements.index')->with('success', 'Paiement créé avec succès.');
+        return redirect()->back()->with('success', 'Paiement effectué avec succès.');
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+ try {
+                $request->validate([
+            'service_id' => 'required|exists:services,id',
+            'client' => 'required|string|max:100',
+            'client_phone' => 'nullable|string|max:25',
+            'montant' => 'required|numeric|min:0',
+            'date' => 'nullable|date'
+        ]);
+
+         Paiement::create($request->all());
+
+        return redirect()->back()->with( 'success', 'Paiement créé avec succès.');
+
+      } catch (\Throwable $th) {
+        dd($th->getMessage());
+
+      }
+
     }
 
     /**

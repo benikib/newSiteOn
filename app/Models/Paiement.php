@@ -18,4 +18,8 @@ class Paiement extends Model
         'date',
     ];
     protected $table = 'paiements';
+      public function service()
+    {
+        return $this->belongsTo(Service::class,'service_id' );
+    }
 }

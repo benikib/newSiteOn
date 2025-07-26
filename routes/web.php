@@ -6,8 +6,11 @@ use App\Http\Controllers\TypeEtablissementController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EtablissementController;
+use App\Http\Controllers\PaiementController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\PersonnelController;
+use App\Http\Controllers\EquipeController;
 
 Route::get('/', [PhotoController::class, 'index'])->name('welcome');
 Route::get('/grilles', function() {
@@ -18,8 +21,8 @@ Route::get('/grilles', function() {
 Route::get('/results', [UserController::class,'search'])->
 name('search');
 
-Route::post('/reservations', [ReservationController::class, 'store']);
-
+Route::post('/reservations', [ReservationController::class, 'store'])->name('reservations.store');
+Route::post('/paiements/reservation', [PaiementController::class, 'paiementReservation'])->name('paiements.store');
 
 // Route::get('/search', function() {
 //     // Vous pouvez implémenter la logique de recherche ici
@@ -30,6 +33,12 @@ Route::get('/desc/ets/{etablissement}',[UserController::class,'ets_info'])->name
 
 Route::get('etablissement/paiement', [\App\Http\Controllers\PaiementController::class, 'index'])->name('etablissements.paiements.index');
 Route::post('etablissement/paiement', [\App\Http\Controllers\PaiementController::class, 'store'])->name('etablissements.paiements.store');
+
+
+
+
+Route::resource('personnels', PersonnelController::class);
+Route::resource('equipes', EquipeController::class);
 
 
 

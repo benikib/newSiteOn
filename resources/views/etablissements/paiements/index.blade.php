@@ -23,8 +23,8 @@
                         @csrf
                         <div class="modal-body">
                             <div class="mb-3">
-                                <label for="client_name" class="form-label">Nom du client</label>
-                                <input type="text" class="form-control" id="client_name" name="client_name" required>
+                                <label for="client" class="form-label">Nom du client</label>
+                                <input type="text" class="form-control" id="client" name="client" required>
                             </div>
                             <div class="mb-3">
                                 <label for="client_phone" class="form-label">Téléphone</label>
@@ -49,7 +49,7 @@
                                 <label for="date" class="form-label">Date</label>
                                 <input type="date" class="form-control" id="date" name="date" required>
                             </div>
-                            <div class="mb-3">
+                            {{-- <div class="mb-3">
                                 <label for="methode" class="form-label">Méthode de paiement</label>
                                 <select class="form-select" id="methode" name="methode" required>
                                     <option value="espèces">Espèces</option>
@@ -57,7 +57,7 @@
                                     <option value="mobile">Mobile money</option>
                                     <option value="virement">Virement</option>
                                 </select>
-                            </div>
+                            </div> --}}
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
@@ -90,7 +90,7 @@
                                         <th>Téléphone</th>
                                         <th>Service</th>
                                         <th>Montant</th>
-                                        <th>Méthode</th>
+                                        {{-- <th>Méthode</th> --}}
                                         <th>Date</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
@@ -98,11 +98,11 @@
                                 <tbody>
                                     @forelse ($paiements as $paiement)
                                         <tr>
-                                            <td>{{ $paiement->client_name }}</td>
+                                            <td>{{ $paiement->client }}</td>
                                             <td>{{ $paiement->client_phone ?? '-' }}</td>
                                             <td>{{ $paiement->service->nom ?? '-' }}</td>
                                             <td>{{ number_format($paiement->montant, 0, ',', ' ') }} FCFA</td>
-                                            <td>{{ ucfirst($paiement->methode) }}</td>
+                                            {{-- <td>{{ ucfirst($paiement->methode) }}</td> --}}
                                             <td>{{ date('d/m/Y', strtotime($paiement->date)) }}</td>
                                             <td class="text-center">
                                                 <button class="btn btn-sm btn-info me-1" data-bs-toggle="modal"
@@ -241,7 +241,7 @@
                             <label for="edit_date" class="form-label">Date</label>
                             <input type="date" class="form-control" id="edit_date" name="date" required>
                         </div>
-                        <div class="mb-3">
+                        {{-- <div class="mb-3">
                             <label for="edit_methode" class="form-label">Méthode de paiement</label>
                             <select class="form-select" id="edit_methode" name="methode" required>
                                 <option value="espèces">Espèces</option>
@@ -249,7 +249,7 @@
                                 <option value="mobile">Mobile money</option>
                                 <option value="virement">Virement</option>
                             </select>
-                        </div>
+                        </div> --}}
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
