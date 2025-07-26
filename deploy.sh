@@ -4,5 +4,5 @@ git pull  # Remplacer "main" par votre branche
 # Commandes supplémentaires si besoin :
 # composer install
 # npm install && npm run build
-# php artisan migrate (pour Laravel)
+php artisan migrate
 
