@@ -51,7 +51,7 @@
                                 @enderror
                             </div>
 
-                            <input type="hidden" name="etablissement_id" value="{{ auth()->user()->etablissement_id }}">
+
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fermer</button>
