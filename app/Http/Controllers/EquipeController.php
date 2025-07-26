@@ -120,3 +120,4 @@ public function store(Request $request)
         return redirect()->back()->withErrors(['error' => 'Erreur lors de la suppression de l\'équipe : ' . $e->getMessage()]);
     }
 }
+}
