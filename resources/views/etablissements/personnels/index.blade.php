@@ -24,8 +24,7 @@
                         @csrf
                         <div class="modal-body">
                             <div class="mb-3">
-                                <input type="hidden" name="etablissement_id"
-                                    value="{{ auth()->user()->etablissement_id }}">
+
                                 <label for="nom" class="form-label">Nom *</label>
                                 <input type="text" class="form-control @error('nom') is-invalid @enderror" id="nom"
                                     name="nom" value="{{ old('nom') }}" required>
