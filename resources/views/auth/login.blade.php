@@ -40,8 +40,8 @@
                                     autocomplete="current-password">
                                 <button class="btn btn-outline-secondary toggle-password" type="button"
                                     aria-label="Afficher/masquer le mot de passe">
-                                    {{-- <i class="fas fa-eye"></i>
-                                    <span class="visually-hidden">Afficher le mot de passe</span> --}}
+                                    <i class="fas fa-eye"></i>
+                                    <span class="visually-hidden">Afficher le mot de passe</span>
                                 </button>
                                 @error('password')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -51,7 +51,7 @@
                         </div>
 
                         <!-- Script pour basculer la visibilité du mot de passe -->
-                        {{-- <script>
+                        <script>
                             document.querySelectorAll('.toggle-password').forEach(button => {
                                 button.addEventListener('click', function() {
                                     const passwordInput = this.previousElementSibling;
@@ -68,7 +68,7 @@
                                     }
                                 });
                             });
-                        </script> --}}
+                        </script>
 
                         <!-- Remember Me & Forgot Password -->
                         <div class="d-flex justify-content-between align-items-center mb-4">
