@@ -101,7 +101,7 @@
                                             <td>{{ $paiement->client }}</td>
                                             <td>{{ $paiement->client_phone ?? '-' }}</td>
                                             <td>{{ $paiement->service->nom ?? '-' }}</td>
-                                            <td>{{ number_format($paiement->montant, 0, ',', ' ') }} FCFA</td>
+                                            <td>{{ number_format($paiement->montant, 0, ',', ' ') }} $</td>
                                             {{-- <td>{{ ucfirst($paiement->methode) }}</td> --}}
                                             <td>{{ date('d/m/Y', strtotime($paiement->date)) }}</td>
                                             <td class="text-center">

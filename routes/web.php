@@ -21,6 +21,12 @@ Route::get('/grilles', function() {
 Route::get('/results', [UserController::class,'search'])->
 name('search');
 
+Route::get('/contact', function() {
+    // Vous pouvez implémenter la logique de contact ici
+    return view('contact');
+})->name('contact');
+Route::post('/contact', [UserController::class, 'sendContact'])->name('contact.submit');
+
 Route::post('/reservations', [ReservationController::class, 'store'])->name('reservations.store');
 Route::post('/paiements/reservation', [PaiementController::class, 'paiementReservation'])->name('paiements.store');
 

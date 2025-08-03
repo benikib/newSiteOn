@@ -15,6 +15,7 @@ class ReservationController extends Controller
 
 public function index()
 {
+    try{
     $etablissements = Etablissement::whereHas('users', function($query) {
         $query->where('user_id', auth()->id());
     })->with(['photos', 'services'])->paginate(5);
@@ -46,7 +47,11 @@ $reservations = Reservation::with(['service', 'service.etablissement'])
 
         $services = Service::where('etablissement_id', $etablissementIds)->get();
 
-    return view('etablissements.reservation.index', compact('etablissements', 'reservations', 'services'));
+    return view('etablissements.reservation.index', compact('etablissements', 'reservations', 'services'));}
+    catch(\Throwable $e){
+        return redirect()->back()->with('error', 'Une erreur est survenue lors de la récupération des réservations. Veuillez réessayer plus tard.');
+    }
+
 }
 public function changerStatut(Request $request, $id)
 {

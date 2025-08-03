@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Etablissement;
 use App\Models\Photo;
+use App\Models\Paiement;
 use App\Models\Promotion;
 use App\Models\TypeEtablissement;
 use App\Models\User;
@@ -230,21 +231,17 @@ public function note_moyenne(Request $request, Etablissement $etablissement)
     }
     // EtablissementController.phpuse App\Models\Etablissement;
 
-
 public function dashboard()
 {
     $userId = auth()->id();
+    $now = now();
 
     // Statistiques de base
     $stats = [
-        'total_etablissements' => Etablissement::whereHas('users', function ($query) use ($userId) {
-            $query->where('users.id', $userId);
-        })->count(),
-
         'promotions_actives' => Service::whereNotNull('promotion')
             ->where('promotion', '>', 0)
-            ->where('date_debut_promo', '<=', now())
-            ->where('date_fin_promo', '>=', now())
+            ->where('date_debut_promo', '<=', $now)
+            ->where('date_fin_promo', '>=', $now)
             ->whereHas('etablissement', function($query) use ($userId) {
                 $query->whereHas('users', function($q) use ($userId) {
                     $q->where('users.id', $userId);
@@ -260,57 +257,68 @@ public function dashboard()
         'total_publicites' => Publicite::whereHas('etablissement.users', function($query) use ($userId) {
             $query->where('users.id', $userId);
         })->count(),
+
+        'total_paiements' => Paiement::whereHas('service.etablissement.users', function($query) use ($userId) {
+            $query->where('users.id', $userId);
+        })->sum('montant'),
+
+        'paiements_mois_courant' => Paiement::whereHas('service.etablissement.users', function($query) use ($userId) {
+            $query->where('users.id', $userId);
+        })
+        ->whereYear('created_at', $now->year)
+        ->whereMonth('created_at', $now->month)
+        ->sum('montant'),
     ];
 
     // Données pour le graphique d'évolution mensuelle (6 derniers mois)
     $monthlyData = [
         'labels' => [],
-        'etablissements' => [],
+        'paiements' => [],
         'services' => [],
         'publicites' => []
     ];
 
     for ($i = 5; $i >= 0; $i--) {
-        $date = now()->subMonths($i);
+        $date = $now->subMonths($i);
         $monthYear = $date->translatedFormat('M Y');
 
         $monthlyData['labels'][] = $monthYear;
 
-        $monthlyData['etablissements'][] = Etablissement::whereHas('users', function($q) use ($userId) {
-                $q->where('users.id', $userId);
-            })
-            ->whereYear('created_at', $date->year)
-            ->whereMonth('created_at', $date->month)
-            ->count();
+        $monthlyData['paiements'][] = Paiement::whereHas('service.etablissement.users', function($query) use ($userId) {
+            $query->where('users.id', $userId);
+        })
+        ->whereYear('created_at', $date->year)
+        ->whereMonth('created_at', $date->month)
+        ->sum('montant');
 
         $monthlyData['services'][] = Service::whereHas('etablissement.users', function($q) use ($userId) {
-                $q->where('users.id', $userId);
-            })
-            ->whereYear('created_at', $date->year)
-            ->whereMonth('created_at', $date->month)
-            ->count();
+            $q->where('users.id', $userId);
+        })
+        ->whereYear('created_at', $date->year)
+        ->whereMonth('created_at', $date->month)
+        ->count();
 
         $monthlyData['publicites'][] = Publicite::whereHas('etablissement.users', function($q) use ($userId) {
-                $q->where('users.id', $userId);
-            })
-            ->whereYear('created_at', $date->year)
-            ->whereMonth('created_at', $date->month)
-            ->count();
+            $q->where('users.id', $userId);
+        })
+        ->whereYear('created_at', $date->year)
+        ->whereMonth('created_at', $date->month)
+        ->count();
     }
 
-    // Données pour le graphique de répartition par catégorie
-     $categories = Etablissement::whereHas('users', function($q) use ($userId) {
-        $q->where('users.id', $userId);
+    // Récupération des paiements par service (remplace $categories)
+    $paiementsParService = Paiement::whereHas('service.etablissement.users', function($query) use ($userId) {
+        $query->where('users.id', $userId);
     })
-    ->join('type_etablissements', 'type_etablissements.id', '=', 'etablissements.type_etablissement_id')
-    ->select('type_etablissements.nom', DB::raw('count(*) as total'))
-    ->groupBy('type_etablissements.nom')
-    ->pluck('total', 'nom');
+    ->join('services', 'services.id', '=', 'paiements.service_id')
+    ->select('services.nom as service_nom', DB::raw('SUM(paiements.montant) as total'))
+    ->groupBy('services.nom')
+    ->pluck('total', 'service_nom');
 
     return view('etablissements.dashboard', [
         'stats' => $stats,
         'monthlyData' => $monthlyData,
-        'categories' => $categories
+        'paiementsParService' => $paiementsParService // Renommé pour correspondre à la vue
     ]);
 }
     public function updatetitre(Request $request, Etablissement $etablissement)

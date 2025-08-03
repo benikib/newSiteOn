@@ -43,51 +43,57 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $gerant = User::updateOrCreate(
-            ['email' => 'gerant@example.com'],
-            [
-                'name' => 'Gérant',
-                'password' => bcrypt('password'),
-                'role' => 'etablissement',
-                'telephone' => fake()->phoneNumber(),
-                'email_verified_at' => now(),
-            ]
-        );
+        // $gerant = User::updateOrCreate(
+        //     ['email' => 'gerant@example.com'],
+        //     [
+        //         'name' => 'Gérant',
+        //         'password' => bcrypt('password'),
+        //         'role' => 'etablissement',
+        //         'telephone' => fake()->phoneNumber(),
+        //         'email_verified_at' => now(),
+        //     ]
+        // );
 
-        User::factory()->count(5)->gerant()->create();
-        User::factory()->count(20)->create();
+        // User::factory()->count(5)->gerant()->create();
+        // User::factory()->count(20)->create();
 
-        // Créer les types d'établissements
-        $this->command->info('Création des types d\'établissements...');
-        $typesList = [
-            'Hôtel' => 'Établissement offrant des chambres et services hôteliers',
-            'Restaurant' => 'Établissement proposant des repas et boissons',
-            'Bar' => 'Établissement spécialisé dans les boissons',
-            'Café' => 'Établissement proposant café et pâtisseries',
-            'Club' => 'Établissement de divertissement nocturne',
-            'Auberge' => 'Petit établissement hôtelier familial',
-            'Guest House' => 'Maison d\'hôtes avec services personnalisés',
-            'Lodge' => 'Hébergement en pleine nature',
-            'Villa' => 'Location de villas de luxe',
-            'Appartement' => 'Location d\'appartements meublés',
-        ];
-        $types = collect();
-        foreach ($typesList as $nom => $description) {
-            $types->push(TypeEtablissement::updateOrCreate(
-                ['nom' => $nom],
-                ['description' => $description]
-            ));
-        }
+        // // Créer les types d'établissements
+        // $this->command->info('Création des types d\'établissements...');
+        // $typesList = [
+        //     'Hôtel' => 'Établissement offrant des chambres et services hôteliers',
+        //     'Restaurant' => 'Établissement proposant des repas et boissons',
+        //     'Bar' => 'Établissement spécialisé dans les boissons',
+        //     'Café' => 'Établissement proposant café et pâtisseries',
+        //     'Club' => 'Établissement de divertissement nocturne',
+        //     'Auberge' => 'Petit établissement hôtelier familial',
+        //     'Guest House' => 'Maison d\'hôtes avec services personnalisés',
+        //     'Lodge' => 'Hébergement en pleine nature',
+        //     'Villa' => 'Location de villas de luxe',
+        //     'Appartement' => 'Location d\'appartements meublés',
+        // ];
+        // $types = collect();
+        // foreach ($typesList as $nom => $description) {
+        //     $types->push(TypeEtablissement::updateOrCreate(
+        //         ['nom' => $nom],
+        //         ['description' => $description]
+        //     ));
+        // }
 
-        // Créer les établissements avec leurs relations
-        $this->command->info('Création des établissements...');
-        $etablissements = Etablissement::factory()
-            ->count(15)
-            ->sequence(fn($sequence) => [
-                'type_etablissement_id' => $types->random()->id,
+        // // Créer les établissements avec leurs relations
+        // $this->command->info('Création des établissements...');
+        // $etablissements = Etablissement::factory()
+        //     ->count(15)
+        //     ->sequence(fn($sequence) => [
+        //         'type_etablissement_id' => $types->random()->id,
 
-            ])
-            ->create();
+        //     ])
+        //     ->create();
+
+
+
+
+
+        
 
     //     // Pour chaque établissement, créer des services, photos, promotions et publicités
     //     $this->command->info('Création des services, photos, promotions et publicités...');

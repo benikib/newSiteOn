@@ -14,6 +14,7 @@ class PaiementController extends Controller
      */
     public function index()
     {
+        try{
          $etablissements = Etablissement::whereHas('users', function($query) {
         $query->where('user_id', auth()->id());
     })->with(['photos', 'services'])->paginate(5);
@@ -32,7 +33,10 @@ $serviceIds = Service::whereIn('etablissement_id', $etablissementIds)->pluck('id
             ->whereIn('service_id', $serviceIds)
             ->latest()
             ->paginate(10);
-        return view('etablissements.paiements.index', compact('paiements' ,'services'));
+        return view('etablissements.paiements.index', compact('paiements' ,'services'));}
+        catch(\Throwable $e){
+            return redirect()->back()->with('error', 'Une erreur est survenue lors de la récupération des paiements. Veuillez réessayer plus tard.');
+        }
     }
 
     /**
