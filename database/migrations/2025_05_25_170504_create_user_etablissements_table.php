@@ -13,12 +13,16 @@ return new class extends Migration
     {
         Schema::create('user_etablissements', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')
-                ->constrained('users')
-                ->onDelete('cascade');
-            $table->foreignId('etablissement_id')
-                ->constrained('etablissements')
-                ->onDelete('cascade');
+
+    // clé étrangère correcte
+    $table->foreignId('etablissement_id')
+          ->constrained('etablissements')
+          ->onDelete('cascade');
+
+    // si tu as un user_id
+    $table->foreignId('user_id')
+          ->constrained('users')
+          ->onDelete('cascade');
             $table->timestamps();
         });
     }
