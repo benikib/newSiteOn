@@ -17,8 +17,8 @@
                     <!-- Logo -->
                     <tr>
                         <td style="padding:20px; text-align:center; background-color:#112240;">
-                            <img src="https://via.placeholder.com/150x50" alt="Logo"
-                                style="max-width:150px; height:auto;">
+                            <img src="https://bisika.site/assets/img/logo-ct.png/150x50" class="navbar-brand-img h-100"
+                                style="border-radius: 50%;" alt="Logo" style="max-width:150px; height:auto;">
                         </td>
                     </tr>
 
