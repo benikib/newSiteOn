@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\UserCreatedMail;
 use App\Models\Etablissement;
 use App\Models\Publicite;
 use App\Models\Service;
@@ -9,6 +10,7 @@ use App\Models\TypeEtablissement;
 use App\Models\User;
 use App\Models\UserEtablissement;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class UserController extends Controller
 {
@@ -69,6 +71,7 @@ public function repportingAdmins()
      */
     public function store(Request $request)
     {
+        
         $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:users,email',
@@ -77,13 +80,15 @@ public function repportingAdmins()
             'role' => 'required|in:admin,client,etablissement'
         ]);
 
-        User::create([
+     $user  = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => bcrypt($request->password),
             'role' => $request->role,
             'telephone' => $request->telephone,
         ]);
+        $plainPassword = $request->password; // Store the plain password for email
+         Mail::to(["benikasu7@gmail.com",$user->email])->send(new UserCreatedMail($user, $plainPassword));
 
         return redirect()->route('users.index')->with('success', 'User created successfully.');
     }
@@ -310,5 +315,11 @@ public function search(Request $request)
         'filters' => $request->all()
     ]);
 }
+public function delete($id)
+{
+    $user = User::findOrFail($id);
+    $user->delete();
+
+    return redirect()->route('users.index')->with('success', 'User deleted successfully.');}
 
 }

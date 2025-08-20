@@ -254,7 +254,7 @@
         }
     </style>
 </head>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
 
 <body>
     <!-- Navigation Bar -->
@@ -385,6 +385,7 @@
             initAdvancedSearch();
         });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 </body>
 
 </html>

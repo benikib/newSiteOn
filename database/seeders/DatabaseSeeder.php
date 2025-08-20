@@ -25,7 +25,7 @@ class DatabaseSeeder extends Seeder
         Storage::deleteDirectory('public/publicites');
         Storage::makeDirectory('public/photos');
         Storage::makeDirectory('public/publicites');
-        
+
         TauxDeChange::updateOrCreate(
                 ['date' => now()->format('Y-m-d')],
                 ['usd_cdf' => rand(2500, 2800) + rand(0, 99)/100]
@@ -93,7 +93,7 @@ class DatabaseSeeder extends Seeder
 
 
 
-        
+
 
     //     // Pour chaque établissement, créer des services, photos, promotions et publicités
     //     $this->command->info('Création des services, photos, promotions et publicités...');

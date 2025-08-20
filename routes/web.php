@@ -11,6 +11,7 @@ use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\PersonnelController;
 use App\Http\Controllers\EquipeController;
+use Illuminate\Support\Facades\Mail;
 
 Route::get('/', [PhotoController::class, 'index'])->name('welcome');
 Route::get('/grilles', function() {
@@ -108,6 +109,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+});
+
+Route::get('/send', function () {
+Mail::to(['benikasu7@gmail.com', 'yoshuankunda1@gmail.com'])
+    ->send(new \App\Mail\OrderShipped());
 
 });
 
