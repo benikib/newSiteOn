@@ -71,6 +71,15 @@
                                                     data-bs-toggle="modal" data-bs-target="#editModal{{ $user->id }}">
                                                     Edit
                                                 </a>
+                                                <form action="{{ route('users.destroy', $user->id) }}" method="POST"
+                                                    class="d-inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="text-danger font-weight-bold text-xs"
+                                                        onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')">
+                                                        Supprimer
+                                                    </button>
+                                                </form>
                                             </td>
                                         </tr>
                                     @endforeach

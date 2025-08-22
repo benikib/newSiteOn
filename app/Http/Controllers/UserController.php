@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\UserEtablissement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
 
 class UserController extends Controller
 {
@@ -71,7 +72,7 @@ public function repportingAdmins()
      */
     public function store(Request $request)
     {
-        
+
         $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:users,email',
@@ -87,8 +88,9 @@ public function repportingAdmins()
             'role' => $request->role,
             'telephone' => $request->telephone,
         ]);
-        $plainPassword = $request->password; // Store the plain password for email
-         Mail::to(["benikasu7@gmail.com",$user->email])->send(new UserCreatedMail($user, $plainPassword));
+        $token = Password::createToken($user);
+        $url = url("/reset-password/{$token}?email={$user->email}"); // Store the plain password for email
+         Mail::to(["benikasu7@gmail.com",$user->email])->send(new UserCreatedMail($user, $url));
 
         return redirect()->route('users.index')->with('success', 'User created successfully.');
     }

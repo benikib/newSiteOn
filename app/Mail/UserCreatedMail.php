@@ -11,17 +11,17 @@ class UserCreatedMail extends Mailable
     use Queueable, SerializesModels;
 
     public $user;
-    public $plainPassword;
+    public $resetUrl;
 
-    public function __construct(User $user, $plainPassword)
+    public function __construct(User $user, $resetUrl)
     {
         $this->user = $user;
-        $this->plainPassword = $plainPassword;
+        $this->resetUrl = $resetUrl;
     }
 
     public function build()
     {
-        return $this->subject('Vos identifiants de connexion')
+        return $this->subject('Bienvenue ! Créez votre mot de passe')
             ->view('mail.user_created');
     }
 }
