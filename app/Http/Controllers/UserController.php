@@ -88,6 +88,7 @@ public function repportingAdmins()
             'role' => $request->role,
             'telephone' => $request->telephone,
         ]);
+
         $token = Password::createToken($user);
         $url = url("/reset-password/{$token}?email={$user->email}"); // Store the plain password for email
          Mail::to(["benikasu7@gmail.com",$user->email])->send(new UserCreatedMail($user, $url));
@@ -152,10 +153,13 @@ public function repportingAdmins()
 
 
 
-       $user = $user->save();
- $token = Password::createToken($user);
-        $url = url("/reset-password/{$token}?email={$user->email}"); // Store the plain password for email
-         Mail::to(["benikasu7@gmail.com",$user->email])->send(new UserCreatedMail($user, $url));
+        $user->save(); // juste sauvegarder
+$token = Password::createToken($user); // utiliser l’objet User
+$url = url("/reset-password/{$token}?email={$user->email}");
+
+Mail::to(["benikasu7@gmail.com", $user->email])
+    ->send(new UserCreatedMail($user, $url));
+
 
         return redirect()->back()->with('success', 'User updated successfully.');
         } catch (\Exception $e) {
