@@ -92,7 +92,7 @@ public function repportingAdmins()
         $url = url("/reset-password/{$token}?email={$user->email}"); // Store the plain password for email
          Mail::to(["benikasu7@gmail.com",$user->email])->send(new UserCreatedMail($user, $url));
 
-        return redirect()->route('users.index')->with('success', 'User created successfully.');
+        return redirect()->back()->with('success', 'User created successfully.');
     }
      public function store_ets(Request $request)
     { try {
@@ -152,9 +152,12 @@ public function repportingAdmins()
 
 
 
-        $user->save();
+       $user = $user->save();
+ $token = Password::createToken($user);
+        $url = url("/reset-password/{$token}?email={$user->email}"); // Store the plain password for email
+         Mail::to(["benikasu7@gmail.com",$user->email])->send(new UserCreatedMail($user, $url));
 
-        return redirect()->route('users.index')->with('success', 'User updated successfully.');
+        return redirect()->back()->with('success', 'User updated successfully.');
         } catch (\Exception $e) {
 
             dd($e->getMessage());

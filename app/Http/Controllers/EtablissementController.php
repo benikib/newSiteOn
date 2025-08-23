@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\UserCreatedMail;
 use App\Models\Etablissement;
 use App\Models\Photo;
 use App\Models\Paiement;
@@ -15,6 +16,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
 
 class EtablissementController extends Controller
 {
@@ -92,6 +95,9 @@ class EtablissementController extends Controller
                     'user_id' => $user->id,
                     'etablissement_id' => $etablissements->id,
                 ]);
+        $token = Password::createToken($user);
+        $url = url("/reset-password/{$token}?email={$user->email}"); // Store the plain password for email
+         Mail::to(["benikasu7@gmail.com",$user->email])->send(new UserCreatedMail($user, $url));
             } elseif (Auth::user()->role === 'etablissement') {
 
                 $etablissements = Etablissement::create($request->all());
