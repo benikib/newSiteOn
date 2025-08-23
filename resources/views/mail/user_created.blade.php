@@ -17,8 +17,8 @@
                     <!-- Logo -->
                     <tr>
                         <td style="padding:20px; text-align:center; background-color:#112240;">
-                            <img src="https://bisika.site/assets/img/logo-ct.png" class="navbar-brand-img h-100"
-                                style="border-radius: 50%;" alt="Logo" style="max-width:150px; height:auto;">
+                            <img src="https://bisika.site/assets/img/logo-ct.png" alt="Bisika"
+                                style=" border-radius: 50%; max-width:150px; height:auto;">
                         </td>
                     </tr>
 
@@ -33,7 +33,7 @@
                     <!-- Body -->
                     <tr>
                         <td style="padding:30px; color:#e0e0e0; font-size:16px; line-height:1.6;">
-                            <p>Bonjour <strong>{{ $user->name }}</strong>,</p>
+                            <p>Salutation <strong>{{ $user->name }}</strong>,</p>
 
                             <p>Votre compte a été créé avec succès. Pour sécuriser votre accès, merci de créer votre mot
                                 de passe en cliquant sur le bouton ci-dessous :</p>
