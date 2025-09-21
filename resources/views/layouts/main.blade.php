@@ -3,46 +3,38 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    <!-- Favicons -->
-    <link rel="apple-touch-icon" sizes="76x76" href="{{ asset('assets/img/apple-icon.png') }}">
-    <link rel="icon" type="image/png" href="{{ asset('assets/img/favicon.png') }}">
 
     <title>Bisika</title>
 
     <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
-    <!-- Icons -->
-    <link rel="stylesheet" href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.css') }}"
-        onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css'">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/font-awesome/css/all.min.css') }}"
-        onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'">
+    <!-- Bootstrap 5 léger depuis CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Core CSS -->
-    <link href="{{ asset('assets/css/nucleo-icons.css') }}" rel="stylesheet" />
-    <link href="{{ asset('assets/css/nucleo-svg.css') }}" rel="stylesheet" />
-    <link id="pagestyle" href="{{ asset('assets/css/soft-ui-dashboard.css?v=1.1.0') }}" rel="stylesheet" />
+    <!-- Icônes avec fallback -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Dashboard CSS minimal -->
+    <link href="{{ asset('assets/css/soft-ui-dashboard.css?v=1.1.0') }}" rel="stylesheet">
 
     @yield('head')
 </head>
 
+<body class="bg-light">
 
-<body class="g-sidenav-show bg-gray-100">
     @include('layouts.etablissements.aside')
 
-    <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
+    <main class="main-content p-2">
         @include('layouts.etablissements.nav')
 
         <!-- Alertes système -->
         @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show mx-3 mt-3" role="alert" id="successAlert">
+            <div class="alert alert-success alert-dismissible fade show" role="alert" id="successAlert">
                 <i class="fas fa-check-circle me-2"></i>
                 {{ session('success') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
@@ -50,17 +42,19 @@
         @endif
 
         @if (session('error'))
-            <div class="alert alert-danger alert-dismissible fade show mx-3 mt-3" role="alert" id="errorAlert">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert" id="errorAlert">
                 <i class="fas fa-exclamation-circle me-2"></i>
                 {{ session('error') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
             </div>
         @endif
-        <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+
+        <!-- Modal déconnexion -->
+        <div class="modal fade" id="logoutModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="logoutModalLabel">Confirmer la déconnexion</h5>
+                        <h5 class="modal-title">Confirmer la déconnexion</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
                     </div>
                     <div class="modal-body">
@@ -78,31 +72,28 @@
         @yield('content')
     </main>
 
-    <!-- Core JS -->
-
-
-    <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
-    <script src="{{ asset('assets/js/core/bootstrap.min.js') }}"></script>
-    <script src="{{ asset('assets/js/plugins/perfect-scrollbar.min.js') }}"></script>
-    <script src="{{ asset('assets/js/plugins/smooth-scrollbar.min.js') }}"></script>
-
-    <!-- ChartJS -->
-    <script src="{{ asset('assets/js/plugins/chartjs.min.js') }}"></script>
-
-    <!-- Main JS -->
-    <script src="{{ asset('assets/js/soft-ui-dashboard.min.js?v=1.1.0') }}"></script>
+    <!-- Core JS léger -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
 
     <script>
-        // Gestion des alertes
+        // Fermeture automatique des alertes (ES5 compatible)
         document.addEventListener('DOMContentLoaded', function() {
-            [document.getElementById('successAlert'), document.getElementById('errorAlert')]
-            .filter(alert => alert)
-                .forEach(alert => {
-                    setTimeout(() => {
-                        const bsAlert = new bootstrap.Alert(alert);
-                        bsAlert.close();
-                    }, 5000);
-                });
+            var alerts = [document.getElementById('successAlert'), document.getElementById('errorAlert')];
+            for (var i = 0; i < alerts.length; i++) {
+                if (alerts[i]) {
+                    (function(alertEl) {
+                        setTimeout(function() {
+                            try {
+                                var bsAlert = new bootstrap.Alert(alertEl);
+                                bsAlert.close();
+                            } catch (e) {
+                                console.warn('Erreur fermeture alerte:', e);
+                            }
+                        }, 4000); // 4 secondes pour mobile faible
+                    })(alerts[i]);
+                }
+            }
         });
     </script>
 
