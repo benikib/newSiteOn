@@ -260,5 +260,49 @@
             });
         });
     </script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.querySelector('#addReservationModal form');
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault(); // 👉 empêche le navigateur d'aller sur l'URL
+
+        const url = form.action;   // garde le route('reservations.store')
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: formData
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                alert(data.message || "Réservation enregistrée avec succès !");
+
+                // Fermer la modale Bootstrap
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addReservationModal'));
+                modal.hide();
+
+                // Réinitialiser le formulaire
+                form.reset();
+            } else if (response.status === 422) {
+                const errors = await response.json();
+                let messages = Object.values(errors.errors).flat().join("\n");
+                alert("Erreur de validation :\n" + messages);
+            } else {
+                alert("Erreur " + response.status);
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Impossible de contacter le serveur.");
+        }
+    });
+});
+</script>
 
 @endsection

@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <title>Bisika - {{ $etablissement->nom }}</title>
@@ -1055,22 +1057,48 @@
             openModal('reservationModal');
         }
 
-        function submitReservation() {
-            const date = document.getElementById('dateInput').value;
-            const name = document.getElementById('clientName').value.trim();
-            const phone = document.getElementById('clientPhone').value.trim();
+       async function submitReservation(serviceId) {
+    const date = document.getElementById('dateInput').value;
+    const name = document.getElementById('clientName').value.trim();
+    const phone = document.getElementById('clientPhone').value.trim();
 
-            if (!date || !name || !phone) {
-                showMessage('Erreur', 'Veuillez remplir tous les champs obligatoires.');
-                return;
-            }
+    if (!date || !name || !phone) {
+        showMessage('Erreur', 'Veuillez remplir tous les champs obligatoires.');
+        return;
+    }
 
-            // Simulate API call
-            showMessage('Succès', 'Votre réservation a été envoyée avec succès!');
+    try {
+        // 👉 Appel API
+        const response = await fetch('/reservations', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content // si Laravel
+            },
+            body: JSON.stringify({
+                service_id: currentServiceId,
+                date: date,
+                client_name: name,
+                client_phone: phone
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            showMessage('Succès', data.message || 'Votre réservation a été envoyée avec succès!');
             setTimeout(() => {
                 closeModal('reservationModal');
             }, 2000);
+        } else {
+            const error = await response.json();
+            showMessage('Erreur', error.message || 'Une erreur est survenue lors de la réservation.');
         }
+    } catch (err) {
+        console.error(err);
+        showMessage('Erreur', 'Impossible de contacter le serveur.');
+    }
+}
+
 
         // =========================
         // GALLERY FUNCTIONS

@@ -68,12 +68,13 @@ public function changerStatut(Request $request, $id)
 
 public function store(Request $request)
 {
+
     $request->validate([
         'service_id' => 'required|integer|exists:services,id',
         'date' => 'required|date|after_or_equal:today',
         'client_name' => 'required|string|max:100',
         'client_phone' => 'nullable|string|max:25',
-        'statut' => 'in:en_attente,confirme'
+        //'statut' => 'in:en_attente,confirme'
     ]);
 
     // Vérifier si la date est déjà réservée (optionnel)
