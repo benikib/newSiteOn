@@ -13,6 +13,7 @@ class Equipe extends Model
         'etablissement_id',
         'nom',
         'description',
+        'evenement'
     ];
     protected $table = 'equipes';
     public function personnels()

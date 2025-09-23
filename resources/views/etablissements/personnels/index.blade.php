@@ -73,7 +73,7 @@
                                 <th>Email</th>
                                 <th>Téléphone</th>
                                 <th>Poste</th>
-                                <th>Équipes</th>
+                                <th>Tâches</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Equipe;
 use App\Models\Etablissement;
 use App\Models\Personnel;
+use App\Models\Reservation;
+use App\Models\Service;
 use Illuminate\Http\Request;
 
 class EquipeController extends Controller
@@ -20,12 +22,26 @@ class EquipeController extends Controller
     ->where('statut', 'actif')
     ->pluck('id');
 
+    $serviceIds = Service::whereIn('etablissement_id', $etablissementIds)->pluck('id');
+
+Reservation::whereIn('service_id', $serviceIds)
+    ->where('created_at', '<', now()->subHours(48))
+    ->delete();
+
+    $reservations = Reservation::with(['service', 'service.etablissement'])
+    ->whereIn('service_id', $serviceIds)
+    ->where('created_at', '>=', now()->subHours(48)) // garde seulement les < 48h
+    ->latest()
+    ->paginate(10);
           $personnels = Personnel::where('etablissement_id', $etablissementIds->first())->get();
           $equipes = Equipe::with(['personnels', 'etablissement'])
             ->where('etablissement_id', $etablissementIds->first())
             ->orderBy('nom')
             ->paginate(15); // 15 éléments par page
-    return view('etablissements.equipes.index', compact('personnels', 'equipes'));
+
+
+
+    return view('etablissements.equipes.index', compact('personnels', 'equipes','reservations'));
     }
 
     /**
@@ -53,17 +69,21 @@ public function store(Request $request)
             'personnels.*' => 'exists:personnels,id',
         ]);
 
+
         $equipe = Equipe::create([
             'etablissement_id' => $etablissementIds->first(),
+            'evenement' => $request->evenement ?? null,
             'nom' => $request->nom,
             'description' => $request->description,
         ]);
 
+
         if ($request->has('personnels')) {
             $equipe->personnels()->sync($request->personnels);
+
         }
 
-        return redirect()->route('equipes.index')->with('success', 'Équipe créée avec succès.');
+        return redirect()->back()->with('success', 'Équipe créée avec succès.');
     } catch (\Exception $e) {
         dd($e->getMessage());
         return redirect()->back()->withErrors(['error' => $e->getMessage()]);
@@ -91,14 +111,18 @@ public function store(Request $request)
      */
     public function update(Request $request, Equipe $equipe)
     {
+        try {
+
     $request->validate([
         'nom' => 'required|string|max:255',
         'description' => 'nullable|string|max:500',
         'personnels' => 'array',
         'personnels.*' => 'exists:personnels,id',
     ]);
+
     $equipe->update([
         'nom' => $request->nom,
+        'evenement' => $request->evenement ?? null,
         'description' => $request->description,
     ]);
     if ($request->has('personnels')) {
@@ -106,6 +130,10 @@ public function store(Request $request)
     } else {
         $equipe->personnels()->detach();
     }
+    return redirect()->back()->with('success', 'Équipe mise à jour avec succès.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Erreur lors de la mise à jour de l\'équipe : ' . $e->getMessage()]);
+        }
     }
 
     /**
@@ -115,7 +143,7 @@ public function store(Request $request)
     {
     try {
         $equipe->delete();
-        return redirect()->route('equipes.index')->with('success', 'Équipe supprimée avec succès.');
+        return redirect()->back()->with('success', 'Équipe supprimée avec succès.');
     } catch (\Exception $e) {
         return redirect()->back()->withErrors(['error' => 'Erreur lors de la suppression de l\'équipe : ' . $e->getMessage()]);
     }

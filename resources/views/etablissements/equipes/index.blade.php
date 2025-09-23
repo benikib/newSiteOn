@@ -24,13 +24,28 @@
                         @csrf
                         <div class="modal-body">
                             <div class="mb-3">
-                                <label for="nom" class="form-label">Nom de l'équipe *</label>
+                                <label for="nom" class="form-label">Taches de l'équipe *</label>
                                 <input type="text" class="form-control @error('nom') is-invalid @enderror" id="nom"
                                     name="nom" value="{{ old('nom') }}" required>
                                 @error('nom')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
+
+
+
+                                <div class="mb-3">
+                                    <label class="form-label">Reservation</label>
+
+                                    <select class="form-select" name="evenement">
+                                           @foreach($reservations as $reservation)
+                                        <option value="{{ $reservation->service->nom }} - {{ $reservation->date}}">
+                                            {{ $reservation->service->nom }} - {{ $reservation->date}}
+                                        </option>
+                                            @endforeach
+                                    </select>
+                                </div>
+
 
                             <div class="mb-3">
                                 <label for="description" class="form-label">Description</label>
@@ -69,7 +84,8 @@
                     <table class="table table-hover">
                         <thead class="table-light">
                             <tr>
-                                <th>Nom</th>
+                                <th>Taches</th>
+                                <th>Evenements</th>
                                 <th>Description</th>
                                 <th>Membres</th>
                                 <th class="text-end">Actions</th>
@@ -79,6 +95,7 @@
                             @forelse($equipes as $equipe)
                                 <tr>
                                     <td>{{ $equipe->nom }}</td>
+                                    <td>{{ $equipe->evenement ?? 'Aucun evenement' }}</td>
                                     <td>{{ $equipe->description ?? 'Aucune description' }}</td>
                                     <td>
                                         @forelse($equipe->personnels as $personnel)
@@ -112,7 +129,7 @@
                                         <div class="modal-content">
                                             <div class="modal-header bg-warning text-white">
                                                 <h5 class="modal-title" id="editEquipeModalLabel{{ $equipe->id }}">
-                                                    Modifier l'équipe
+                                                    Modifier  la tâches
                                                 </h5>
                                                 <button type="button" class="btn-close btn-close-white"
                                                     data-bs-dismiss="modal" aria-label="Close"></button>
@@ -122,10 +139,23 @@
                                                 @method('PUT')
                                                 <div class="modal-body">
                                                     <div class="mb-3">
-                                                        <label for="nom" class="form-label">Nom *</label>
+                                                        <label for="nom" class="form-label">Tâches de l'equipe</label>
                                                         <input type="text" class="form-control" id="nom"
                                                             name="nom" value="{{ $equipe->nom }}" required>
                                                     </div>
+
+
+                                                     <div class="mb-3">
+                                                        <label class="form-label">Reservation</label>
+                                                                <select class="form-select" name="evenement">
+                                           @foreach($reservations as $reservation)
+                                        <option value="{{ $reservation->service->nom }} - {{ $reservation->date}}">
+                                            {{ $reservation->service->nom }} - {{ $reservation->date}}
+                                        </option>
+                                            @endforeach
+                                    </select>
+                                                    </div>
+
 
                                                     <div class="mb-3">
                                                         <label for="description" class="form-label">Description</label>

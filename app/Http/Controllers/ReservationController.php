@@ -95,7 +95,7 @@ if ($existe) {
         'date' => $request->date
     ]);
 
-    return response()->json(['message' => 'Réservation enregistrée avec succès.']);
+    return response()->json(['message' => 'Réservation créée avec succès.']);
 }
 
 }
