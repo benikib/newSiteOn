@@ -49,7 +49,7 @@ class EtablissementController extends Controller
 
         }
         catch (\Exception $e) {
-           
+
             return redirect()->back()->withErrors(['error' => 'Erreur lors de la récupération des utilisateurs.']);
         }
     }
@@ -121,7 +121,7 @@ class EtablissementController extends Controller
 
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            dd($e->validator->errors());
+            
 
             return redirect()->back()->withErrors($e->validator)->withInput();
         }
