@@ -121,8 +121,8 @@ class EtablissementController extends Controller
 
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            
 
+                dd($e->getMessage());
             return redirect()->back()->withErrors($e->validator)->withInput();
         }
     }
