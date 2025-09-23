@@ -37,15 +37,22 @@ class EtablissementController extends Controller
     }
     public function users_ets()
     {
+        try {
 
-       $userEtablissements = UserEtablissement::with('user')
+       $userEtablissements = UserEtablissement::with('user','etablissement')
             ->where('etablissement_id', Auth::user()->usersEtablissements->first()?->etablissement_id)
             ->get();
+
 
 
             return view('etablissements.users_etablissements.index', compact('userEtablissements'));
 
         }
+        catch (\Exception $e) {
+           
+            return redirect()->back()->withErrors(['error' => 'Erreur lors de la récupération des utilisateurs.']);
+        }
+    }
 
     /**
      * Show the form for creating a new resource.

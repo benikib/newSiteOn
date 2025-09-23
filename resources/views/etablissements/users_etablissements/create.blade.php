@@ -21,7 +21,7 @@
                         <input type="text" class="form-control" id="telphone" name="telephone" required>
                     </div>
                     <input type="hidden" name="role" value="etablissement">
-                    <input type="hidden" name="etablissement_id" value="{{ $etablissement }}">
+                    <input type="hidden" name="etablissement_id" value="{{ $userEtablissements->first()->etablissement_id }}">
                     <div class="mb-3">
                         <label for="password" class="form-label">Mot de passe (laisser vide pour ne pas
                             modifier)</label>

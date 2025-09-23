@@ -17,16 +17,16 @@
         </div> --}}
 
         <!-- En-tête + bouton -->
-        {{-- <div class="d-flex justify-content-between align-items-center mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h4 text-dark">Users</h1>
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#repportingModal">
                 Ajouter un user
             </button>
 
-        </div> --}}
+        </div>
 
         <!-- Modal Ajout -->
-        {{-- @include('admins.users_etablissements.create') --}}
+  @include('etablissements.users_etablissements.create')
 
 
 

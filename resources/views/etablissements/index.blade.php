@@ -7,11 +7,11 @@
         <!-- En-tête + bouton -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h4 text-dark">Etablissements</h1>
-            <button type="button" class="btn btn-primary d-inline-flex align-items-center" data-bs-toggle="modal"
+            {{-- <button type="button" class="btn btn-primary d-inline-flex align-items-center" data-bs-toggle="modal"
                 data-bs-target="#etablissementModal">
                 <i class="fas fa-plus me-2"></i>
                 Ajouter un établissement
-            </button>
+            </button> --}}
         </div>
 
         <!-- Tableau -->

@@ -57,7 +57,7 @@ Route::put( 'publicites/{user}/etablissement',[PubliciteController::class,'updat
 
 
 Route::get('/users_ets/{ets}',[UserController::class,'users_ets'])->name("users_ets.index");
-Route::post('/users_ets', [UserController::class,'store_ets'])->name('users_ets.store');
+Route::post('/users_ets_amind', [UserController::class,'store_ets'])->name('users_ets.store');
 Route::put( 'user_ets/{user}',[UserController::class,'update_ets'])->name('users_ets.update');
 Route::get('/taux', [TauxController::class, 'create'])->name('taux.create');
 Route::post('/taux', [TauxController::class, 'store'])->name('taux.store');

@@ -41,7 +41,7 @@ Route::delete('etablissement/promotion/{promotion}', [\App\Http\Controllers\Prom
 Route::get('etablissement/{etablissement}/edit', [EtablissementController::class, 'edit'])->name('etablissements.edit');
 Route::post('/promotions/{service}', [ServiceController::class, 'promotion'])->name('services.promotion');
 Route::get('etablissements/utilisateurs', [EtablissementController::class, 'users_ets'])->name('etablissemensts.users.index');
-
+Route::post('/users_ets', [UserController::class,'store_ets'])->name('users_ets.store');
 
 
 Route::get('users/etablissments', [UserEtablissementController::class, 'index'])->name('users.etablissements');
