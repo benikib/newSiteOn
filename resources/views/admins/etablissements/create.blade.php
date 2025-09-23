@@ -87,12 +87,37 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="user_password" class="form-label">Mot de passe*</label>
-                                    <input type="password" name="user_password" id="user_password"
-                                        class="form-control" required>
-                                    <small class="text-muted">Le mot de passe sera généré automatiquement mais peut
-                                        être modifié</small>
-                                </div>
+    <label for="user_password" class="form-label">Mot de passe*</label>
+    <div class="input-group">
+        <input type="password" name="user_password" id="user_password" class="form-control" required>
+        <button type="button" class="btn btn-outline-secondary" id="toggleUserPassword"
+                style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+            <i class="bi bi-eye"></i>
+        </button>
+    </div>
+    <small class="text-muted">
+        Le mot de passe sera généré automatiquement mais peut être modifié
+    </small>
+</div>
+
+<!-- Bootstrap Icons si pas encore inclus -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+
+<script>
+document.getElementById('toggleUserPassword').addEventListener('click', function () {
+    const input = document.getElementById('user_password');
+    const icon = this.querySelector('i');
+
+    if (input.type === "password") {
+        input.type = "text";
+        icon.classList.replace("bi-eye", "bi-eye-slash");
+    } else {
+        input.type = "password";
+        icon.classList.replace("bi-eye-slash", "bi-eye");
+    }
+});
+</script>
+
 
                                 <input type="hidden" name="user_role" value="etablissement">
 
