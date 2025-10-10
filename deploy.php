@@ -9,6 +9,7 @@ file_put_contents('/home/u684456859/domains/bisika.menjidrc.com/deploy_errors.lo
     FILE_APPEND);
 
 try {
+   
     // // Votre code existant...
     // $secret = 'votre-secret';
     $payload = file_get_contents('php://input');
