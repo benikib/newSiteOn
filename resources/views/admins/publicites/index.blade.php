@@ -101,7 +101,7 @@
                                                             data-bs-dismiss="modal">Annuler</button>
 
                                                         <form
-                                                            action="{{ route('type_etablissements.destroy', $publicite->id) }}"
+                                                            action="{{ route('publicites.destroy', $publicite->id) }}"
                                                             method="POST">
                                                             @csrf
                                                             @method('DELETE')

@@ -89,7 +89,7 @@ class EtablissementController extends Controller
             ]);
 
 
-            if (Auth::user()->role === 'admin') {
+            if (in_array(auth()->user()->role, ['admin', 'integrateur'])) {
 
                 $user = User::create([
                     'name' => $request->user_name,
@@ -122,7 +122,7 @@ class EtablissementController extends Controller
 
         } catch (\Illuminate\Validation\ValidationException $e) {
 
-                dd($e->getMessage());
+                
             return redirect()->back()->withErrors($e->validator)->withInput();
         }
     }

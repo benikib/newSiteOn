@@ -7,7 +7,6 @@
         <a class="navbar-brand m-0 d-flex align-items-center" href="{{ route('dashboard') }}">
             <img src="{{ asset('assets/img/logo-ct.png') }}" class="navbar-brand-img h-100" alt="Logo"
                 style="border-radius: 50%;">
-
             <span class="ms-2 font-weight-bold fs-5 text-dark">Bisika</span>
         </a>
     </div>
@@ -16,34 +15,41 @@
 
     <div class="collapse navbar-collapse w-auto h-auto" id="sidenav-collapse-main">
         <ul class="navbar-nav">
-            <!-- Dashboard -->
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
-                    href="{{ route('dashboard') }}">
-                    <div
-                        class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-primary text-center me-2 d-flex align-items-center justify-content-center">
-                        <i class="fas fa-tachometer-alt text-white"></i>
-                    </div>
-                    <span class="nav-link-text ms-1">Dashboard</span>
-                </a>
-            </li>
 
-            <!-- Gestion des établissements -->
+            <!-- Dashboard (visible uniquement à l'admin) -->
+           
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
+                        href="{{ route('dashboard') }}">
+                        <div
+                            class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-primary text-center me-2 d-flex align-items-center justify-content-center">
+                            <i class="fas fa-tachometer-alt text-white"></i>
+                        </div>
+                        <span class="nav-link-text ms-1">Dashboard</span>
+                    </a>
+                </li>
+           
+
+            <!-- Section Gestion -->
             <li class="nav-item mt-3">
                 <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Gestion</h6>
             </li>
 
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('type_etablissements.*') ? 'active' : '' }}"
-                    href="{{ route('type_etablissements.index') }}">
-                    <div
-                        class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-success text-center me-2 d-flex align-items-center justify-content-center">
-                        <i class="fas fa-layer-group text-white"></i>
-                    </div>
-                    <span class="nav-link-text ms-1">Types d'établissements</span>
-                </a>
-            </li>
+            <!-- Types d'établissements (admin uniquement) -->
+            @if (Auth::user()->role === 'admin')
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('type_etablissements.*') ? 'active' : '' }}"
+                        href="{{ route('type_etablissements.index') }}">
+                        <div
+                            class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-success text-center me-2 d-flex align-items-center justify-content-center">
+                            <i class="fas fa-layer-group text-white"></i>
+                        </div>
+                        <span class="nav-link-text ms-1">Types d'établissements</span>
+                    </a>
+                </li>
+            @endif
 
+            <!-- Établissements (visible pour tous) -->
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('etablissements.*') ? 'active' : '' }}"
                     href="{{ route('etablissements.index') }}">
@@ -55,6 +61,7 @@
                 </a>
             </li>
 
+            <!-- Publicités (visible pour tous) -->
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('publicites.*') ? 'active' : '' }}"
                     href="{{ route('publicites.index') }}">
@@ -66,34 +73,36 @@
                 </a>
             </li>
 
-            <!-- Administration -->
-            <li class="nav-item mt-3">
-                <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Gestion Utilisateur</h6>
-            </li>
+            <!-- Gestion Utilisateurs (admin uniquement) -->
+            @if (Auth::user()->role === 'admin')
+                <li class="nav-item mt-3">
+                    <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Gestion Utilisateur</h6>
+                </li>
 
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}"
-                    href="{{ route('users.index') }}">
-                    <div
-                        class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-danger text-center me-2 d-flex align-items-center justify-content-center">
-                        <i class="fas fa-users-cog text-white"></i>
-                    </div>
-                    <span class="nav-link-text ms-1">Utilisateurs</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admins.*') ? 'active' : '' }}"
-                    href="{{ route('admins.index') }}">
-                    <div
-                        class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-danger text-center me-2 d-flex align-items-center justify-content-center">
-                        <i class="fas fa-users-cog text-white"></i>
-                    </div>
-                    <span class="nav-link-text ms-1">Administrateurs</span>
-                </a>
-            </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}"
+                        href="{{ route('users.index') }}">
+                        <div
+                            class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-danger text-center me-2 d-flex align-items-center justify-content-center">
+                            <i class="fas fa-users-cog text-white"></i>
+                        </div>
+                        <span class="nav-link-text ms-1">Utilisateurs</span>
+                    </a>
+                </li>
 
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admins.*') ? 'active' : '' }}"
+                        href="{{ route('admins.index') }}">
+                        <div
+                            class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-danger text-center me-2 d-flex align-items-center justify-content-center">
+                            <i class="fas fa-user-shield text-white"></i>
+                        </div>
+                        <span class="nav-link-text ms-1">Administrateurs</span>
+                    </a>
+                </li>
+            @endif
 
-            <!-- Compte utilisateur -->
+            <!-- Mon compte -->
             <li class="nav-item mt-3">
                 <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Mon compte</h6>
             </li>
@@ -108,6 +117,8 @@
                     <span class="nav-link-text ms-1">Profil</span>
                 </a>
             </li>
+
+            <!-- Déconnexion -->
             <li class="nav-item">
                 <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
                     <div
@@ -123,109 +134,6 @@
                 </form>
             </li>
 
-            <!-- Modal de confirmation -->
-
-
         </ul>
     </div>
-
-
-
 </aside>
-
-<style>
-    .sidenav {
-        width: 250px;
-        transition: all 0.3s ease;
-        z-index: 1035;
-        box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.05);
-        height: calc(100vh - 2rem);
-        margin: 1rem;
-    }
-
-    .sidenav-header {
-        padding: 1.5rem 1rem 0.5rem;
-    }
-
-    .sidenav .nav-link {
-        margin: 0.1rem 0.5rem;
-        border-radius: 0.375rem;
-        transition: all 0.2s ease;
-        padding: 0.5rem 1rem;
-    }
-
-    .sidenav .nav-link.active {
-        background-color: rgba(94, 114, 228, 0.1);
-        font-weight: 600;
-        color: #5e72e4;
-    }
-
-    .sidenav .nav-link.active .icon-shape {
-        background-color: #5e72e4 !important;
-    }
-
-    .sidenav .nav-link:hover:not(.active) {
-        background-color: rgba(0, 0, 0, 0.03);
-    }
-
-    .icon-shape {
-        width: 36px;
-        height: 36px;
-        transition: all 0.2s ease;
-    }
-
-    .sidenav-footer {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        border-top: 1px solid rgba(0, 0, 0, 0.05);
-    }
-
-    @media (max-width: 1199.98px) {
-        .sidenav {
-            transform: translateX(-100%);
-            position: fixed;
-            left: 0;
-            top: 0;
-            margin: 0;
-            height: 100vh;
-        }
-
-        .sidenav.show {
-            transform: translateX(0);
-        }
-
-        .sidenav-header {
-            padding-top: 1rem;
-        }
-    }
-</style>
-
-<script>
-    // Toggle sidebar on mobile
-    document.getElementById('iconSidenav').addEventListener('click', function() {
-        document.getElementById('sidenav-main').classList.toggle('show');
-    });
-
-    // Close sidebar when clicking outside
-    document.addEventListener('click', function(event) {
-        const sidenav = document.getElementById('sidenav-main');
-        const target = event.target;
-
-        if (window.innerWidth < 1200 &&
-            !target.closest('#sidenav-main') &&
-            !target.closest('.navbar-toggler') &&
-            sidenav.classList.contains('show')) {
-            sidenav.classList.remove('show');
-        }
-    });
-
-    // Active state management
-    const currentPath = window.location.pathname;
-    document.querySelectorAll('.nav-link').forEach(link => {
-        if (link.getAttribute('href') === currentPath) {
-            link.classList.add('active');
-        }
-    });
-</script>

@@ -15,7 +15,7 @@
                                 data-bs-target="#etablissement" type="button" role="tab"
                                 aria-controls="etablissement" aria-selected="true">Établissement</button>
                         </li>
-                        @if (auth()->user()->role === 'admin')
+                        @if (in_array(auth()->user()->role, ['admin', 'integrateur']))
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="admin-tab" data-bs-toggle="tab" data-bs-target="#admin"
                                     type="button" role="tab" aria-controls="admin" aria-selected="false"
@@ -26,7 +26,7 @@
                             <button class="nav-link" id="localisation-tab" data-bs-toggle="tab"
                                 data-bs-target="#localisation" type="button" role="tab"
                                 aria-controls="localisation" aria-selected="false"
-                                {{ auth()->user()->role === 'admin' ? 'disabled' : '' }}>Localisation</button>
+                                {{ in_array(auth()->user()->role, ['admin', 'integrateur']) ? 'disabled' : '' }}>Localisation</button>
                         </li>
                     </ul>
 
@@ -39,7 +39,7 @@
                                 <label for="nom" class="form-label">Nom de l'Établissement*</label>
                                 <input type="text" name="nom" id="nom" class="form-control"
                                     placeholder="Ex: Université, Lycée, etc." required
-                                    oninput="@if (auth()->user()->role === 'admin') generateUserCredentials(this.value) @endif">
+                                    oninput="@if (in_array(auth()->user()->role, ['admin', 'integrateur'])) generateUserCredentials(this.value) @endif">
                             </div>
 
                             <div class="mb-3">
@@ -67,11 +67,11 @@
 
                             <div class="d-flex justify-content-end">
                                 <button type="button" class="btn btn-primary"
-                                    onclick="nextTab('{{ auth()->user()->role === 'admin' ? 'admin-tab' : 'localisation-tab' }}')">Suivant</button>
+                                    onclick="nextTab('{{ in_array(auth()->user()->role, ['admin', 'integrateur']) ? 'admin-tab' : 'localisation-tab' }}')">Suivant</button>
                             </div>
                         </div>
 
-                        @if (auth()->user()->role === 'admin')
+                        @if (in_array(auth()->user()->role, ['admin', 'integrateur']))
                             <!-- Onglet Administrateur -->
                             <div class="tab-pane fade" id="admin" role="tabpanel" aria-labelledby="admin-tab">
                                 <div class="mb-3">
@@ -171,7 +171,7 @@ document.getElementById('toggleUserPassword').addEventListener('click', function
                             <input type="hidden" name="user_id" value="{{ auth()->user()->id }}">
                             <div class="d-flex justify-content-between">
                                 <button type="button" class="btn btn-secondary"
-                                    onclick="prevTab('{{ auth()->user()->role === 'admin' ? 'admin-tab' : 'etablissement-tab' }}')">Précédent</button>
+                                    onclick="prevTab('{{ in_array(auth()->user()->role, ['admin', 'integrateur']) ? 'admin-tab' : 'etablissement-tab' }}')">Précédent</button>
                                 <button type="submit" class="btn btn-success">Enregistrer</button>
                             </div>
                         </div>

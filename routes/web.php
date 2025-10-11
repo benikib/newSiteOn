@@ -11,9 +11,12 @@ use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\PersonnelController;
 use App\Http\Controllers\EquipeController;
+use App\Http\Controllers\IntegrateurController;
 use Illuminate\Support\Facades\Mail;
 
 Route::get('/', [PhotoController::class, 'index'])->name('welcome');
+//integrateur 
+Route::get('/integrateur',[IntegrateurController::class,'index'])->name('index');
 Route::get('/grilles', function() {
     // Vous pouvez implémenter la logique de recherche ici
     return view('partials.grillesCarte');

@@ -78,7 +78,7 @@ public function repportingAdmins()
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:6',
             'telephone' => 'required',
-            'role' => 'required|in:admin,client,etablissement'
+            'role' => 'required|in:admin,integrateur,etablissement'
         ]);
 
      $user  = User::create([
@@ -102,7 +102,7 @@ public function repportingAdmins()
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:6',
             'telephone' => 'required',
-            'role' => 'required|in:admin,client,etablissement',
+            'role' => 'required|in:admin,integrateur,etablissement',
             'etablissement_id' => 'required|exists:etablissements,id'
         ]);
 

@@ -112,6 +112,11 @@ class PubliciteController extends Controller
      */
     public function destroy(Publicite $publicite)
     {
-        //
+        try {
+            $publicite->delete();
+            return redirect()->back()->with('success', 'Publicité supprimée avec succès.');
+        } catch (\Throwable $th) {
+            return redirect()->back()->withErrors(['error' => $th->getMessage()]);
+        }
     }
 }

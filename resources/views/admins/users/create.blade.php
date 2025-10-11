@@ -27,7 +27,7 @@
                             <option value="admin">Admin</option>
 
                             <option value="etablissement">Etablissement</option>
-                            <option value="client">Client</option>
+                            <option value="integrateur">Integrateur</option>
 
                         </select>
                     </div>

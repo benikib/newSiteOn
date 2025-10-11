@@ -33,7 +33,7 @@
                                 <option value="admin" {{ $user->role == 'admin' ? 'selected' : '' }}>Admin</option>
                                 <option value="etablissement" {{ $user->role == 'etablissement' ? 'selected' : '' }}>
                                     Etablissement</option>
-                                <option value="client" {{ $user->role == 'client' ? 'selected' : '' }}>Client</option>
+                                <option value="integrateur" {{ $user->role == 'integrateur' ? 'selected' : '' }}>Integrateur</option>
                             </select>
                         </div>
                         <div class="mb-3">

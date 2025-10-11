@@ -17,19 +17,27 @@
         </nav>
 
     </div>
-    <!-- Bouton pour ouvrir le modal -->
+
     @php
         $taux = \App\Models\TauxDeChange::all()->first();
     @endphp
 
-    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editTauxModal">
-        Taux du jour : {{ $taux ? number_format($taux->usd_cdf, 2) : 'Non défini' }} CDF
-    </button>
-
-
+    @if(auth()->user()->role === 'admin')
+        <!-- Admin : peut modifier -->
+        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editTauxModal">
+            Taux du jour : {{ $taux ? number_format($taux->usd_cdf, 2) : 'Non défini' }} CDF
+        </button>
+    @else
+        <!-- Les autres : juste afficher -->
+        <span class="btn btn-sm btn-outline-secondary disabled">
+            Taux du jour : {{ $taux ? number_format($taux->usd_cdf, 2) : 'Non défini' }} CDF
+        </span>
+    @endif
 
 </nav>
-<!-- Modal d’édition du taux -->
+
+<!-- Modal d’édition du taux (affiché seulement si admin) -->
+@if(auth()->user()->role === 'admin')
 <div class="modal fade" id="editTauxModal" tabindex="-1" aria-labelledby="editTauxModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -56,6 +64,5 @@
         </div>
     </div>
 </div>
-
-
+@endif
 <!-- End Navbar -->

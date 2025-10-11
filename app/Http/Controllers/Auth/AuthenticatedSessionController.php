@@ -29,14 +29,14 @@ class AuthenticatedSessionController extends Controller
     $request->session()->regenerate();
 
     // Vérifie si l'utilisateur est admin
-    if (auth()->user()->role !== 'admin') {
+    if (auth()->user()->role === 'etablissement') {
          $id = auth()->user()->usersEtablissements();
 
         return redirect()->route('users.etablissements'); // Remplace par ta vraie route
     }
 
 
-   if (auth()->user()->role == 'admin') {
+   if (in_array(auth()->user()->role,['admin', 'integrateur'] )) {
          $id = auth()->user()->usersEtablissements();
 
         return redirect()->route('dashboard'); // Remplace par ta vraie route

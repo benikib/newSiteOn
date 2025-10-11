@@ -54,6 +54,7 @@ Route::get('/publicites',[PubliciteController::class,'index'])->name("publicites
 Route::post('/publicites', [PubliciteController::class,'store'])->name('publicites.store');
 Route::post('/publicite', [PubliciteController::class,'store'])->name('publicits.store');
 Route::put( 'publicites/{user}/etablissement',[PubliciteController::class,'update'])->name('publicites.update');
+Route::delete('/publicites/{publicite}', [PubliciteController::class, 'destroy'])->name('publicites.destroy');
 
 
 Route::get('/users_ets/{ets}',[UserController::class,'users_ets'])->name("users_ets.index");
