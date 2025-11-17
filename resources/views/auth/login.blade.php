@@ -78,7 +78,7 @@
                             </div>
 
                             @if (Route::has('password.request'))
-                                <a href="{{ route('password.request') }}" class="text-decoration-none text-primary">
+                                <a href="{{ route('login') }}" class="text-decoration-none text-primary">
                                     {{ __('Forgot password?') }}
                                 </a>
                             @endif
@@ -111,11 +111,11 @@
 
             <!-- Register Link -->
             <div class="text-center mt-4">
-                <p class="text-muted">{{ __("Don't have an account?") }}
+                {{-- <p class="text-muted">{{ __("Don't have an account?") }}
                     <a href="{{ route('register') }}" class="text-primary text-decoration-none fw-medium">
                         {{ __('Sign up') }}
                     </a>
-                </p>
+                </p> --}}
                 {{-- <a href="{{ url('/') }}" class="btn btn-outline-secondary btn-sm">
                     <i class="fas fa-arrow-left me-1"></i> {{ __('Back to Home') }}
                 </a> --}}

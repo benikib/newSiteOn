@@ -280,8 +280,8 @@
                                             </div>
                                             <div class="contact-details">
                                                 <h4>Téléphone</h4>
-                                                <p>+243 81 234 5678</p>
-                                                <p>+243 89 876 5432</p>
+                                                <p>+243 847473745</p>
+                                                {{-- <p>+243 8</p> --}}
                                             </div>
                                         </div>
 
@@ -291,8 +291,8 @@
                                             </div>
                                             <div class="contact-details">
                                                 <h4>Email</h4>
-                                                <p>contact@bisika.cd</p>
-                                                <p>support@bisika.cd</p>
+                                                <p>contact@bisika.org</p>
+                                                <p>support@bisika.org</p>
                                             </div>
                                         </div>
                                     </div>
