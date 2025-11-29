@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PhotoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TypeEtablissementController;
@@ -115,11 +116,10 @@ Route::middleware('auth')->group(function () {
 
 });
 
-Route::get('/send', function () {
-Mail::to(['contactbisika@gmail.com', 'yoshuankunda1@gmail.com'])
-    ->send(new \App\Mail\OrderShipped());
 
-});
+
+Route::post('/contact-submit', [ContactController::class, 'submit'])->name('contact.submit');
+
 
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';

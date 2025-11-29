@@ -296,6 +296,11 @@
                                             </div>
                                         </div>
                                     </div>
+@if(session('success'))
+    <div class="alert alert-success">
+        {{ session('success') }}
+    </div>
+@endif
 
                                     <form class="contact-form" action="{{ route('contact.submit') }}" method="POST">
                                         @csrf
