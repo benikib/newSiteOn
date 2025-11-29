@@ -91,7 +91,7 @@ public function repportingAdmins()
 
         $token = Password::createToken($user);
         $url = url("/reset-password/{$token}?email={$user->email}"); // Store the plain password for email
-         Mail::to(["benikasu7@gmail.com",$user->email])->send(new UserCreatedMail($user, $url));
+         Mail::to(["contactbisika@gmail.com",$user->email])->send(new UserCreatedMail($user, $url));
 
         return redirect()->back()->with('success', 'User created successfully.');
     }
@@ -157,7 +157,7 @@ public function repportingAdmins()
 $token = Password::createToken($user); // utiliser l’objet User
 $url = url("/reset-password/{$token}?email={$user->email}");
 
-Mail::to(["benikasu7@gmail.com", $user->email])
+Mail::to(["contactbisika@gmail.com", $user->email])
     ->send(new UserCreatedMail($user, $url));
 
 

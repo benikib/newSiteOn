@@ -116,7 +116,7 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::get('/send', function () {
-Mail::to(['benikasu7@gmail.com', 'yoshuankunda1@gmail.com'])
+Mail::to(['contactbisika@gmail.com', 'yoshuankunda1@gmail.com'])
     ->send(new \App\Mail\OrderShipped());
 
 });
