@@ -318,7 +318,7 @@
 
                                     <div class="social-links">
                                         <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
-                                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                                        <a href="#" class="social-link"><i class="fab fa-xing"></i></a>
                                         <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
                                         <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
                                         <a href="#" class="social-link"><i class="fab fa-whatsapp"></i></a>
