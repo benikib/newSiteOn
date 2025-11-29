@@ -292,7 +292,7 @@
                                             <div class="contact-details">
                                                 <h4>Email</h4>
                                                 <p>contactbisika@gmail.com</p>
-                                                <p>support@bisika.org</p>
+                                                
                                             </div>
                                         </div>
                                     </div>
