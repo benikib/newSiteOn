@@ -37,10 +37,10 @@
 
 
             <!-- Bouton de suppression -->
-            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+            {{-- <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
                 data-bs-target="#modalDelete{{ $etablissement->id }}" title="Supprimer">
                 <i class="bi bi-trash"></i>
-            </button>
+            </button> --}}
             </form>
         </div>
     </td>
