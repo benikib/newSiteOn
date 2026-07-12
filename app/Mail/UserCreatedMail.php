@@ -22,6 +22,10 @@ class UserCreatedMail extends Mailable
     public function build()
     {
         return $this->subject('Bienvenue ! Créez votre mot de passe')
-            ->view('mail.user_created');
+            ->view('emails.user_created')
+            ->with([
+                'user' => $this->user,
+                'resetUrl' => $this->resetUrl,
+            ]  );
     }
 }
