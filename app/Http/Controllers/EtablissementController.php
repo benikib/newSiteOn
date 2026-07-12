@@ -104,7 +104,7 @@ class EtablissementController extends Controller
                 ]);
         $token = Password::createToken($user);
         $url = url("/reset-password/{$token}?email={$user->email}"); // Store the plain password for email
-        Mail::to($user->email)->send(new UserCreatedMail($user, $request->user_password, $url));
+        Mail::to($user->email)->send(new UserCreatedMail($user, $url));
             } elseif (Auth::user()->role === 'etablissement') {
 
                 $etablissements = Etablissement::create($request->all());
