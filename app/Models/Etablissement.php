@@ -69,4 +69,73 @@ public function scopeByCategory($query, $categoryId)
 {
     return $query->where('category_id', $categoryId);
 }
+    public function stocks()
+    {
+        return $this->hasMany(Stock::class);
+    }
+
+    /**
+     * Relation avec les commandes (one-to-many)
+     */
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    /**
+     * Relation avec les clients (one-to-many)
+     */
+    public function customers()
+    {
+        return $this->hasMany(Customer::class);
+    }
+
+    /**
+     * Relation avec les catégories (one-to-many)
+     */
+    public function categories()
+    {
+        return $this->hasMany(Category::class);
+    }
+
+    /**
+     * Relation avec les mouvements (one-to-many)
+     */
+    public function movements()
+    {
+        return $this->hasMany(Movement::class);
+    }
+
+    // ===== SCOPES =====
+
+    public function scopeActif($query)
+    {
+        return $query->where('statut', true);
+    }
+
+    public function scopeInactif($query)
+    {
+        return $query->where('statut', false);
+    }
+
+    // ===== ACCESSORS =====
+
+    public function getStatutLabelAttribute()
+    {
+        return $this->statut ? 'Actif' : 'Inactif';
+    }
+
+    public function getStatutBadgeAttribute()
+    {
+        return $this->statut 
+            ? '<span class="badge bg-success">Actif</span>'
+            : '<span class="badge bg-danger">Inactif</span>';
+    }
+
+    // ===== MUTATORS =====
+
+    public function getNomAttribute($value)
+    {
+        return $value ?? $this->name;
+    }
 }
