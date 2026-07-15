@@ -15,6 +15,7 @@ class EtablissementMiddleware
      */  public function handle(Request $request, Closure $next)
     {
         $user = $request->user();
+        
         if ($user && $user->role === 'etablissement') {
             return $next($request);
         }

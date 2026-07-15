@@ -123,4 +123,6 @@ Route::post('/contact-submit', [ContactController::class, 'submit'])->name('cont
 
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';
+require __DIR__.'/stock.php';
 require __DIR__.'/etablissement.php';
+require __DIR__.'/client.php';
