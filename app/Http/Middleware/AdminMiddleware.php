@@ -28,6 +28,6 @@ class AdminMiddleware
         }
 
         // ✅ Bloquer l’accès pour les autres
-        abort(403, 'Accès refusé : réservé aux administrateurs.');
+        abort(403, 'Accès refusé : réservé aux administrateurs et intégrateurs.');
     }
 }

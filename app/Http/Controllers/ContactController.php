@@ -17,13 +17,15 @@ class ContactController extends Controller
         ]);
 
         // Envoyer l’email (optionnel)
-        Mail::raw(
-            "Nom : {$request->name}\nEmail : {$request->email}\nSujet : {$request->subject}\n\nMessage : \n{$request->message}",
-            function ($msg) use ($request) {
-                $msg->to('contactbisika@gmail.com')
-                    ->subject('Nouveau message de contact');
-            }
-        );
+        Mail::send('emails.contact', [
+            'name' => $request->name,
+            'email' => $request->email,
+            'subject' => $request->subject,
+            'messageContent' => $request->message,
+        ], function ($message) use ($request) {
+            $message->to('contactbisika@gmail.com')
+                    ->subject('Nouveau message de contact : ' . $request->subject);
+        });
 
         // Retour
         return back()->with('success', 'Votre message a été envoyé avec succès !');

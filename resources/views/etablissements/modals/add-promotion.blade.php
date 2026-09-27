@@ -25,7 +25,7 @@
                             <label class="form-label">Prix*</label>
                             <div class="input-group">
                                 <input type="number" name="prix" class="form-control" step="0.01" min="0" required>
-                                <span class="input-group-text">€</span>
+                                <span class="input-group-text">Fc</span>
                             </div>
                         </div>
                         

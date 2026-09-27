@@ -28,7 +28,22 @@
                         <span class="nav-link-text ms-1">Dashboard</span>
                     </a>
                 </li>
-           
+           <li class="nav-item">
+
+                <a class="nav-link {{ request()->routeIs('dashboard')?'active':'' }}"
+                    href="{{ route('admin.stocks.dashboard') }}">
+
+                    <div class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-primary text-center me-2">
+                        <i class="fas fa-tachometer-alt text-white"></i>
+                    </div>
+
+                    <span class="nav-link-text">
+                        Dashboard stock
+                    </span>
+
+                </a>
+
+            </li>
 
             <!-- Section Gestion -->
             <li class="nav-item mt-3">

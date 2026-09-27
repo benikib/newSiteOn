@@ -161,7 +161,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Budget approximatif</label>
                                 <div class="input-group">
-                                    <span class="input-group-text">€</span>
+                                    <span class="input-group-text">Fc</span>
                                     <input type="number" class="form-control" placeholder="Ex: 1500">
                                 </div>
                             </div>

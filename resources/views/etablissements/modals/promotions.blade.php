@@ -32,7 +32,7 @@
                                     <p class="card-text">{{ $promotion->description }}</p>
                                     <div class="d-flex justify-content-between align-items-center mt-3">
                                         <span class="text-primary fw-bold">
-                                            {{ number_format($promotion->prix, 2) }} €
+                                            {{ number_format($promotion->prix, 2) }} Fc
                                         </span>
                                         <small class="text-muted">
                                             {{ $promotion->date_debut }} -
@@ -110,7 +110,7 @@
                                 <div class="input-group">
                                     <input type="number" name="prix" class="form-control" step="0.01"
                                         min="0" value="{{ $promotion->prix }}" required>
-                                    <span class="input-group-text">€</span>
+                                    <span class="input-group-text">Fc</span>
                                 </div>
                             </div>
 

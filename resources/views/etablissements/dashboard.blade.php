@@ -137,7 +137,7 @@
                             label: function(context) {
                                 let label = context.dataset.label || '';
                                 if (label.includes('Encaissements')) {
-                                    return label + ': ' + context.parsed.y.toLocaleString('fr-FR') + ' €';
+                                    return label + ': ' + context.parsed.y.toLocaleString('fr-FR') + ' Fc';
                                 }
                                 return label + ': ' + context.parsed.y;
                             }
@@ -189,7 +189,7 @@
                                 const value = context.raw || 0;
                                 const total = context.dataset.data.reduce((a, b) => a + b, 0);
                                 const percentage = Math.round((value / total) * 100);
-                                return `${label}: ${value.toLocaleString('fr-FR')} € (${percentage}%)`;
+                                return `${label}: ${value.toLocaleString('fr-FR')} Fc (${percentage}%)`;
                             }
                         }
                     }

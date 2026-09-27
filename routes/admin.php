@@ -11,7 +11,9 @@ use App\Models\Etablissement;
 use App\Models\Publicite;
 use App\Models\User;
 use App\Http\Controllers\AdminController;
+
 use App\Http\Controllers\TauxController;
+
 
 Route::middleware(['auth', 'admins'])->group(function () {
    Route::get('/etablissement',[EtablissementController::class, 'index']) ->name('etablissements.index');
@@ -67,8 +69,5 @@ Route::get('/taux/{taux}', [TauxController::class, 'show'])->name('taux.show');
 Route::put('/taux/{taux}', [TauxController::class, 'update'])->name('taux.update');
 Route::delete('/taux/{taux}', [TauxController::class, 'destroy'])->name('taux.destroy');
 
-
 });
-
-
 
