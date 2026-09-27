@@ -1,13 +1,6 @@
 <aside
     class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3"
-    id="sidenav-main"
-    style="
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.85), rgba(37, 99, 235, 0.80)) !important;
-        backdrop-filter: blur(20px) !important;
-        -webkit-backdrop-filter: blur(20px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.18) !important;
-        box-shadow: 0 8px 32px rgba(37, 99, 235, 0.25) !important;
-    ">
+    id="sidenav-main">
     <div class="sidenav-header">
         <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none"
             aria-hidden="true" id="iconSidenav"></i>
@@ -30,7 +23,7 @@
                 <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
                     href="{{ route('dashboard_ets') }}">
                     <div class="icon icon-shape icon-sm shadow border-radius-md text-center me-2 d-flex align-items-center justify-content-center"
-                        style="background: rgba(255,255,255,0.20) !important; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.10);">
+                        style="background: #f1f5fa !important; border: 1px solid #e7edf4;">
                         <i class="fas fa-home" style="color: #1a1a2e;"></i>
                     </div>
                     <span class="nav-link-text" style="color: #1a1a2e; font-weight: 500;">Dashboard</span>
@@ -50,7 +43,7 @@
                 <a class="nav-link {{ request()->routeIs('client.sales.pos') ? 'active' : '' }}"
                     href="{{ route('client.sales.pos') }}">
                     <div class="icon icon-shape icon-sm shadow border-radius-md text-center me-2 d-flex align-items-center justify-content-center"
-                        style="background: rgba(255,255,255,0.20) !important; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.10);">
+                        style="background: #f1f5fa !important; border: 1px solid #e7edf4;">
                         <i class="fas fa-cash-register" style="color: #1a1a2e;"></i>
                     </div>
                     <span class="nav-link-text" style="color: #1a1a2e; font-weight: 500;">Point de vente</span>
@@ -62,7 +55,7 @@
                 <a class="nav-link {{ request()->routeIs('client.sales.history') ? 'active' : '' }}"
                     href="{{ route('client.sales.history') }}">
                     <div class="icon icon-shape icon-sm shadow border-radius-md text-center me-2 d-flex align-items-center justify-content-center"
-                        style="background: rgba(255,255,255,0.20) !important; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.10);">
+                        style="background: #f1f5fa !important; border: 1px solid #e7edf4;">
                         <i class="fas fa-history" style="color: #1a1a2e;"></i>
                     </div>
                     <span class="nav-link-text" style="color: #1a1a2e; font-weight: 500;">Historique des ventes</span>
@@ -74,7 +67,7 @@
                 <a class="nav-link" href="#productsSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="{{ request()->routeIs('client.products.*') || request()->routeIs('client.categories.*') ? 'true' : 'false' }}">
                     <div class="d-flex align-items-center w-100">
                         <div class="icon icon-shape icon-sm shadow border-radius-md text-center me-2 d-flex align-items-center justify-content-center"
-                            style="background: rgba(255,255,255,0.20) !important; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.10);">
+                            style="background: #f1f5fa !important; border: 1px solid #e7edf4;">
                             <i class="fas fa-boxes" style="color: #1a1a2e;"></i>
                         </div>
                         <span class="nav-link-text flex-grow-1" style="color: #1a1a2e; font-weight: 500;">Produits</span>
@@ -111,7 +104,7 @@
                 <a class="nav-link" href="#stocksSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="{{ request()->routeIs('client.stocks.*') ? 'true' : 'false' }}">
                     <div class="d-flex align-items-center w-100">
                         <div class="icon icon-shape icon-sm shadow border-radius-md text-center me-2 d-flex align-items-center justify-content-center"
-                            style="background: rgba(255,255,255,0.20) !important; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.10);">
+                            style="background: #f1f5fa !important; border: 1px solid #e7edf4;">
                             <i class="fas fa-warehouse" style="color: #1a1a2e;"></i>
                         </div>
                         <span class="nav-link-text flex-grow-1" style="color: #1a1a2e; font-weight: 500;">Stocks</span>
@@ -183,7 +176,7 @@
                 <a class="nav-link" href="#managementSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="{{ request()->routeIs('users.etablissements.*') || request()->routeIs('etablissements.*') || request()->routeIs('personnels.*') || request()->routeIs('equipes.*') ? 'true' : 'false' }}">
                     <div class="d-flex align-items-center w-100">
                         <div class="icon icon-shape icon-sm shadow border-radius-md text-center me-2 d-flex align-items-center justify-content-center"
-                            style="background: rgba(255,255,255,0.20) !important; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.10);">
+                            style="background: #f1f5fa !important; border: 1px solid #e7edf4;">
                             <i class="fas fa-cogs" style="color: #1a1a2e;"></i>
                         </div>
                         <span class="nav-link-text flex-grow-1" style="color: #1a1a2e; font-weight: 500;">Administration</span>
@@ -244,7 +237,7 @@
             <li class="nav-item">
                 <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
                     <div class="icon icon-shape icon-sm shadow border-radius-md text-center me-2 d-flex align-items-center justify-content-center"
-                        style="background: rgba(255,255,255,0.20) !important; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.10);">
+                        style="background: #f1f5fa !important; border: 1px solid #e7edf4;">
                         <i class="fas fa-sign-out-alt" style="color: #1a1a2e;"></i>
                     </div>
                     <span class="nav-link-text" style="color: #1a1a2e; font-weight: 500;">Déconnexion</span>
@@ -265,7 +258,7 @@
 <!-- Modal de déconnexion -->
 <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);">
+        <div class="modal-content" style="background: #fff;">
             <div class="modal-header">
                 <h5 class="modal-title" id="logoutModalLabel">Confirmer la déconnexion</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
@@ -289,58 +282,39 @@
 </form>
 
 <style>
-    /* ===== SIDEBAR - FOND BLEU + GLASSMORPHISM ===== */
+    /* Sidebar */
     .sidenav {
         width: 250px;
-        transition: all 0.3s ease;
-        z-index: 1030;
+        z-index: 1040;
         height: calc(100vh - 2rem);
         margin: 1rem;
         overflow-y: auto;
-        
-        /* Fond bleu avec effet verre */
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.88), rgba(37, 99, 235, 0.82)) !important;
-        backdrop-filter: blur(20px) !important;
-        -webkit-backdrop-filter: blur(20px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        box-shadow: 0 8px 32px rgba(37, 99, 235, 0.25) !important;
+        background: #fff !important;
+        border: 1px solid #e7edf4 !important;
+        box-shadow: 0 4px 18px rgba(15, 23, 42, 0.08) !important;
     }
 
-    /* Supprimer le fond Bootstrap */
-    .sidenav.bg-gradient-info {
-        background: transparent !important;
-    }
-
-    /* Style des liens */
     .sidenav .nav-link {
-        margin: 0.1rem 0.5rem;
-        border-radius: 0.5rem;
-        transition: all 0.3s ease;
-        padding: 0.5rem 0.8rem;
+        margin: 0.1rem 0.65rem;
+        border-radius: 0.45rem;
+        transition: background-color 0.15s ease, color 0.15s ease;
+        padding: 0.55rem 0.75rem;
         font-size: 0.875rem;
-        color: rgba(0, 0, 0, 0.75) !important;
+        color: #344054 !important;
         position: relative;
     }
 
-    /* Effet au survol */
     .sidenav .nav-link:hover {
-        background: rgba(255, 255, 255, 0.15) !important;
-        transform: translateX(4px);
-        color: #000 !important;
+        background: #f3f6fa !important;
+        color: #1d2939 !important;
     }
 
-    /* État actif */
     .sidenav .nav-link.active {
-        background: rgba(255, 255, 255, 0.22) !important;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.20);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        color: #000 !important;
+        background: #eaf1fb !important;
+        color: #2459a6 !important;
         font-weight: 600;
     }
 
-    /* Indicateur actif */
     .sidenav .nav-link.active::before {
         content: '';
         position: absolute;
@@ -348,49 +322,43 @@
         top: 50%;
         transform: translateY(-50%);
         width: 3px;
-        height: 24px;
-        background: linear-gradient(180deg, #ffffff, rgba(255,255,255,0.5));
-        border-radius: 0 4px 4px 0;
-        box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        height: 20px;
+        background: #3973c6;
+        border-radius: 0 3px 3px 0;
     }
 
-    /* Icônes */
     .sidenav .icon-shape {
-        width: 32px;
-        height: 32px;
-        transition: transform 0.3s ease, background 0.3s ease;
+        width: 34px;
+        height: 34px;
+        transition: background-color 0.15s ease;
         flex-shrink: 0;
-        background: rgba(255, 255, 255, 0.15) !important;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: #f1f5fa !important;
+        border: 1px solid #e7edf4;
     }
 
     .sidenav .nav-link:hover .icon-shape {
-        transform: scale(1.1) rotate(-3deg);
-        background: rgba(255, 255, 255, 0.25) !important;
+        background: #e8eef7 !important;
     }
 
     .sidenav .nav-link.active .icon-shape {
-        background: rgba(255, 255, 255, 0.30) !important;
-        box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
+        background: #dce8f8 !important;
+        border-color: #dce8f8;
     }
 
-    /* Sous-menus */
     .sidenav .collapse .nav-link {
         font-size: 0.8rem !important;
         padding: 0.3rem 0.8rem !important;
-        color: rgba(0, 0, 0, 0.6) !important;
+        color: #596579 !important;
     }
 
     .sidenav .collapse .nav-link:hover {
-        color: #000 !important;
-        background: rgba(255, 255, 255, 0.10) !important;
+        color: #1d2939 !important;
+        background: #f3f6fa !important;
     }
 
     .sidenav .collapse .nav-link.active {
-        color: #000 !important;
-        background: rgba(255, 255, 255, 0.15) !important;
+        color: #2459a6 !important;
+        background: #eaf1fb !important;
         font-weight: 600;
     }
 
@@ -398,102 +366,85 @@
         display: none;
     }
 
-    /* Icône chevron */
     .sidenav .fa-chevron-down {
-        transition: transform 0.3s ease;
+        transition: transform 0.15s ease;
     }
 
     .sidenav .nav-link[aria-expanded="true"] .fa-chevron-down {
         transform: rotate(180deg);
     }
 
-    /* Scrollbar */
     .sidenav::-webkit-scrollbar {
-        width: 4px;
-    }
-
-    .sidenav::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 10px;
+        width: 5px;
     }
 
     .sidenav::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.25);
-        border-radius: 10px;
+        background: #cbd5e1;
+        border-radius: 5px;
     }
 
-    .sidenav::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.40);
-    }
-
-    /* Texte */
     .sidenav .nav-link-text {
-        color: rgba(0, 0, 0, 0.8) !important;
+        color: #344054 !important;
         font-weight: 500;
     }
 
     .sidenav .nav-link-text.text-secondary {
-        color: rgba(0, 0, 0, 0.6) !important;
+        color: #667085 !important;
     }
 
     .sidenav-header .text-dark {
-        color: #1a1a2e !important;
+        color: #1d2939 !important;
     }
 
-    /* Titres de section */
     .sidenav .opacity-6 {
-        color: rgba(0, 0, 0, 0.45) !important;
-        letter-spacing: 1.5px;
+        color: #667085 !important;
         font-weight: 700;
         font-size: 0.65rem !important;
     }
 
-    /* Séparateurs */
     .sidenav .horizontal.dark {
-        border-color: rgba(0, 0, 0, 0.08) !important;
+        border-color: #e7edf4 !important;
     }
 
-    /* Footer */
     .sidenav-footer {
-        border-top: 1px solid rgba(0, 0, 0, 0.06);
+        border-top: 1px solid #e7edf4;
         margin-top: auto;
         padding: 0.75rem 1rem;
     }
 
-    /* Responsive */
     @media (max-width: 1199.98px) {
         .sidenav {
-            transform: translateX(-270px);
+            transform: translateX(-100%);
             position: fixed;
             top: 0;
             left: 0;
             height: 100vh;
+            width: min(280px, 85vw);
             margin: 0;
             border-radius: 0 !important;
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.92), rgba(37, 99, 235, 0.88)) !important;
-            backdrop-filter: blur(30px) !important;
-            -webkit-backdrop-filter: blur(30px) !important;
+            transition: transform 0.18s ease-out;
+            will-change: transform;
         }
 
         .sidenav.show {
             transform: translateX(0);
-            box-shadow: 0 0 40px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14) !important;
         }
     }
 
-    /* Supprimer les backgrounds indésirables */
-    .bg-gradient-info {
-        background: transparent !important;
-    }
-
-    .navbar-vertical {
-        background: transparent !important;
+    @media (prefers-reduced-motion: reduce) {
+        .sidenav,
+        .sidenav .nav-link,
+        .sidenav .icon-shape,
+        .sidenav .fa-chevron-down {
+            transition: none !important;
+        }
     }
 </style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const iconSidenav = document.getElementById('iconSidenav');
+        const iconSidenav = document.getElementById('iconNavbarSidenav') || document.getElementById('iconSidenav');
         const sidenav = document.getElementById('sidenav-main');
 
         // Toggle sidebar on mobile
@@ -510,7 +461,7 @@
             if (window.innerWidth < 1200 &&
                 sidenav &&
                 !sidenav.contains(target) &&
-                target.id !== 'iconSidenav' &&
+                !(iconSidenav && iconSidenav.contains(target)) &&
                 sidenav.classList.contains('show')) {
                 sidenav.classList.remove('show');
             }
@@ -520,7 +471,8 @@
         if (window.innerWidth < 1200) {
             document.querySelectorAll('.nav-link').forEach(function(link) {
                 link.addEventListener('click', function() {
-                    if (sidenav && sidenav.classList.contains('show')) {
+                    if (link.getAttribute('data-bs-toggle') !== 'collapse' &&
+                        sidenav && sidenav.classList.contains('show')) {
                         sidenav.classList.remove('show');
                     }
                 });
