@@ -52,16 +52,20 @@
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Produit <span class="text-danger">*</span></label>
+                            <input type="search" id="stockOutProductSearch" class="form-control mb-2"
+                                placeholder="Rechercher par nom ou code produit..." autocomplete="off">
                             <select name="stock_id" class="form-select @error('stock_id') is-invalid @enderror" required>
                                 <option value="">Sélectionnez un produit</option>
                                 @foreach($stocks ?? [] as $stock)
                                     <option value="{{ $stock->id }}" {{ old('stock_id') == $stock->id ? 'selected' : '' }}
-                                            data-max="{{ $stock->quantity }}">
+                                            data-max="{{ $stock->quantity }}"
+                                            data-search="{{ $stock->product->name }} {{ $stock->product->code }}">
                                         {{ $stock->product->name }} ({{ $stock->product->code }}) - 
                                         Stock: {{ number_format($stock->quantity) }} {{ $stock->product->unit->name ?? '' }}
                                     </option>
                                 @endforeach
                             </select>
+                            <small id="stockOutProductNoResults" class="form-text text-muted d-none">Aucun produit correspondant.</small>
                             @error('stock_id')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
@@ -139,10 +143,12 @@
 </div>
 @endsection
 
-@push('scripts')
+@section('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const stockSelect = document.querySelector('select[name="stock_id"]');
+        const productSearch = document.getElementById('stockOutProductSearch');
+        const noProductResults = document.getElementById('stockOutProductNoResults');
         const quantityInput = document.getElementById('quantity');
         const maxQuantitySpan = document.getElementById('maxQuantity');
 
@@ -157,6 +163,27 @@
             // Déclencher le changement initial
             stockSelect.dispatchEvent(new Event('change'));
         }
+
+        if (stockSelect && productSearch) {
+            productSearch.addEventListener('input', function() {
+                const term = this.value.trim().toLocaleLowerCase();
+                const options = Array.from(stockSelect.options).filter(option => option.value);
+
+                options.forEach(option => {
+                    const searchText = (option.dataset.search || option.textContent).toLocaleLowerCase();
+                    option.hidden = term !== '' && !searchText.includes(term);
+                });
+
+                const hasMatch = options.some(option => !option.hidden);
+                noProductResults?.classList.toggle('d-none', term === '' || hasMatch);
+
+                const selectedOption = stockSelect.options[stockSelect.selectedIndex];
+                if (term !== '' && selectedOption?.value && selectedOption.hidden) {
+                    stockSelect.value = '';
+                    stockSelect.dispatchEvent(new Event('change'));
+                }
+            });
+        }
     });
 </script>
-@endpush
+@endsection

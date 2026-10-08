@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\UserEtablissement;
 use App\Models\Service;
 use App\Models\Publicite;
+use App\Services\AbonnementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -24,12 +25,17 @@ class EtablissementController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $etablissements =  $etablissements = Etablissement::withCount(['services', 'promotions', 'publicites', 'photos'])
+        $query = Etablissement::withCount(['services', 'promotions', 'publicites', 'photos'])
             ->with(['typeEtablissement', 'services', 'promotions'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->orderBy('created_at', 'desc');
+        if ($request->boolean('abonnements_migration')) {
+            $query->whereHas('abonnements', function ($abonnements) {
+                $abonnements->where('type_operation', 'migration');
+            });
+        }
+        $etablissements = $query->paginate(10)->withQueryString();
         $typeEtablissements = TypeEtablissement::all();
 
 
@@ -215,23 +221,32 @@ public function note_moyenne(Request $request, Etablissement $etablissement)
     }
 
 
-    public function updateStatut(Request $request, Etablissement $etablissement)
+    public function updateStatut(Request $request, Etablissement $etablissement, AbonnementService $abonnementService)
     {
 
         $request->validate([
             'statut' => 'required|in:en_attente,actif,desactive'
         ]);
 
-        try {
-            $etablissement->update([
-
-                'statut' => $request->statut,
-            ]);
-
-            return redirect()->back()->with('success', 'Compte activé avec succès');
-        } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Erreur lors de l \' activation']);
+        if ($request->statut === 'actif') {
+            if (!$abonnementService->refreshEtablissement($etablissement)) {
+                return redirect()->back()->withErrors([
+                    'statut' => 'Ajoutez un nouvel abonnement dans l’historique pour réactiver cet établissement.',
+                ]);
+            }
+        } elseif ($request->statut === 'desactive') {
+            $data = $request->validate(['motif' => 'required|string|max:2000']);
+            $abonnementService->suspend($etablissement, $data['motif'], $request->user());
+        } else {
+            if ($abonnementService->currentPeriod($etablissement)) {
+                return redirect()->back()->withErrors([
+                    'statut' => 'Suspendez l’abonnement depuis son historique avant de placer cet établissement en attente.',
+                ]);
+            }
+            $etablissement->update(['statut' => 'en_attente']);
         }
+
+        return redirect()->back()->with('success', 'Statut de l’établissement mis à jour.');
     }
      public function destroy(Etablissement $etablissement)
     {

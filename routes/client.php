@@ -25,6 +25,8 @@ Route::prefix('client')->name('client.')->middleware(['auth'])->group(function (
     Route::match(['get', 'post'], 'stocks/inventory', [ClientStockController::class, 'inventory'])->name('stocks.inventory');
 
     // ===== HISTORIQUE DES MOUVEMENTS =====
+    Route::get('stocks/movements/print', [ClientStockController::class, 'printMovements'])->name('stocks.movements.print');
+    Route::get('stocks/movements/pdf', [ClientStockController::class, 'pdfMovements'])->name('stocks.movements.pdf');
     Route::get('stocks/movements', [ClientStockController::class, 'movements'])->name('stocks.movements');
 
     // ===== ALERTES STOCK MINIMUM =====

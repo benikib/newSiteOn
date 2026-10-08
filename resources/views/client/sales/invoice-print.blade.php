@@ -401,10 +401,25 @@
                 <span>TVA</span>
                 <span>{{ number_format($order->total_tva, 2, ',', ' ') }} Fc</span>
             </div>
-            <div class="row total">
-                <span>Total TTC</span>
-                <span>{{ number_format($order->total_amount, 2, ',', ' ') }} Fc</span>
+            <div class="row">
+                <span>Montant initial TTC</span>
+                <span>{{ number_format($order->initial_amount ?? $order->total_amount, 2, ',', ' ') }} CDF</span>
             </div>
+            <div class="row">
+                <span>Réduction @if($order->discount_type === 'percentage')({{ number_format($order->discount_value, 2, ',', ' ') }}%)@endif</span>
+                <span>- {{ number_format($order->discount_amount ?? 0, 2, ',', ' ') }} CDF</span>
+            </div>
+            <div class="row total">
+                <span>Total net TTC</span>
+                <span>{{ number_format($order->total_amount, 2, ',', ' ') }} CDF</span>
+            </div>
+            <div class="row">
+                <span>Montant payé ({{ $order->payment_currency ?? 'CDF' }})</span>
+                <span>{{ number_format($order->payment_amount ?? $order->total_amount, 2, ',', ' ') }} {{ $order->payment_currency ?? 'CDF' }}</span>
+            </div>
+            @if(($order->payment_currency ?? 'CDF') === 'USD' && $order->exchange_rate)
+                <div class="row"><span>Taux appliqué</span><span>1 USD = {{ number_format($order->exchange_rate, 2, ',', ' ') }} CDF</span></div>
+            @endif
         </div>
 
         <div style="clear: both;"></div>

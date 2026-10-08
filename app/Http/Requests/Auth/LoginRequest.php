@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use App\Services\AbonnementService;
 
 class LoginRequest extends FormRequest
 {
@@ -46,6 +47,14 @@ class LoginRequest extends FormRequest
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
+            ]);
+        }
+
+        if (!app(AbonnementService::class)->userHasValidSubscription(Auth::user())) {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'Connexion refusée : l’abonnement de cet établissement est expiré ou inactif. Contactez l’administrateur.',
             ]);
         }
 

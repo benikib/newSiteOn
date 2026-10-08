@@ -27,6 +27,14 @@
                         placeholder="Rechercher par nom, ville ou type...">
                 </div>
             </div>
+            <form method="GET" action="{{ route('etablissements.index') }}" class="d-flex align-items-center gap-2 mt-3">
+                <label for="abonnements_migration" class="form-label mb-0">Abonnements issus de la migration</label>
+                <select class="form-select form-select-sm" id="abonnements_migration" name="abonnements_migration" style="max-width: 180px">
+                    <option value="">Tous les établissements</option>
+                    <option value="1" @selected(request()->boolean('abonnements_migration'))>Afficher uniquement</option>
+                </select>
+                <button class="btn btn-sm btn-outline-primary" type="submit">Filtrer</button>
+            </form>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -104,6 +112,10 @@
                                         <a href="{{ route('etablissement.show', $etablissement->id) }}"
                                             class="btn btn-sm btn-outline-primary" title="Voir">
                                             <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{{ route('admin.abonnements.index', $etablissement) }}"
+                                            class="btn btn-sm btn-outline-success" title="Historique des abonnements">
+                                            <i class="fas fa-calendar-alt"></i>
                                         </a>
                                         <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
                                             data-bs-target="#modalStatut{{ $etablissement->id }}">
@@ -188,6 +200,10 @@
                                                             {{ $etablissement->statut == 'en_attente' ? 'selected' : '' }}>
                                                             En attente</option>
                                                     </select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="motifStatut{{ $etablissement->id }}" class="form-label">Motif (obligatoire pour une suspension)</label>
+                                                    <textarea class="form-control" id="motifStatut{{ $etablissement->id }}" name="motif" rows="2" required></textarea>
                                                 </div>
 
                                                 <div class="modal-footer">

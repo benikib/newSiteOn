@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Http\Controllers\AdminController;
 
 use App\Http\Controllers\TauxController;
+use App\Http\Controllers\AbonnementController;
 
 
 Route::middleware(['auth', 'admins'])->group(function () {
@@ -27,6 +28,17 @@ Route::get('/etablissement/{id}', [EtablissementController::class, 'show'])->nam
 Route::post('/etablissement/{etablissement}/note_moyenne', [EtablissementController::class, 'note_moyenne'])->name('etablissements.note_moyenne');
 Route::patch('/etablissements/{etablissement}/statut', [EtablissementController::class, 'updateStatut'])
      ->name('etablissements.updateStatut');
+
+Route::get('/etablissement/{etablissement}/abonnements', [AbonnementController::class, 'index'])
+   ->name('admin.abonnements.index');
+Route::post('/etablissement/{etablissement}/abonnements', [AbonnementController::class, 'store'])
+   ->name('admin.abonnements.store');
+Route::post('/etablissement/{etablissement}/abonnements/suspension', [AbonnementController::class, 'suspend'])
+   ->name('admin.abonnements.suspend');
+Route::get('/etablissement/{etablissement}/abonnements/impression', [AbonnementController::class, 'print'])
+   ->name('admin.abonnements.print');
+Route::get('/etablissement/{etablissement}/abonnements/pdf', [AbonnementController::class, 'pdf'])
+   ->name('admin.abonnements.pdf');
 
 
 

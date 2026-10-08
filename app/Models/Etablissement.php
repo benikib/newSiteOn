@@ -106,6 +106,11 @@ public function scopeByCategory($query, $categoryId)
         return $this->hasMany(Movement::class);
     }
 
+    public function abonnements()
+    {
+        return $this->hasMany(Abonnement::class)->orderByDesc('date_debut')->orderByDesc('id');
+    }
+
     // ===== SCOPES =====
 
     public function scopeActif($query)

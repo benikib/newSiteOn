@@ -11,6 +11,7 @@ use App\Models\Inventory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ClientStockController extends Controller
 {
@@ -579,60 +580,105 @@ public function outOfStock(Request $request)
 public function movements(Request $request)
 {
     $etablissementIds = $this->getUserEtablissements();
-    
     if ($etablissementIds->isEmpty()) {
         return redirect()->route('client.profile.edit')
             ->with('error', 'Vous n\'avez aucun établissement actif.');
     }
 
     $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
-
-    $query = Movement::where('etablissement_id', $selectedEtablissementId)
-        ->with(['product', 'user']);
-
-    // Filtres
-    if ($request->filled('type')) {
-        $query->where('type', $request->type);
+    if (!$etablissementIds->contains($selectedEtablissementId)) {
+        $selectedEtablissementId = $etablissementIds->first();
     }
 
-    if ($request->filled('product_id')) {
-        $query->where('product_id', $request->product_id);
-    }
+    $movements = $this->filteredMovementsQuery($request, $selectedEtablissementId)
+        ->orderByDesc('created_at')
+        ->paginate(30)
+        ->withQueryString();
 
-    if ($request->filled('date_from')) {
-        $query->whereDate('created_at', '>=', $request->date_from);
-    }
-
-    if ($request->filled('date_to')) {
-        $query->whereDate('created_at', '<=', $request->date_to);
-    }
-
-    $movements = $query->orderBy('created_at', 'desc')->paginate(30);
-
-    // Statistiques
-    $totalIn = Movement::where('etablissement_id', $selectedEtablissementId)
-        ->where('type', 'in')->count();
-    $totalOut = Movement::where('etablissement_id', $selectedEtablissementId)
-        ->where('type', 'out')->count();
+    $totalIn = Movement::where('etablissement_id', $selectedEtablissementId)->where('type', 'in')->count();
+    $totalOut = Movement::where('etablissement_id', $selectedEtablissementId)->where('type', 'out')->count();
     $totalAdjust = Movement::where('etablissement_id', $selectedEtablissementId)
         ->whereIn('type', ['adjust_positive', 'adjust_negative'])->count();
-
-    // Produits pour le filtre
-    $products = Product::whereHas('stock', function($q) use ($selectedEtablissementId) {
-        $q->where('etablissement_id', $selectedEtablissementId);
+    $products = Product::whereHas('stock', function ($query) use ($selectedEtablissementId) {
+        $query->where('etablissement_id', $selectedEtablissementId);
     })->get();
-
     $etablissements = Etablissement::whereIn('id', $etablissementIds)->get();
 
     return view('client.stocks.movements', compact(
-        'movements',
-        'products',
-        'etablissements',
-        'selectedEtablissementId',
-        'totalIn',
-        'totalOut',
-        'totalAdjust'
+        'movements', 'products', 'etablissements', 'selectedEtablissementId', 'totalIn', 'totalOut', 'totalAdjust'
     ));
+}
+
+public function printMovements(Request $request)
+{
+    $data = $this->movementExportData($request);
+    if ($data === null) {
+        return redirect()->route('client.profile.edit')->with('error', 'Vous n\'avez aucun établissement actif.');
+    }
+
+    return view('client.stocks.movements-export', $data + ['showPrintButton' => true]);
+}
+
+public function pdfMovements(Request $request)
+{
+    $data = $this->movementExportData($request);
+    if ($data === null) {
+        return redirect()->route('client.profile.edit')->with('error', 'Vous n\'avez aucun établissement actif.');
+    }
+
+    return Pdf::loadView('client.stocks.movements-export', $data + ['showPrintButton' => false])
+        ->setPaper('a4', 'landscape')
+        ->download('mouvements-stock-' . $data['etablissement']->id . '.pdf');
+}
+
+private function movementExportData(Request $request): ?array
+{
+    $etablissementIds = $this->getUserEtablissements();
+    if ($etablissementIds->isEmpty()) {
+        return null;
+    }
+
+    $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
+    if (!$etablissementIds->contains($selectedEtablissementId)) {
+        $selectedEtablissementId = $etablissementIds->first();
+    }
+
+    $movements = $this->filteredMovementsQuery($request, $selectedEtablissementId)
+        ->orderByDesc('created_at')
+        ->get();
+
+    $firstDate = $movements->min('created_at');
+    $lastDate = $movements->max('created_at');
+    if ($request->filled('date_from') || $request->filled('date_to')) {
+        $start = $request->date_from
+            ? \Carbon\Carbon::parse($request->date_from)->format('d/m/Y')
+            : 'début';
+        $end = $request->date_to
+            ? \Carbon\Carbon::parse($request->date_to)->format('d/m/Y')
+            : 'aujourd’hui';
+        $period = "Du {$start} au {$end}";
+    } elseif ($firstDate && $lastDate) {
+        $period = 'Du ' . $firstDate->format('d/m/Y') . ' au ' . $lastDate->format('d/m/Y');
+    } else {
+        $period = 'Toutes les dates (aucun mouvement)';
+    }
+
+    return [
+        'etablissement' => Etablissement::find($selectedEtablissementId),
+        'movements' => $movements,
+        'period' => $period,
+        'printedAt' => now(),
+    ];
+}
+
+private function filteredMovementsQuery(Request $request, $etablissementId)
+{
+    return Movement::where('etablissement_id', $etablissementId)
+        ->with(['product', 'user'])
+        ->when($request->filled('type'), fn ($query) => $query->where('type', $request->type))
+        ->when($request->filled('product_id'), fn ($query) => $query->where('product_id', $request->product_id))
+        ->when($request->filled('date_from'), fn ($query) => $query->whereDate('created_at', '>=', $request->date_from))
+        ->when($request->filled('date_to'), fn ($query) => $query->whereDate('created_at', '<=', $request->date_to));
 }
 
     /**
@@ -648,23 +694,6 @@ public function movements(Request $request)
     //     }
 
     //     $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
-
-    //     $lowStock = Stock::where('etablissement_id', $selectedEtablissementId)
-    //         ->with(['product', 'product.category'])
-    //         ->whereRaw('quantity <= minimum_stock')
-    //         ->where('quantity', '>', 0)
-    //         ->orderBy('quantity', 'asc')
-    //         ->paginate(20);
-
-    //     $outOfStock = Stock::where('etablissement_id', $selectedEtablissementId)
-    //         ->with(['product', 'product.category'])
-    //         ->where('quantity', '<=', 0)
-    //         ->orderBy('product_id')
-    //         ->paginate(20);
-
-    //     $etablissements = Etablissement::whereIn('id', $etablissementIds)->get();
-    //     $etablissement = $etablissements->firstWhere('id', $selectedEtablissementId);
-
     //     return view('client.stocks.alerts', compact(
     //         'etablissement',
     //         'etablissements',

@@ -54,12 +54,14 @@
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Produit <span class="text-danger">*</span></label>
-                            <select name="product_id" class="form-select @error('product_id') is-invalid @enderror" required>
+                            <input type="search" id="stockInProductSearch" class="form-control mb-2"
+                                placeholder="Rechercher par nom ou code produit..." autocomplete="off">
+                            <select id="stockInProductSelect" name="product_id" class="form-select @error('product_id') is-invalid @enderror" required>
                                 <option value="">Sélectionnez un produit</option>
                                 @if(isset($products) && $products->count() > 0)
                                     <optgroup label="Nouveaux produits">
                                         @foreach($products as $product)
-                                            <option value="{{ $product->id }}" {{ old('product_id') == $product->id ? 'selected' : '' }}>
+                                            <option value="{{ $product->id }}" data-search="{{ $product->name }} {{ $product->code }}" {{ old('product_id') == $product->id ? 'selected' : '' }}>
                                                 {{ $product->name }} ({{ $product->code }})
                                             </option>
                                         @endforeach
@@ -68,13 +70,14 @@
                                 @if(isset($existingProducts) && $existingProducts->count() > 0)
                                     <optgroup label="Produits existants">
                                         @foreach($existingProducts as $stock)
-                                            <option value="{{ $stock->product_id }}" {{ old('product_id') == $stock->product_id ? 'selected' : '' }}>
+                                            <option value="{{ $stock->product_id }}" data-search="{{ $stock->product->name }} {{ $stock->product->code }}" {{ old('product_id') == $stock->product_id ? 'selected' : '' }}>
                                                 {{ $stock->product->name }} ({{ $stock->product->code }}) - Stock: {{ $stock->quantity }}
                                             </option>
                                         @endforeach
                                     </optgroup>
                                 @endif
                             </select>
+                            <small id="stockInProductNoResults" class="form-text text-muted d-none">Aucun produit correspondant.</small>
                             @error('product_id')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
@@ -198,9 +201,37 @@
 </div>
 @endsection
 
-@push('scripts')
+@section('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+
+        const productSearch = document.getElementById('stockInProductSearch');
+        const productSelect = document.getElementById('stockInProductSelect');
+        const noProductResults = document.getElementById('stockInProductNoResults');
+
+        if (productSearch && productSelect) {
+            productSearch.addEventListener('input', function() {
+                const term = this.value.trim().toLocaleLowerCase();
+                const options = Array.from(productSelect.options).filter(option => option.value);
+
+                options.forEach(option => {
+                    const searchText = (option.dataset.search || option.textContent).toLocaleLowerCase();
+                    option.hidden = term !== '' && !searchText.includes(term);
+                });
+
+                Array.from(productSelect.querySelectorAll('optgroup')).forEach(group => {
+                    group.hidden = Array.from(group.options).every(option => option.hidden);
+                });
+
+                const hasMatch = options.some(option => !option.hidden);
+                noProductResults?.classList.toggle('d-none', term === '' || hasMatch);
+
+                const selectedOption = productSelect.options[productSelect.selectedIndex];
+                if (term !== '' && selectedOption?.value && selectedOption.hidden) {
+                    productSelect.value = '';
+                }
+            });
+        }
 
         // ===== AUTO-FERMETURE DES ALERTES =====
         setTimeout(() => {
@@ -265,4 +296,4 @@
 
     });
 </script>
-@endpush
+@endsection

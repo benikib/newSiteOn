@@ -127,9 +127,19 @@
                                     <td class="text-right"></td>
                                 </tr>
                                 <tr class="table-success">
-                                    <td colspan="6" class="text-end fs-5">Total TTC</td>
+                                    <td colspan="6" class="text-end">Montant initial TTC</td>
                                     <td class="text-right fs-5"></td>
-                                    <td class="text-right fs-5">{{ number_format($order->total_amount, 2, ',', ' ') }} Fc</td>
+                                    <td class="text-right">{{ number_format($order->initial_amount ?? $order->total_amount, 2, ',', ' ') }} CDF</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="6" class="text-end">Réduction @if($order->discount_type === 'percentage')({{ number_format($order->discount_value, 2, ',', ' ') }}%)@endif</td>
+                                    <td class="text-right"></td>
+                                    <td class="text-right">- {{ number_format($order->discount_amount ?? 0, 2, ',', ' ') }} CDF</td>
+                                </tr>
+                                <tr class="table-success">
+                                    <td colspan="6" class="text-end fs-5">Total net TTC</td>
+                                    <td class="text-right fs-5"></td>
+                                    <td class="text-right fs-5">{{ number_format($order->total_amount, 2, ',', ' ') }} CDF</td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -146,6 +156,13 @@
                                     <span class="text-muted">Méthode:</span>
                                     <span class="fw-semibold">{{ $order->payment_method_label ?? 'Non spécifié' }}</span>
                                 </p>
+                                <p class="mb-0">
+                                    <span class="text-muted">Montant payé:</span>
+                                    <span class="fw-semibold">{{ number_format($order->payment_amount ?? $order->total_amount, 2, ',', ' ') }} {{ $order->payment_currency ?? 'CDF' }}</span>
+                                </p>
+                                @if(($order->payment_currency ?? 'CDF') === 'USD' && $order->exchange_rate)
+                                    <p class="mb-0"><span class="text-muted">Taux appliqué:</span> 1 USD = {{ number_format($order->exchange_rate, 2, ',', ' ') }} CDF</p>
+                                @endif
                             </div>
                         </div>
                         <div class="col-md-4">

@@ -150,6 +150,15 @@
         </div>
     </div>
 
+    <div class="d-flex justify-content-end gap-2 mb-3">
+        <a href="{{ route('client.stocks.movements.print', request()->except('page')) }}" class="btn btn-outline-secondary btn-sm" target="_blank">
+            <i class="fas fa-print me-1"></i> Imprimer
+        </a>
+        <a href="{{ route('client.stocks.movements.pdf', request()->except('page')) }}" class="btn btn-outline-danger btn-sm">
+            <i class="fas fa-file-pdf me-1"></i> Télécharger en PDF
+        </a>
+    </div>
+
     <!-- ===== LISTE DES MOUVEMENTS ===== -->
     <div class="card shadow-sm">
         <div class="card-body p-0">

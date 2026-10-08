@@ -70,7 +70,7 @@
                                         <h6 class="mb-0 text-truncate">{{ $product->name }}</h6>
                                         <small class="text-muted">{{ $product->code }}</small>
                                         <div class="mt-1">
-                                            <span class="badge bg-primary">{{ number_format($product->stock->selling_price ?? 0, 2, ',', ' ') }} Fc</span>
+                                            <span class="badge bg-primary product-price" data-price-cdf="{{ $product->stock->selling_price ?? 0 }}">{{ number_format($usdCdfRate ? ($product->stock->selling_price ?? 0) / $usdCdfRate : ($product->stock->selling_price ?? 0), 2, ',', ' ') }} {{ $usdCdfRate ? 'USD' : 'CDF' }}</span>
                                             <span class="badge {{ ($product->stock->quantity ?? 0) > 10 ? 'bg-success' : 'bg-warning text-dark' }}">
                                                 Stock: {{ number_format($product->stock->quantity ?? 0) }}
                                             </span>
@@ -102,15 +102,23 @@
                     <div class="border-bottom pb-2 mb-2">
                         <div class="d-flex justify-content-between">
                             <span class="text-muted">Total HT</span>
-                            <span id="cartTotalHT">0,00 Fc</span>
+                            <span id="cartTotalHT">0,00 {{ $usdCdfRate ? 'USD' : 'CDF' }}</span>
                         </div>
                         <div class="d-flex justify-content-between">
                             <span class="text-muted">TVA</span>
-                            <span id="cartTotalTVA">0,00 Fc</span>
+                            <span id="cartTotalTVA">0,00 {{ $usdCdfRate ? 'USD' : 'CDF' }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Montant initial TTC</span>
+                            <span id="cartInitialTTC">0,00 {{ $usdCdfRate ? 'USD' : 'CDF' }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Réduction</span>
+                            <span id="cartDiscountAmount">0,00 {{ $usdCdfRate ? 'USD' : 'CDF' }}</span>
                         </div>
                         <div class="d-flex justify-content-between fw-bold fs-5">
-                            <span>Total TTC</span>
-                            <span id="cartTotalTTC">0,00 Fc</span>
+                            <span>Total net TTC</span>
+                            <span id="cartTotalTTC">0,00 {{ $usdCdfRate ? 'USD' : 'CDF' }}</span>
                         </div>
                     </div>
 
@@ -128,6 +136,34 @@
                         </div>
                         <div class="col-6">
                             <input type="text" id="customerPhone" class="form-control form-control-sm" placeholder="Téléphone">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small mb-1" for="paymentCurrency">Devise de paiement</label>
+                            <select id="paymentCurrency" class="form-select form-select-sm">
+                                <option value="USD" {{ $usdCdfRate ? 'selected' : 'disabled' }}>USD</option>
+                                <option value="CDF" {{ $usdCdfRate ? '' : 'selected' }}>CDF</option>
+                            </select>
+                            <small class="text-muted" id="exchangeRateHint">
+                                @if($usdCdfRate)
+                                    1 USD = {{ number_format($usdCdfRate, 2, ',', ' ') }} CDF
+                                @else
+                                    Taux USD/CDF indisponible; seul le paiement en CDF est possible.
+                                @endif
+                            </small>
+                        </div>
+                        <div class="col-5">
+                            <label class="form-label small mb-1" for="discountType">Réduction</label>
+                            <select id="discountType" class="form-select form-select-sm">
+                                <option value="amount">Montant</option>
+                                <option value="percentage">Pourcentage</option>
+                            </select>
+                        </div>
+                        <div class="col-7">
+                            <label class="form-label small mb-1" for="discountValue">Valeur</label>
+                            <div class="input-group input-group-sm">
+                                <input type="number" id="discountValue" class="form-control" min="0" step="0.01" value="0">
+                                <span class="input-group-text" id="discountUnit">{{ $usdCdfRate ? 'USD' : 'CDF' }}</span>
+                            </div>
                         </div>
                         <div class="col-12">
                             <select id="paymentMethod" class="form-select form-select-sm">
@@ -245,6 +281,19 @@
 window.cart = [];
 window.currentOrderId = null;
 window.selectedProductData = null;
+window.usdCdfRate = @json($usdCdfRate);
+
+window.formatCurrency = function(amount) {
+    const currency = document.getElementById('paymentCurrency').value;
+    const convertedAmount = currency === 'USD' ? amount / window.usdCdfRate : amount;
+    return convertedAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + currency;
+};
+
+window.updateProductPriceLabels = function() {
+    document.querySelectorAll('.product-price').forEach(label => {
+        label.textContent = window.formatCurrency(Number(label.dataset.priceCdf) || 0);
+    });
+};
 
 // ===== OUVRE LA MODALE PRODUIT =====
 window.openProductModal = function(id, name, price, stock, tva) {
@@ -259,7 +308,7 @@ window.openProductModal = function(id, name, price, stock, tva) {
 
     document.getElementById('productInfo').innerHTML = `
         <strong>${name}</strong><br>
-        Prix HT: ${price.toFixed(2)} Fc<br>
+        Prix HT: ${window.formatCurrency(price)}<br>
         Stock disponible: ${stock}
     `;
     document.getElementById('qtyInput').value = 1;
@@ -328,6 +377,8 @@ window.updateCartDisplay = function() {
     const container = document.getElementById('cartItems');
     const totalHTSpan = document.getElementById('cartTotalHT');
     const totalTVASpan = document.getElementById('cartTotalTVA');
+    const initialTTCSpan = document.getElementById('cartInitialTTC');
+    const discountAmountSpan = document.getElementById('cartDiscountAmount');
     const totalTTCSpan = document.getElementById('cartTotalTTC');
 
     if (window.cart.length === 0) {
@@ -337,9 +388,11 @@ window.updateCartDisplay = function() {
                 Aucun produit
             </div>
         `;
-        totalHTSpan.textContent = '0,00 Fc';
-        totalTVASpan.textContent = '0,00 Fc';
-        totalTTCSpan.textContent = '0,00 Fc';
+        totalHTSpan.textContent = window.formatCurrency(0);
+        totalTVASpan.textContent = window.formatCurrency(0);
+        initialTTCSpan.textContent = window.formatCurrency(0);
+        discountAmountSpan.textContent = window.formatCurrency(0);
+        totalTTCSpan.textContent = window.formatCurrency(0);
         return;
     }
 
@@ -363,10 +416,10 @@ window.updateCartDisplay = function() {
                     <div>
                         <strong>${item.name}</strong>
                         <br>
-                        <small class="text-muted">${item.quantity} x ${item.price.toFixed(2)} Fc</small>
+                        <small class="text-muted">${item.quantity} x ${window.formatCurrency(item.price)}</small>
                     </div>
                     <div>
-                        <span class="fw-bold">${subtotalTTC.toFixed(2)} Fc</span>
+                        <span class="fw-bold">${window.formatCurrency(subtotalTTC)}</span>
                         <button class="btn btn-sm btn-outline-danger ms-2" onclick="window.removeItem(${index})">
                             <i class="fas fa-trash"></i>
                         </button>
@@ -376,10 +429,20 @@ window.updateCartDisplay = function() {
         `;
     });
 
+    const discountType = document.getElementById('discountType').value;
+    const discountValue = Math.max(0, parseFloat(document.getElementById('discountValue').value) || 0);
+    let discountAmount = discountType === 'percentage'
+        ? totalTTC * Math.min(discountValue, 100) / 100
+        : discountValue * (document.getElementById('paymentCurrency').value === 'USD' ? window.usdCdfRate : 1);
+    discountAmount = Math.min(totalTTC, discountAmount);
+    const finalTotal = totalTTC - discountAmount;
+
     container.innerHTML = html;
-    totalHTSpan.textContent = totalHT.toFixed(2) + ' Fc';
-    totalTVASpan.textContent = totalTVA.toFixed(2) + ' Fc';
-    totalTTCSpan.textContent = totalTTC.toFixed(2) + ' Fc';
+    totalHTSpan.textContent = window.formatCurrency(totalHT);
+    totalTVASpan.textContent = window.formatCurrency(totalTVA);
+    initialTTCSpan.textContent = window.formatCurrency(totalTTC);
+    discountAmountSpan.textContent = window.formatCurrency(discountAmount);
+    totalTTCSpan.textContent = window.formatCurrency(finalTotal);
 };
 
 // ===== SUPPRIMER UN ARTICLE =====
@@ -439,7 +502,7 @@ window.searchProducts = function(search) {
                                             <h6 class="mb-0 text-truncate">${product.name}</h6>
                                             <small class="text-muted">${product.code}</small>
                                             <div class="mt-1">
-                                                <span class="badge bg-primary">${(product.stock.selling_price || 0).toFixed(2)} Fc</span>
+                                                <span class="badge bg-primary product-price" data-price-cdf="${product.stock.selling_price || 0}">${window.formatCurrency(product.stock.selling_price || 0)}</span>
                                                 <span class="badge ${(product.stock.quantity || 0) > 10 ? 'bg-success' : 'bg-warning text-dark'}">
                                                     Stock: ${product.stock.quantity || 0}
                                                 </span>
@@ -478,6 +541,9 @@ window.validateSale = function() {
         customer_name: document.getElementById('customerName').value || 'Client physique',
         customer_phone: document.getElementById('customerPhone').value,
         payment_method: document.getElementById('paymentMethod').value,
+        payment_currency: document.getElementById('paymentCurrency').value,
+        discount_type: document.getElementById('discountType').value,
+        discount_value: parseFloat(document.getElementById('discountValue').value) || 0,
         notes: document.getElementById('notes')?.value || '',
         items: items
     };
@@ -514,6 +580,9 @@ window.validateSale = function() {
             
             // Réinitialiser
             window.cart = [];
+            document.getElementById('discountType').value = 'amount';
+            document.getElementById('discountValue').value = '0';
+            document.getElementById('discountUnit').textContent = document.getElementById('paymentCurrency').value;
             window.updateCartDisplay();
             document.getElementById('customerSelect').value = '';
             document.getElementById('customerName').value = '';
@@ -553,6 +622,18 @@ window.pdfInvoice = function() {
 
 // ===== INITIALISATION =====
 document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('paymentCurrency').addEventListener('change', function() {
+        document.getElementById('discountUnit').textContent = document.getElementById('discountType').value === 'percentage' ? '%' : this.value;
+        window.updateCartDisplay();
+        window.updateProductPriceLabels();
+    });
+    document.getElementById('discountType').addEventListener('change', function() {
+        const isPercentage = this.value === 'percentage';
+        document.getElementById('discountUnit').textContent = isPercentage ? '%' : document.getElementById('paymentCurrency').value;
+        document.getElementById('discountValue').max = isPercentage ? 100 : '';
+        window.updateCartDisplay();
+    });
+    document.getElementById('discountValue').addEventListener('input', window.updateCartDisplay);
     console.log('✅ POS chargé !');
     console.log('📦 Nombre de produits:', document.querySelectorAll('.product-col').length);
     

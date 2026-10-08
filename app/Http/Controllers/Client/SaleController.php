@@ -10,6 +10,7 @@ use App\Models\OrderItem;
 use App\Models\Etablissement;
 use App\Models\Movement;
 use App\Models\Customer;
+use App\Models\TauxDeChange;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -69,6 +70,8 @@ class SaleController extends Controller
 
         // Paramètres TVA
         $tvaRates = [0, 5.5, 10, 20];
+        $usdCdfRate = TauxDeChange::orderByDesc('date')->value('usd_cdf');
+        $usdCdfRate = $usdCdfRate !== null ? (float) $usdCdfRate : null;
 
         return view('client.sales.pos', compact(
             'products',
@@ -76,7 +79,8 @@ class SaleController extends Controller
             'etablissement',
             'selectedEtablissementId',
             'customers',
-            'tvaRates'
+            'tvaRates',
+            'usdCdfRate'
         ));
     }
 
@@ -141,9 +145,11 @@ class SaleController extends Controller
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
-            'items.*.price' => 'required|numeric|min:0',
             'items.*.tva_rate' => 'required|numeric|min:0',
             'payment_method' => 'required|in:cash,card,transfer,other',
+            'payment_currency' => 'required|in:CDF,USD',
+            'discount_type' => 'nullable|in:amount,percentage',
+            'discount_value' => 'nullable|numeric|min:0',
             'customer_name' => 'nullable|string|max:255',
             'customer_phone' => 'nullable|string|max:20',
             'customer_email' => 'nullable|email|max:255',
@@ -157,6 +163,15 @@ class SaleController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
+
+        $usdCdfRate = TauxDeChange::orderByDesc('date')->value('usd_cdf');
+        if ($request->payment_currency === 'USD' && (!$usdCdfRate || $usdCdfRate <= 0)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Aucun taux USD/CDF valide n’est disponible pour cette vente.'
+            ], 422);
+        }
+        $usdCdfRate = $usdCdfRate !== null ? (float) $usdCdfRate : null;
 
         $cartItems = [];
         $totalHT = 0;
@@ -191,7 +206,8 @@ class SaleController extends Controller
                 ], 422);
             }
 
-            $subtotalHT = $item['quantity'] * $item['price'];
+            $unitPrice = (float) ($product->stock->selling_price ?? 0);
+            $subtotalHT = $item['quantity'] * $unitPrice;
             $tvaAmount = $subtotalHT * ($item['tva_rate'] / 100);
             $subtotalTTC = $subtotalHT + $tvaAmount;
 
@@ -202,13 +218,38 @@ class SaleController extends Controller
             $cartItems[] = [
                 'product' => $product,
                 'quantity' => $item['quantity'],
-                'price_ht' => $item['price'],
+                'price_ht' => $unitPrice,
                 'tva_rate' => $item['tva_rate'],
                 'tva_amount' => $tvaAmount,
                 'subtotal_ht' => $subtotalHT,
                 'subtotal_ttc' => $subtotalTTC,
             ];
         }
+
+        $initialTotal = round($totalTTC, 2);
+        $discountType = $request->input('discount_type', 'amount');
+        $discountValue = (float) $request->input('discount_value', 0);
+
+        if ($discountType === 'percentage' && $discountValue > 100) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La réduction en pourcentage ne peut pas dépasser 100%.',
+            ], 422);
+        }
+
+        $discountAmount = $discountType === 'percentage'
+            ? round($initialTotal * ($discountValue / 100), 2)
+            : round($discountValue * ($request->payment_currency === 'USD' ? $usdCdfRate : 1), 2);
+
+        if ($discountAmount > $initialTotal) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La réduction ne peut pas dépasser le montant initial de la facture.',
+            ], 422);
+        }
+
+        $discountAmount = min($discountAmount, $initialTotal);
+        $finalTotal = round($initialTotal - $discountAmount, 2);
 
         DB::beginTransaction();
         try {
@@ -239,7 +280,16 @@ class SaleController extends Controller
                 'notes' => $request->notes,
                 'total_ht' => $totalHT,
                 'total_tva' => $totalTVA,
-                'total_amount' => $totalTTC,
+                'total_amount' => $finalTotal,
+                'initial_amount' => $initialTotal,
+                'discount_amount' => $discountAmount,
+                'discount_type' => $discountValue > 0 ? $discountType : null,
+                'discount_value' => $discountValue > 0 ? $discountValue : null,
+                'payment_currency' => $request->payment_currency,
+                'payment_amount' => $request->payment_currency === 'USD'
+                    ? round($finalTotal / $usdCdfRate, 2)
+                    : round($finalTotal, 2),
+                'exchange_rate' => $usdCdfRate,
                 'status' => 'completed',
                 'payment_method' => $request->payment_method,
                 'payment_status' => 'paid',
@@ -297,7 +347,11 @@ class SaleController extends Controller
                 'order_number' => $order->order_number,
                 'total_ht' => $totalHT,
                 'total_tva' => $totalTVA,
-                'total_ttc' => $totalTTC,
+                'initial_total' => $initialTotal,
+                'discount_amount' => $discountAmount,
+                'total_ttc' => $finalTotal,
+                'payment_currency' => $order->payment_currency,
+                'payment_amount' => $order->payment_amount,
                 'invoice_url' => route('client.sales.invoice', $order->id)
             ]);
 
