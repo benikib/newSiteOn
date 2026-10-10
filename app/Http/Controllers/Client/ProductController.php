@@ -276,6 +276,7 @@ class ProductController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            report($e);
             
             // Supprimer l'image si erreur
             if ($imagePath && Storage::disk('public')->exists($imagePath)) {
@@ -285,11 +286,11 @@ class ProductController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Erreur: ' . $e->getMessage()
+                    'message' => 'Impossible d’enregistrer ce produit. Vérifiez les informations et réessayez.'
                 ], 500);
             }
 
-            return back()->with('error', 'Erreur: ' . $e->getMessage());
+            return back()->with('error', 'Impossible d’enregistrer ce produit. Vérifiez les informations et réessayez.');
         }
     }
 

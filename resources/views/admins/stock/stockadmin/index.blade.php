@@ -273,7 +273,13 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">Prix d'achat (optionnel)</label>
-                                <input type="number" name="purchase_price" class="form-control" step="0.01" min="0">
+                                <div class="input-group">
+                                    <input type="number" name="purchase_price" class="form-control" step="0.01" min="0">
+                                    <select name="purchase_currency" class="form-select" aria-label="Devise du prix d'achat">
+                                        <option value="CDF">CDF</option>
+                                        <option value="USD">USD</option>
+                                    </select>
+                                </div>
                                 <small class="text-muted">Laissez vide pour utiliser le prix actuel</small>
                             </div>
                             <div class="mb-3">

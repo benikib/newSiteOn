@@ -35,7 +35,8 @@ $serviceIds = Service::whereIn('etablissement_id', $etablissementIds)->pluck('id
             ->paginate(10);
         return view('etablissements.paiements.index', compact('paiements' ,'services'));}
         catch(\Throwable $e){
-            return redirect()->back()->with('error', 'Une erreur est survenue lors de la récupération des paiements. Veuillez réessayer plus tard.');
+            report($e);
+            return redirect()->back()->with('error', 'Impossible de charger les paiements. Réessayez plus tard.');
         }
     }
 
@@ -82,8 +83,8 @@ $serviceIds = Service::whereIn('etablissement_id', $etablissementIds)->pluck('id
         return redirect()->back()->with( 'success', 'Paiement créé avec succès.');
 
       } catch (\Throwable $th) {
-        dd($th->getMessage());
-
+                report($th);
+                return redirect()->back()->with('error', 'Impossible d’enregistrer ce paiement. Vérifiez les informations et réessayez.');
       }
 
     }

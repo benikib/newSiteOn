@@ -136,6 +136,13 @@
                                     <i class="fas fa-envelope text-primary me-2"></i>
                                     <span>{{ $etablissement->email ?? 'Non renseigné' }}</span>
                                 </div>
+                                @if ($etablissement->whatsapp_number)
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fab fa-whatsapp text-success me-2"></i>
+                                        <a href="https://wa.me/{{ $etablissement->whatsapp_number }}?text={{ rawurlencode($etablissement->whatsapp_message ?: 'Bonjour ' . $etablissement->nom . ', je souhaite avoir des informations.') }}"
+                                            target="_blank" rel="noopener" class="text-success">WhatsApp</a>
+                                    </div>
+                                @endif
                                 @if ($etablissement->website)
                                     <div class="d-flex align-items-center">
                                         <i class="fas fa-globe text-primary me-2"></i>
@@ -345,9 +352,21 @@
                                                 {{ $etablissement->commune }}</p>
                                             <p class="mb-2">Av. {{ $etablissement->avenue }}, N°
                                                 {{ $etablissement->numero }}</p>
-                                            <button class="btn btn-outline-primary btn-sm">
+                                            @php
+                                                $addressQuery = implode(', ', array_filter([
+                                                    $etablissement->numero,
+                                                    $etablissement->avenue,
+                                                    $etablissement->quartier,
+                                                    $etablissement->commune,
+                                                    $etablissement->ville,
+                                                ]));
+                                                $directionsUrl = $etablissement->itineraire
+                                                    ?: 'https://www.google.com/maps/search/?api=1&query=' . urlencode($addressQuery);
+                                            @endphp
+                                            <a href="{{ $directionsUrl }}" target="_blank" rel="noopener"
+                                                class="btn btn-outline-primary btn-sm">
                                                 <i class="fas fa-route me-1"></i> Itinéraire
-                                            </button>
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -506,6 +525,24 @@
                             <input type="url" class="form-control" name="website"
                                 value="{{ $etablissement->website }}">
                         </div>
+                        <hr>
+                        <h6>Contact WhatsApp</h6>
+                        <div class="mb-3">
+                            <label class="form-label" for="whatsapp_number">Numéro WhatsApp</label>
+                            <input type="tel" class="form-control @error('whatsapp_number') is-invalid @enderror"
+                                id="whatsapp_number" name="whatsapp_number" value="{{ old('whatsapp_number', $etablissement->whatsapp_number) }}"
+                                inputmode="tel" autocomplete="tel" placeholder="243XXXXXXXXX" maxlength="20"
+                                aria-describedby="whatsapp-number-help whatsapp-number-error">
+                            <small class="form-text text-muted" id="whatsapp-number-help">Format : indicatif pays et numéro, sans « + » ni espaces. Exemple RDC : 243812345678. Un numéro local commençant par 0 sera converti automatiquement.</small>
+                            @error('whatsapp_number')<div class="invalid-feedback" id="whatsapp-number-error">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="whatsapp_message">Message d’accueil prérempli</label>
+                            <textarea class="form-control @error('whatsapp_message') is-invalid @enderror" id="whatsapp_message"
+                                name="whatsapp_message" rows="3" maxlength="500"
+                                placeholder="Bonjour {{ $etablissement->nom }}, je souhaite avoir des informations.">{{ old('whatsapp_message', $etablissement->whatsapp_message) }}</textarea>
+                            @error('whatsapp_message')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
@@ -515,6 +552,14 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.getElementById('whatsapp_number')?.addEventListener('blur', function () {
+            let number = this.value.replace(/[\s()+.\-]/g, '');
+            if (number.startsWith('0')) number = `243${number.slice(1)}`;
+            this.value = number;
+        });
+    </script>
 
     <!-- Edit Description Modal -->
     <div class="modal fade" id="editDescriptionModal" tabindex="-1" aria-hidden="true">
@@ -573,6 +618,11 @@
                             <label class="form-label">Numéro</label>
                             <input type="text" class="form-control" name="numero"
                                 value="{{ $etablissement->numero }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="itineraire">Lien d’itinéraire (Google Maps)</label>
+                            <input type="url" class="form-control" id="itineraire" name="itineraire"
+                                value="{{ $etablissement->itineraire }}" placeholder="https://maps.google.com/...">
                         </div>
                     </div>
                     <div class="modal-footer">

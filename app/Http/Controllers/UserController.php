@@ -9,6 +9,10 @@ use App\Models\Service;
 use App\Models\TypeEtablissement;
 use App\Models\User;
 use App\Models\UserEtablissement;
+use App\Models\Product;
+use App\Models\ProductReservationItem;
+use App\Models\DeliveryOrderItem;
+use App\Models\TauxDeChange;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
@@ -35,7 +39,7 @@ class UserController extends Controller
             ->pluck('user');
 
         if ($users->isEmpty()) {
-            return redirect()->back()->with('error', 'No users found for this etablissement.');
+            return redirect()->back()->with('error', 'Aucun utilisateur n’a été trouvé pour cet établissement.');
         }
 
         return view('admins.users_etablissements.index',compact("users","etablissement"));
@@ -121,7 +125,8 @@ public function repportingAdmins()
 
         return redirect()->back()->with('success', 'User created successfully.');
     } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Error creating user: ' . $e->getMessage());
+            report($e);
+            return redirect()->back()->with('error', 'Impossible de créer cet utilisateur. Vérifiez les informations et réessayez.');
         }
     }
 
@@ -162,9 +167,8 @@ Mail::to($user->email)->send(new UserCreatedMail($user, $url));
 
         return redirect()->back()->with('success', 'User updated successfully.');
         } catch (\Exception $e) {
-
-            dd($e->getMessage());
-            return redirect()->route('users.index')->with('error', 'User not found.');
+            report($e);
+            return redirect()->route('users.index')->with('error', 'Impossible de mettre à jour cet utilisateur. Vérifiez les informations et réessayez.');
         }
     }
 
@@ -196,9 +200,8 @@ Mail::to($user->email)->send(new UserCreatedMail($user, $url));
 
         return redirect()->back()->with('success', 'User updated successfully.');
         } catch (\Exception $e) {
-
-
-            return redirect()->route('users.index')->with('error', 'User not found.');
+            report($e);
+            return redirect()->route('users.index')->with('error', 'Impossible de mettre à jour ce compte. Vérifiez les informations et réessayez.');
         }
     }
 
@@ -228,12 +231,52 @@ Mail::to($user->email)->send(new UserCreatedMail($user, $url));
          $photos = $publicitesActives = Publicite::actives()
         ->orderBy('id', 'desc')
         ->get();
-     $etablissement = Etablissement::with('typeEtablissement')->findOrFail($etablissement_id);
+     $etablissement = Etablissement::with(['typeEtablissement', 'photos'])
+        ->findOrFail($etablissement_id);
         $typesEtablissement =TypeEtablissement::all();
         if (!$etablissement) {
-            return redirect()->back()->with('error', 'Etablissement not found.');
+            return redirect()->back()->with('error', 'Établissement introuvable.');
         }
-        return view('partials.resultatseach', compact('etablissement', 'typesEtablissement','photos'));
+
+        $etablissement->setRelation('services', $etablissement->services()
+            ->where('disponibilite', true)
+            ->with('reservations')
+            ->get());
+
+        $products = Product::with(['stock', 'category', 'unit'])
+            ->where('etablissement_id', $etablissement->id)
+            ->where('status', true)
+            ->orderByDesc('created_at')
+            ->get();
+
+        $reservedQuantities = ProductReservationItem::whereIn('product_id', $products->pluck('id'))
+            ->whereHas('reservation', fn ($query) => $query->where('statut', 'en_attente'))
+            ->selectRaw('product_id, SUM(quantity) as total_reserved')
+            ->groupBy('product_id')
+            ->pluck('total_reserved', 'product_id');
+
+        $deliveryQuantities = DeliveryOrderItem::whereIn('product_id', $products->pluck('id'))
+            ->whereHas('deliveryOrder', fn ($query) => $query->whereIn('statut', ['en_attente', 'payee_partiellement', 'payee']))
+            ->selectRaw('product_id, SUM(quantity) as total_reserved')
+            ->groupBy('product_id')
+            ->pluck('total_reserved', 'product_id');
+
+        foreach ($products as $product) {
+            $physicalQuantity = (int) ($product->stock->quantity ?? 0);
+            $pendingQuantity = (int) ($reservedQuantities[$product->id] ?? 0)
+                + (int) ($deliveryQuantities[$product->id] ?? 0);
+            $product->setAttribute('available_quantity', max(0, $physicalQuantity - $pendingQuantity));
+        }
+
+        $categories = $products->pluck('category')
+            ->filter(fn ($category) => $category && $category->status)
+            ->unique('id')
+            ->values();
+        $usdCdfRate = TauxDeChange::where('date', today())->value('usd_cdf') ?? 2500;
+
+        return view('partials.resultatseach', compact(
+            'etablissement', 'typesEtablissement', 'photos', 'products', 'categories', 'usdCdfRate'
+        ));
     }
     public function ets(Request $request)
 {

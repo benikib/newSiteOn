@@ -99,24 +99,41 @@
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Prix d'achat <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <span class="input-group-text">Fc</span>
                                     <input type="number" name="purchase_price" class="form-control @error('purchase_price') is-invalid @enderror" 
                                            value="{{ old('purchase_price') }}" required step="0.01" min="0">
+                                    <select id="purchaseCurrency" name="purchase_currency" class="form-select @error('purchase_currency') is-invalid @enderror" aria-label="Devise du prix d'achat">
+                                        <option value="CDF" {{ old('purchase_currency', 'CDF') === 'CDF' ? 'selected' : '' }}>CDF</option>
+                                        <option value="USD" {{ old('purchase_currency') === 'USD' ? 'selected' : '' }}>USD</option>
+                                    </select>
                                 </div>
                                 @error('purchase_price')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
+                                @error('purchase_currency')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted">
+                                    Le montant est converti en CDF pour calculer la valeur et le coût moyen du stock.
+                                    Taux USD/CDF : {{ $usdCdfRate ? number_format($usdCdfRate, 2, ',', ' ') : 'non configuré' }}.
+                                </small>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Prix de vente <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <span class="input-group-text">Fc</span>
                                     <input type="number" name="selling_price" class="form-control @error('selling_price') is-invalid @enderror" 
                                            value="{{ old('selling_price') }}" required step="0.01" min="0">
+                                    <select id="sellingCurrency" name="selling_currency" class="form-select @error('selling_currency') is-invalid @enderror" aria-label="Devise du prix de vente">
+                                        <option value="CDF" {{ old('selling_currency', 'CDF') === 'CDF' ? 'selected' : '' }}>CDF</option>
+                                        <option value="USD" {{ old('selling_currency') === 'USD' ? 'selected' : '' }}>USD</option>
+                                    </select>
                                 </div>
                                 @error('selling_price')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
+                                @error('selling_currency')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted">Le prix est converti en CDF pour les ventes. Taux USD/CDF : {{ $usdCdfRate ? number_format($usdCdfRate, 2, ',', ' ') : 'non configuré' }}.</small>
                             </div>
                             <div class="col-12">
                                 <label class="form-label fw-semibold">Note</label>
@@ -263,11 +280,16 @@
         // ===== CALCUL DE LA MARGE =====
         const purchasePrice = document.querySelector('input[name="purchase_price"]');
         const sellingPrice = document.querySelector('input[name="selling_price"]');
+        const purchaseCurrency = document.getElementById('purchaseCurrency');
+        const sellingCurrency = document.getElementById('sellingCurrency');
+        const usdCdfRate = Number(@json($usdCdfRate ?? 0));
 
         if (purchasePrice && sellingPrice) {
             const showMargin = () => {
-                const buy = parseFloat(purchasePrice.value) || 0;
-                const sell = parseFloat(sellingPrice.value) || 0;
+            const enteredBuy = parseFloat(purchasePrice.value) || 0;
+            const buy = purchaseCurrency?.value === 'USD' ? enteredBuy * usdCdfRate : enteredBuy;
+                const enteredSell = parseFloat(sellingPrice.value) || 0;
+                const sell = sellingCurrency?.value === 'USD' ? enteredSell * usdCdfRate : enteredSell;
                 const margin = sell - buy;
                 const marginPercent = buy > 0 ? (margin / buy) * 100 : 0;
 
@@ -292,6 +314,8 @@
 
             purchasePrice.addEventListener('input', showMargin);
             sellingPrice.addEventListener('input', showMargin);
+            purchaseCurrency?.addEventListener('change', showMargin);
+            sellingCurrency?.addEventListener('change', showMargin);
         }
 
     });

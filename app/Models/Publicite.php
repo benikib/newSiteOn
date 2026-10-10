@@ -28,8 +28,15 @@ class Publicite extends Model
 
 public function scopeActives($query)
 {
+    $dateExpression = match ($query->getConnection()->getDriverName()) {
+        'sqlite' => "date(date, '+' || dure || ' days') >= ?",
+        'pgsql' => "date + dure * INTERVAL '1 day' >= ?::date",
+        'sqlsrv' => 'DATEADD(day, dure, date) >= ?',
+        default => 'DATE_ADD(date, INTERVAL dure DAY) >= ?',
+    };
+
     return $query->where('status', 'active')
-                 ->whereRaw("DATE_ADD(date, INTERVAL dure DAY) >= ?", [now()->toDateString()]);
+        ->whereRaw($dateExpression, [now()->toDateString()]);
 }
 
 

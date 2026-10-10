@@ -1,5 +1,4 @@
-<nav class="navbar navbar-expand-lg navbar-dark sticky-top"
-    style="background: linear-gradient(135deg, var(--primary-color) 0%, #2c3e50 100%); box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
     <div class="container">
         <a class="navbar-brand fw-bold d-flex align-items-center" href="{{ url('/') }}"
             style="transition: all 0.3s ease;">
@@ -17,13 +16,25 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item mx-1">
-                    <a class="nav-link position-relative" href="{{ url('/') }}">
+                    <a class="nav-link position-relative {{ request()->routeIs('welcome') ? 'active' : '' }}" href="{{ route('welcome') }}">
                         <i class="fas fa-home me-1"></i> Accueil
                         <span class="nav-link-underline"></span>
                     </a>
                 </li>
                 <li class="nav-item mx-1">
-                    <a class="nav-link position-relative" href="{{ route('contact') }}">
+                    <a class="nav-link position-relative" href="{{ route('products.index') }}">
+                        <i class="fas fa-box-open me-1"></i> Produits
+                        <span class="nav-link-underline"></span>
+                    </a>
+                </li>
+                <li class="nav-item mx-1">
+                    <a class="nav-link position-relative {{ request()->routeIs('products.*') ? 'active' : '' }}" href="{{ route('products.index') }}">
+                        <i class="fas fa-box-open me-1"></i> Produits
+                        <span class="nav-link-underline"></span>
+                    </a>
+                </li>
+                <li class="nav-item mx-1">
+                    <a class="nav-link position-relative {{ request()->routeIs('contact') ? 'active' : '' }}" href="{{ route('contact') }}">
                         <i class="fas fa-envelope me-1"></i> Contact
                         <span class="nav-link-underline"></span>
                     </a>

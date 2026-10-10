@@ -2,6 +2,9 @@
 <html lang="fr">
 
 <head>
+    @if ((request()->is('/') || request()->is('produits') || request()->is('results') || request()->is('contact')) && app()->environment('production') && config('services.analytics.ga4_measurement_id'))
+        @include('partials.analytics-consent')
+    @endif
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bisika</title>
@@ -13,11 +16,11 @@
 
     <style>
         :root {
-            --primary-color: #398FAA;
-            --primary-hover: #2e7a91;
-            --primary-dark: #1d5c6e;
-            --text-dark: #333333;
-            --text-light: #f8f9fa;
+            --primary-color: #245c48;
+            --primary-hover: #194532;
+            --primary-dark: #173d2d;
+            --text-dark: #202923;
+            --text-light: #f8f9f6;
             --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.1);
             --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.15);
         }
@@ -30,7 +33,7 @@
 
         /* Navigation Bar */
         .navbar {
-            background-color: var(--primary-color) !important;
+            background: #203b30 !important;
             box-shadow: var(--shadow-sm);
         }
 
@@ -48,7 +51,7 @@
         .nav-link:hover,
         .nav-link:focus {
             color: white;
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
 
         .nav-link.active {
@@ -66,6 +69,14 @@
             height: 2px;
             background: white;
         }
+
+        .public-primary-button { background: #c45c36; border-color: #c45c36; color: #fff; }
+        .public-primary-button:hover, .public-primary-button:focus { background: #a94628; border-color: #a94628; color: #fff; }
+        .public-page-shell { width: min(1160px, calc(100% - 2rem)); margin-inline: auto; }
+        .public-section-heading { margin-bottom: 1.25rem; }
+        .public-section-heading h2 { margin: 0; color: #202923; font: 600 clamp(1.55rem, 3vw, 2rem)/1.15 Georgia, serif; }
+        .public-section-heading p { margin: .5rem 0 0; color: #66736b; }
+        .public-main { min-height: 65vh; }
 
         /* Buttons */
         .btn-primary {
@@ -90,6 +101,13 @@
         .btn-outline-primary:hover {
             background-color: var(--primary-color);
             color: white;
+        }
+
+        @media (max-width: 991.98px) {
+            #navbarNav { padding: .65rem 0 1rem; }
+            #navbarNav .navbar-nav { gap: .15rem; }
+            #navbarNav .nav-link { min-height: 44px; display: flex; align-items: center; }
+            #navbarNav .ms-auto { margin-top: .6rem; }
         }
 
         /* Search Section */
@@ -253,6 +271,7 @@
             }
         }
     </style>
+    @yield('styles')
 </head>
 
 
@@ -262,6 +281,7 @@
 
     <!-- Main Content -->
     <main class="container mt-4">
+        <x-flash-alert />
         @yield('content')
     </main>
 
@@ -386,6 +406,7 @@
         });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    @yield('scripts')
 </body>
 
 </html>

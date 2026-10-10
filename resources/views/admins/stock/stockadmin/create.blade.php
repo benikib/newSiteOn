@@ -120,7 +120,6 @@
                                     Prix d'achat <span class="text-danger">*</span>
                                 </label>
                                 <div class="input-group">
-                                    <span class="input-group-text">Fc</span>
                                     <input type="number" 
                                            name="purchase_price" 
                                            id="purchase_price" 
@@ -129,10 +128,18 @@
                                            step="0.01"
                                            min="0"
                                            required>
+                                    <select name="purchase_currency" class="form-select @error('purchase_currency') is-invalid @enderror" aria-label="Devise du prix d'achat">
+                                        <option value="CDF" {{ old('purchase_currency', 'CDF') === 'CDF' ? 'selected' : '' }}>CDF</option>
+                                        <option value="USD" {{ old('purchase_currency') === 'USD' ? 'selected' : '' }}>USD</option>
+                                    </select>
                                 </div>
                                 @error('purchase_price')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                @error('purchase_currency')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted">Taux USD/CDF : {{ $usdCdfRate ? number_format($usdCdfRate, 2, ',', ' ') : 'non configuré' }}</small>
                             </div>
 
                             <!-- ===== PRIX DE VENTE ===== -->
@@ -141,7 +148,6 @@
                                     Prix de vente <span class="text-danger">*</span>
                                 </label>
                                 <div class="input-group">
-                                    <span class="input-group-text">Fc</span>
                                     <input type="number" 
                                            name="selling_price" 
                                            id="selling_price" 
@@ -150,10 +156,18 @@
                                            step="0.01"
                                            min="0"
                                            required>
+                                    <select name="selling_currency" class="form-select @error('selling_currency') is-invalid @enderror" aria-label="Devise du prix de vente">
+                                        <option value="CDF" {{ old('selling_currency', 'CDF') === 'CDF' ? 'selected' : '' }}>CDF</option>
+                                        <option value="USD" {{ old('selling_currency') === 'USD' ? 'selected' : '' }}>USD</option>
+                                    </select>
                                 </div>
                                 @error('selling_price')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                @error('selling_currency')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted">Taux USD/CDF : {{ $usdCdfRate ? number_format($usdCdfRate, 2, ',', ' ') : 'non configuré' }}</small>
                             </div>
 
                             <!-- ===== BOUTONS ===== -->

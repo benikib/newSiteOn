@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Photo;
 use App\Models\Publicite;
 use App\Models\TypeEtablissement;
+use App\Models\Product;
+use App\Models\ProductReservationItem;
+use App\Models\DeliveryOrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -21,18 +24,81 @@ class PhotoController extends Controller
         ->orderBy('id', 'desc')
         ->get();
 
+            $photos = Publicite::actives()
+                ->orderByDesc('id')
+                ->get();
 
-
-       $typesAvecEtablissements = TypeEtablissement::with('etablissements')->avecEtablissements()->get();
-
-
-        // Si vous souhaitez filtrer les photos par établissement, vous pouvez le faire ici
-        // Par exemple, si vous avez un paramètre de requête 'etablissement_id', vous pouvez filtrer comme suit :
-        // $photos = Photo::where('etablissement_id', $request->query('etablissement_id'))->get();
-
-        // Retourner la vue avec les photos
-        return view('welcome', compact('photos', 'typesAvecEtablissements'));
+            return view('welcome.simple', compact('photos'));
     }
+
+    public function products(Request $request)
+    {
+        [$products] = $this->publicProducts();
+        $query = trim((string) $request->query('q', ''));
+
+        if ($query !== '') {
+            $normalizedQuery = $this->normalizeSearch($query);
+            $products = $products->filter(function ($product) use ($normalizedQuery) {
+                $searchable = $this->normalizeSearch(implode(' ', [
+                    $product->name,
+                    $product->description,
+                    $product->code,
+                    $product->category->nom ?? '',
+                    $product->etablissement->nom ?? '',
+                ]));
+
+                return str_contains($searchable, $normalizedQuery);
+            })->values();
+        }
+
+        $categories = $products->pluck('category')
+            ->filter(fn ($category) => $category && $category->status)
+            ->unique('id')
+            ->values();
+
+        return view('products.index', compact('products', 'categories', 'query'));
+    }
+
+    private function publicProducts(): array
+    {
+        $products = Product::with(['stock', 'unit', 'etablissement', 'category'])
+            ->where('status', true)
+            ->whereHas('etablissement', fn ($query) => $query->where('statut', 'actif'))
+            ->orderByDesc('created_at')
+            ->get();
+
+        $productIds = $products->pluck('id');
+        $reservedQuantities = ProductReservationItem::whereIn('product_id', $productIds)
+            ->whereHas('reservation', fn ($query) => $query->where('statut', 'en_attente'))
+            ->selectRaw('product_id, SUM(quantity) as total_reserved')
+            ->groupBy('product_id')
+            ->pluck('total_reserved', 'product_id');
+
+        $deliveryQuantities = DeliveryOrderItem::whereIn('product_id', $productIds)
+            ->whereHas('deliveryOrder', fn ($query) => $query->whereIn('statut', ['en_attente', 'payee_partiellement', 'payee']))
+            ->selectRaw('product_id, SUM(quantity) as total_reserved')
+            ->groupBy('product_id')
+            ->pluck('total_reserved', 'product_id');
+
+        foreach ($products as $product) {
+            $physicalQuantity = (int) ($product->stock->quantity ?? 0);
+            $pendingQuantity = (int) ($reservedQuantities[$product->id] ?? 0)
+                + (int) ($deliveryQuantities[$product->id] ?? 0);
+            $product->setAttribute('available_quantity', max(0, $physicalQuantity - $pendingQuantity));
+        }
+
+        $establishments = $products->pluck('etablissement')->filter()->unique('id')->values();
+
+        return [$products, $establishments];
+    }
+
+    private function normalizeSearch(string $value): string
+    {
+        $normalized = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $value);
+
+        return mb_strtolower($normalized === false ? $value : $normalized, 'UTF-8');
+    }
+
 public function storess(Request $request)
     {
         $request->validate([
@@ -144,8 +210,8 @@ public function storess(Request $request)
 
 
     } catch (\Exception $e) {
-
-        return back()->withErrors(['error' => 'Erreur lors de l\'ajout de la photo : ' . $e->getMessage()]);
+        report($e);
+        return back()->withErrors(['error' => 'Impossible d’ajouter cette photo. Vérifiez le fichier et réessayez.']);
     }
 }
 public function destroye( $gallery)

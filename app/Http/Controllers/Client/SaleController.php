@@ -357,9 +357,10 @@ class SaleController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            report($e);
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur: ' . $e->getMessage()
+                'message' => 'La vente n’a pas pu être enregistrée. Vérifiez le stock puis réessayez.'
             ], 500);
         }
     }

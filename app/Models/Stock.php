@@ -13,14 +13,24 @@ class Stock extends Model
         'product_id',
         'quantity',
         'purchase_price',
+        'purchase_price_original',
+        'purchase_currency',
+        'purchase_exchange_rate',
         'selling_price',
+        'selling_price_original',
+        'selling_currency',
+        'selling_exchange_rate',
         'minimum_stock'
     ];
 
     protected $casts = [
         'quantity' => 'integer',
         'purchase_price' => 'decimal:2',
+        'purchase_price_original' => 'decimal:2',
+        'purchase_exchange_rate' => 'decimal:4',
         'selling_price' => 'decimal:2',
+        'selling_price_original' => 'decimal:2',
+        'selling_exchange_rate' => 'decimal:4',
         'minimum_stock' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',

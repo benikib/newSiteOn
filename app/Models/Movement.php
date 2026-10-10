@@ -16,7 +16,13 @@ class Movement extends Model
         'before',
         'after',
         'purchase_price',
+        'purchase_price_original',
+        'purchase_currency',
+        'purchase_exchange_rate',
         'selling_price',
+        'selling_price_original',
+        'selling_currency',
+        'selling_exchange_rate',
         'note',
         'user_id'
     ];
@@ -26,7 +32,11 @@ class Movement extends Model
         'before' => 'integer',
         'after' => 'integer',
         'purchase_price' => 'decimal:2',
+        'purchase_price_original' => 'decimal:2',
+        'purchase_exchange_rate' => 'decimal:4',
         'selling_price' => 'decimal:2',
+        'selling_price_original' => 'decimal:2',
+        'selling_exchange_rate' => 'decimal:4',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

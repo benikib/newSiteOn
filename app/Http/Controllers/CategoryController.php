@@ -203,7 +203,6 @@ class CategoryController extends Controller
                     'errors' => $validator->errors()
                 ], 422);
             }
-            dd($validator);
             return back()->withErrors($validator)->withInput();
         }
 
@@ -417,7 +416,8 @@ class CategoryController extends Controller
                 $imported++;
 
             } catch (\Exception $e) {
-                $errors[] = 'Erreur ligne ' . ($imported + 2) . ': ' . $e->getMessage();
+                report($e);
+                $errors[] = 'La ligne ' . ($imported + 2) . ' n’a pas pu être importée.';
             }
         }
 
