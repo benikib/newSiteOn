@@ -44,8 +44,8 @@ class PromotionController extends Controller
 
             return redirect()->back()->with('success', 'Promotion créée avec succès.');
         } catch (\Exception $e) {
-            dd($e->getMessage());
-            return redirect()->back()->withErrors(['error' => $e->getMessage()]);
+            report($e);
+            return redirect()->back()->withErrors(['error' => 'Impossible de créer cette promotion. Vérifiez les informations et réessayez.']);
         }
     }
 
@@ -82,7 +82,8 @@ class PromotionController extends Controller
 
             return redirect()->back()->with('success', 'Promotion mise à jour avec succès.');
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => $e->getMessage()]);
+            report($e);
+            return redirect()->back()->withErrors(['error' => 'Impossible de mettre à jour cette promotion. Réessayez.']);
         }
     }
 
@@ -95,6 +96,7 @@ class PromotionController extends Controller
             $promotion->delete();
             return redirect()->back()->with('success', 'Promotion supprimée avec succès.');
         } catch (\Exception $e) {
+            report($e);
             return redirect()->back()->withErrors(['error' => 'Erreur lors de la suppression de la promotion.']);
         }
     }

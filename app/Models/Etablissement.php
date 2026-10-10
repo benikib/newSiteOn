@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Etablissement extends Model
 {
@@ -11,6 +12,7 @@ class Etablissement extends Model
     use HasFactory;
     protected $fillable = [
         'nom',
+        'itineraire',
         'ville',
         'commune',
         'avenue',
@@ -22,6 +24,8 @@ class Etablissement extends Model
         'latitude',
         'longitude',
         'telephone',
+        'whatsapp_number',
+        'whatsapp_message',
         'statut',
         'note_moyenne',
         'type_etablissement_id',
@@ -30,6 +34,36 @@ class Etablissement extends Model
 
     ];
     protected $table = 'etablissements';
+
+    protected static function booted(): void
+    {
+        static::saving(function (Etablissement $etablissement) {
+            if (!$etablissement->isDirty('nom') && $etablissement->slug) {
+                return;
+            }
+
+            $baseSlug = Str::slug($etablissement->nom) ?: 'etablissement';
+            if (is_numeric($baseSlug)) {
+                $baseSlug = 'etablissement-' . $baseSlug;
+            }
+
+            $slug = $baseSlug;
+            $suffix = 2;
+            do {
+                $query = static::where('slug', $slug);
+                if ($etablissement->exists) {
+                    $query->where('id', '!=', $etablissement->getKey());
+                }
+                if (!$query->exists()) {
+                    break;
+                }
+                $slug = $baseSlug . '-' . $suffix++;
+            } while (true);
+
+            $etablissement->slug = $slug;
+        });
+    }
+
     public function typeEtablissement()
     {
         return $this->belongsTo(TypeEtablissement::class, 'type_etablissement_id');

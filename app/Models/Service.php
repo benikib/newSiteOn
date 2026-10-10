@@ -16,7 +16,9 @@ class Service extends Model
         'etablissement_id',
          'promotion',
          'date_debut_promo',
-         'date_fin_promo'
+         'date_fin_promo',
+        'icone',
+        'disponibilite',
     ];
     protected $table = 'services';
     public function etablissement()

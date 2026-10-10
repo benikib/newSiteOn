@@ -206,6 +206,151 @@
                 @endif
             </div>
         </div>
+
+        <section class="mt-5" aria-labelledby="product-reservations-title">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                <div>
+                    <h2 class="h5 mb-1" id="product-reservations-title">Demandes de réservation d’articles</h2>
+                    <p class="text-muted small mb-0">Les demandes en attente sont déduites de la disponibilité publique.</p>
+                </div>
+            </div>
+            <div class="table-responsive bg-white border rounded">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr><th>Reçue le</th><th>Client</th><th>Téléphone</th><th>Message</th><th>Articles demandés</th><th>Statut</th><th class="text-end">Actions</th></tr>
+                    </thead>
+                    <tbody>
+                        @forelse($productReservations as $productReservation)
+                            <tr>
+                                <td>{{ $productReservation->created_at->format('d/m/Y H:i') }}</td>
+                                <td class="fw-semibold">{{ $productReservation->client_name }}</td>
+                                <td><a href="tel:{{ $productReservation->client_phone }}">{{ $productReservation->client_phone }}</a></td>
+                                <td>{{ $productReservation->message ?: '—' }}</td>
+                                <td>
+                                    @foreach($productReservation->items as $item)
+                                        <div>{{ $item->product->name ?? 'Article indisponible' }} <span class="text-muted">({{ $item->product->code ?? '—' }}) × {{ $item->quantity }}</span></div>
+                                    @endforeach
+                                </td>
+                                <td>
+                                    <span class="badge {{ $productReservation->statut === 'confirmé' ? 'bg-success' : ($productReservation->statut === 'rejeté' ? 'bg-danger' : 'bg-warning text-dark') }}">
+                                        {{ $productReservation->statut === 'confirmé' ? 'Confirmée' : ($productReservation->statut === 'rejeté' ? 'Refusée' : 'En attente') }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    @if($productReservation->statut === 'en_attente')
+                                        <form action="{{ route('etablissements.reservation.articles.statut', $productReservation->id) }}" method="POST" class="d-inline-flex gap-1">
+                                            @csrf
+                                            <button class="btn btn-sm btn-success" type="submit" name="statut" value="confirmé" aria-label="Confirmer la demande">
+                                                <i class="fas fa-check me-1" aria-hidden="true"></i> Confirmer
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" type="submit" name="statut" value="rejeté" aria-label="Refuser la demande">
+                                                <i class="fas fa-times me-1" aria-hidden="true"></i> Refuser
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="text-muted small">Demande traitée</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="7" class="text-center text-muted py-4">Aucune demande de réservation d’article.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            @if($productReservations->hasPages())
+                <div class="mt-3">{{ $productReservations->links() }}</div>
+            @endif
+        </section>
+
+        <section class="mt-5" aria-labelledby="delivery-orders-title">
+            <div class="mb-3">
+                <h2 class="h5 mb-1" id="delivery-orders-title">Commandes à livrer</h2>
+                <p class="text-muted small mb-0">Confirmez les paiements, préparez les commandes et suivez leur livraison.</p>
+            </div>
+            <div class="table-responsive bg-white border rounded">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr><th>Commande</th><th>Client et adresse</th><th>Articles</th><th>Paiement</th><th>Statut</th><th class="text-end">Action suivante</th></tr>
+                    </thead>
+                    <tbody>
+                        @forelse($deliveryOrders as $deliveryOrder)
+                            @php
+                                $deliveryStatusLabels = [
+                                    'en_attente' => 'En attente',
+                                    'payee_partiellement' => 'Payée partiellement',
+                                    'payee' => 'Payée',
+                                    'en_livraison' => 'En livraison',
+                                    'livree' => 'Livrée',
+                                ];
+                            @endphp
+                            <tr>
+                                <td>
+                                    <strong>#{{ $deliveryOrder->id }}</strong><br>
+                                    <small class="text-muted">{{ $deliveryOrder->created_at->format('d/m/Y H:i') }}</small>
+                                </td>
+                                <td>
+                                    <strong>{{ $deliveryOrder->client_name }}</strong><br>
+                                    <a href="tel:{{ $deliveryOrder->client_phone }}">{{ $deliveryOrder->client_phone }}</a><br>
+                                    <small class="text-muted">{{ $deliveryOrder->delivery_address }}</small>
+                                </td>
+                                <td>
+                                    @foreach($deliveryOrder->items as $item)
+                                        <div>{{ $item->product_name }} <span class="text-muted">× {{ $item->quantity }}</span></div>
+                                    @endforeach
+                                </td>
+                                <td>
+                                    <div>Total : {{ number_format($deliveryOrder->total_amount, 2, ',', ' ') }} CDF</div>
+                                    @if($deliveryOrder->payment_plan === 'two_installments')
+                                        <small class="text-muted">Acompte prévu : {{ number_format($deliveryOrder->deposit_amount, 2, ',', ' ') }} CDF</small><br>
+                                    @else
+                                        <small class="text-muted">Paiement en une fois</small><br>
+                                    @endif
+                                    <small class="text-muted">Reçu : {{ number_format($deliveryOrder->amount_paid, 2, ',', ' ') }} CDF</small>
+                                </td>
+                                <td>
+                                    <span class="badge {{ $deliveryOrder->statut === 'livree' ? 'bg-success' : ($deliveryOrder->statut === 'en_attente' ? 'bg-warning text-dark' : 'bg-info text-dark') }}">
+                                        {{ $deliveryStatusLabels[$deliveryOrder->statut] ?? $deliveryOrder->statut }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    @php
+                                        $nextAction = match($deliveryOrder->statut) {
+                                            'en_attente' => 'confirm_payment',
+                                            'payee_partiellement' => 'confirm_balance',
+                                            'payee' => 'start_delivery',
+                                            'en_livraison' => 'mark_delivered',
+                                            default => null,
+                                        };
+                                        $nextActionLabel = match($nextAction) {
+                                            'confirm_payment' => $deliveryOrder->payment_plan === 'two_installments' ? 'Confirmer l’acompte' : 'Confirmer le paiement',
+                                            'confirm_balance' => 'Confirmer le solde',
+                                            'start_delivery' => 'Mettre en livraison',
+                                            'mark_delivered' => 'Marquer livrée',
+                                            default => null,
+                                        };
+                                    @endphp
+                                    @if($nextAction)
+                                        <form action="{{ route('etablissements.livraisons.action', $deliveryOrder->id) }}" method="POST">
+                                            @csrf
+                                            <input type="hidden" name="action" value="{{ $nextAction }}">
+                                            <button class="btn btn-sm btn-outline-primary" type="submit">{{ $nextActionLabel }}</button>
+                                        </form>
+                                    @else
+                                        <span class="text-muted small">Terminée</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="6" class="text-center text-muted py-4">Aucune commande à livrer.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            @if($deliveryOrders->hasPages())
+                <div class="mt-3">{{ $deliveryOrders->links() }}</div>
+            @endif
+        </section>
     </div>
 
     <script>
@@ -239,15 +384,15 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        alert(data.message);
+                        window.BisikaAlerts.success(data.message || 'Le statut de la réservation a été mis à jour.');
                         location.reload();
                     } else {
-                        alert('Erreur: ' + data.message);
+                        window.BisikaAlerts.error('Le statut de la réservation n’a pas pu être mis à jour.');
                     }
                 })
                 .catch(error => {
-                    console.error('Error:', error);
-                    alert('Une erreur est survenue');
+                    console.error(error);
+                    window.BisikaAlerts.error('La réservation n’a pas pu être mise à jour. Vérifiez votre connexion.');
                 });
         }
 
@@ -282,7 +427,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (response.ok) {
                 const data = await response.json();
-                alert(data.message || "Réservation enregistrée avec succès !");
+                window.BisikaAlerts.success(data.message || 'Réservation enregistrée avec succès.');
 
                 // Fermer la modale Bootstrap
                 const modal = bootstrap.Modal.getInstance(document.getElementById('addReservationModal'));
@@ -292,14 +437,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 form.reset();
             } else if (response.status === 422) {
                 const errors = await response.json();
-                let messages = Object.values(errors.errors).flat().join("\n");
-                alert("Erreur de validation :\n" + messages);
+                console.warn(errors.errors);
+                window.BisikaAlerts.error('Certaines informations sont invalides. Vérifiez le formulaire.');
             } else {
-                alert("Erreur " + response.status);
+                window.BisikaAlerts.error('La réservation n’a pas pu être enregistrée. Réessayez.');
             }
         } catch (error) {
             console.error(error);
-            alert("Impossible de contacter le serveur.");
+            window.BisikaAlerts.error('Impossible de contacter le serveur. Vérifiez votre connexion.');
         }
     });
 });

@@ -56,6 +56,8 @@ class ServiceController extends Controller
                 'description' => 'nullable|string|max:255',
                 'etablissement_id' => 'required|exists:etablissements,id',
                 'prix' => 'nullable|numeric|min:0',
+                'icone' => 'nullable|in:calendar,truck,phone,star',
+                'disponibilite' => 'nullable|boolean',
             ]);
 
             Service::create([
@@ -63,6 +65,8 @@ class ServiceController extends Controller
                 'description' => $request->input('description'),
                 'etablissement_id' => $request->input('etablissement_id'),
                 'prix' => $request->input('prix', null), // Default to null if not provided
+                'icone' => $request->input('icone', 'calendar'),
+                'disponibilite' => $request->boolean('disponibilite', true),
             ]);
 
             return redirect()->back()
@@ -98,13 +102,15 @@ class ServiceController extends Controller
         try {
             $service = Service::findOrFail($id);
 
-            $request->validate([
+            $validated = $request->validate([
                 'nom' => 'required|string|max:100',
                 'description' => 'nullable|string|max:255',
                 'prix' => 'nullable|numeric|min:0',
+                'icone' => 'sometimes|in:calendar,truck,phone,star',
+                'disponibilite' => 'sometimes|boolean',
             ]);
 
-            $service->update($request->all());
+            $service->update($validated);
 
             return  back()->with('success', 'Service ajouté avec succès');
 
@@ -143,7 +149,8 @@ class ServiceController extends Controller
             $service->delete();
             return redirect()->back()->with('success', 'Service supprimé avec succès.');
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Erreur lors de la suppression du service.']);
+            report($e);
+            return redirect()->back()->withErrors(['error' => 'Impossible de supprimer ce service. Réessayez.']);
         }
     }
 }

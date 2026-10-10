@@ -710,12 +710,12 @@
                                 // Rafraîchir la page pour voir les modifications
                                 location.reload();
                             } else {
-                                alert('Une erreur est survenue lors de la mise à jour.');
+                                window.BisikaAlerts.error('La mise à jour n’a pas pu être enregistrée. Réessayez.');
                             }
                         })
                         .catch(error => {
-                            console.error('Error:', error);
-                            alert('Une erreur est survenue lors de la mise à jour.');
+                            console.error(error);
+                            window.BisikaAlerts.error('La mise à jour n’a pas pu être enregistrée. Vérifiez votre connexion.');
                         });
                 });
             });

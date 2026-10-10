@@ -101,8 +101,8 @@ class TypeEtablissementController extends Controller
             $typeEtablissement->delete();
             return redirect()->route('type_etablissements.index')->with('success', 'Type d\'établissement supprimé avec succès.');
         } catch (\Exception $e) {
-              
-            return redirect()->back()->with('error', 'Erreur lors de la suppression du type d\'établissement.');
+            report($e);
+            return redirect()->back()->with('error', 'Impossible de supprimer ce type d’établissement. Réessayez.');
         }
     }
 }

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Stock;
 use App\Models\Etablissement;
 use App\Models\Product;
+use App\Models\TauxDeChange;
+use App\Services\PurchasePrice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -125,8 +127,9 @@ class StockController extends Controller
     {
         $etablissements = Etablissement::orderBy('nom')->get();
         $products = Product::where('status', true)->orderBy('name')->get();
+        $usdCdfRate = TauxDeChange::orderByDesc('date')->value('usd_cdf');
 
-        return view('admins.stock.stockadmin.create', compact('etablissements', 'products'));
+        return view('admins.stock.stockadmin.create', compact('etablissements', 'products', 'usdCdfRate'));
     }
 
     /**
@@ -140,7 +143,9 @@ class StockController extends Controller
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:0',
             'purchase_price' => 'required|numeric|min:0',
+            'purchase_currency' => 'required|in:CDF,USD',
             'selling_price' => 'required|numeric|min:0',
+            'selling_currency' => 'required|in:CDF,USD',
             'minimum_stock' => 'nullable|integer|min:0',
         ]);
 
@@ -170,13 +175,29 @@ class StockController extends Controller
             return back()->with('error', $error)->withInput();
         }
 
+        [$purchasePriceCdf, $exchangeRate] = PurchasePrice::normalize(
+            (float) $request->purchase_price,
+            $request->purchase_currency
+        );
+        [$sellingPriceCdf, $sellingExchangeRate] = PurchasePrice::normalize(
+            (float) $request->selling_price,
+            $request->selling_currency,
+            'selling_currency'
+        );
+
         // ===== CRÉATION =====
         $stock = Stock::create([
             'etablissement_id' => $request->etablissement_id,
             'product_id' => $request->product_id,
             'quantity' => $request->quantity,
-            'purchase_price' => $request->purchase_price,
-            'selling_price' => $request->selling_price,
+            'purchase_price' => $purchasePriceCdf,
+            'purchase_price_original' => $request->purchase_price,
+            'purchase_currency' => $request->purchase_currency,
+            'purchase_exchange_rate' => $exchangeRate,
+            'selling_price' => $sellingPriceCdf,
+            'selling_price_original' => $request->selling_price,
+            'selling_currency' => $request->selling_currency,
+            'selling_exchange_rate' => $sellingExchangeRate,
             'minimum_stock' => $request->minimum_stock ?? 0,
         ]);
 
@@ -215,8 +236,9 @@ class StockController extends Controller
     {
         $etablissements = Etablissement::orderBy('nom')->get();
         $products = Product::where('status', true)->orderBy('name')->get();
+        $usdCdfRate = TauxDeChange::orderByDesc('date')->value('usd_cdf');
 
-        return view('admins.stock.stockadmin.edit', compact('stock', 'etablissements', 'products'));
+        return view('admins.stock.stockadmin.edit', compact('stock', 'etablissements', 'products', 'usdCdfRate'));
     }
 
     /**
@@ -230,7 +252,9 @@ class StockController extends Controller
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:0',
             'purchase_price' => 'required|numeric|min:0',
+            'purchase_currency' => 'required|in:CDF,USD',
             'selling_price' => 'required|numeric|min:0',
+            'selling_currency' => 'required|in:CDF,USD',
             'minimum_stock' => 'nullable|integer|min:0',
         ]);
 
@@ -261,13 +285,29 @@ class StockController extends Controller
             return back()->with('error', $error)->withInput();
         }
 
+        [$purchasePriceCdf, $exchangeRate] = PurchasePrice::normalize(
+            (float) $request->purchase_price,
+            $request->purchase_currency
+        );
+        [$sellingPriceCdf, $sellingExchangeRate] = PurchasePrice::normalize(
+            (float) $request->selling_price,
+            $request->selling_currency,
+            'selling_currency'
+        );
+
         // ===== MISE À JOUR =====
         $stock->update([
             'etablissement_id' => $request->etablissement_id,
             'product_id' => $request->product_id,
             'quantity' => $request->quantity,
-            'purchase_price' => $request->purchase_price,
-            'selling_price' => $request->selling_price,
+            'purchase_price' => $purchasePriceCdf,
+            'purchase_price_original' => $request->purchase_price,
+            'purchase_currency' => $request->purchase_currency,
+            'purchase_exchange_rate' => $exchangeRate,
+            'selling_price' => $sellingPriceCdf,
+            'selling_price_original' => $request->selling_price,
+            'selling_currency' => $request->selling_currency,
+            'selling_exchange_rate' => $sellingExchangeRate,
             'minimum_stock' => $request->minimum_stock ?? 0,
         ]);
 
@@ -316,6 +356,7 @@ class StockController extends Controller
         $validator = Validator::make($request->all(), [
             'quantity' => 'required|integer|min:1',
             'purchase_price' => 'nullable|numeric|min:0',
+            'purchase_currency' => 'required_with:purchase_price|in:CDF,USD',
             'note' => 'nullable|string|max:500',
         ]);
 
@@ -331,8 +372,15 @@ class StockController extends Controller
 
         // Mise à jour du prix d'achat (moyenne pondérée)
         if ($request->filled('purchase_price')) {
-            $totalCost = ($oldQuantity * $stock->purchase_price) + ($request->quantity * $request->purchase_price);
+            [$purchasePriceCdf, $exchangeRate] = PurchasePrice::normalize(
+                (float) $request->purchase_price,
+                $request->purchase_currency
+            );
+            $totalCost = ($oldQuantity * $stock->purchase_price) + ($request->quantity * $purchasePriceCdf);
             $stock->purchase_price = $totalCost / $stock->quantity;
+            $stock->purchase_price_original = $request->purchase_price;
+            $stock->purchase_currency = $request->purchase_currency;
+            $stock->purchase_exchange_rate = $exchangeRate;
         }
 
         $stock->save();

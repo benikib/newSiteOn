@@ -30,7 +30,7 @@
     <td class="align-middle text-center">
         <div class="btn-group" role="group">
             <!-- Bouton Détails -->
-            <a href='{{ route('etablissements.show', $etablissement->id) }}' class="btn btn-sm btn-outline-primary"
+            <a href='{{ route('etablissements.show', $etablissement->slug) }}' class="btn btn-sm btn-outline-primary"
                 data-bs-toggle="tooltip" title="Détails">
                 <i class="fas fa-edit"></i>
             </a>

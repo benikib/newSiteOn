@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'analytics' => [
+        'ga4_measurement_id' => env('GA_MEASUREMENT_ID'),
+    ],
+
 ];

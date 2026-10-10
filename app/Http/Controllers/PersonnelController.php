@@ -73,8 +73,8 @@ class PersonnelController extends Controller
 
             return redirect()->back()->with('success', 'Personnel créé avec succès.');
         } catch (\Exception $e) {
-
-            return redirect()->back()->withErrors(['error' => $e->getMessage()]);
+            report($e);
+            return redirect()->back()->withErrors(['error' => 'Impossible de créer ce membre du personnel. Réessayez.']);
         }
     }
 
@@ -123,7 +123,8 @@ class PersonnelController extends Controller
             $personnel->delete();
             return redirect()->route('personnels.index')->with('success', 'Personnel supprimé avec succès.');
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Erreur lors de la suppression du personnel : ' . $e->getMessage()]);
+            report($e);
+            return redirect()->back()->withErrors(['error' => 'Impossible de supprimer ce membre du personnel. Réessayez.']);
         }
     }
 }

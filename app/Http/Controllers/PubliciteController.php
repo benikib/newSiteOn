@@ -58,8 +58,8 @@ class PubliciteController extends Controller
 
             return redirect()->back()->with('success', 'Publicité créée avec succès.');
         } catch (\Exception $e) {
-            dd($e->getMessage());
-            return redirect()->back()->withErrors(['error' => $e->getMessage()]);
+            report($e);
+            return redirect()->back()->withErrors(['error' => 'Impossible de créer cette publicité. Vérifiez les informations et réessayez.']);
         }
     }
 
@@ -103,7 +103,8 @@ class PubliciteController extends Controller
 
             return redirect()->back()->with('success', 'Publicité mise à jour avec succès.');
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => $e->getMessage()]);
+            report($e);
+            return redirect()->back()->withErrors(['error' => 'Impossible de mettre à jour cette publicité. Réessayez.']);
         }
     }
 
@@ -116,7 +117,8 @@ class PubliciteController extends Controller
             $publicite->delete();
             return redirect()->back()->with('success', 'Publicité supprimée avec succès.');
         } catch (\Throwable $th) {
-            return redirect()->back()->withErrors(['error' => $th->getMessage()]);
+            report($th);
+            return redirect()->back()->withErrors(['error' => 'Impossible de supprimer cette publicité. Réessayez.']);
         }
     }
 }

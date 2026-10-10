@@ -85,8 +85,8 @@ public function store(Request $request)
 
         return redirect()->back()->with('success', 'Équipe créée avec succès.');
     } catch (\Exception $e) {
-        dd($e->getMessage());
-        return redirect()->back()->withErrors(['error' => $e->getMessage()]);
+        report($e);
+        return redirect()->back()->withErrors(['error' => 'Impossible de créer cette équipe. Réessayez.']);
     }
 }
 
@@ -132,7 +132,8 @@ public function store(Request $request)
     }
     return redirect()->back()->with('success', 'Équipe mise à jour avec succès.');
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Erreur lors de la mise à jour de l\'équipe : ' . $e->getMessage()]);
+            report($e);
+            return redirect()->back()->withErrors(['error' => 'Impossible de mettre à jour cette équipe. Réessayez.']);
         }
     }
 
@@ -145,7 +146,8 @@ public function store(Request $request)
         $equipe->delete();
         return redirect()->back()->with('success', 'Équipe supprimée avec succès.');
     } catch (\Exception $e) {
-        return redirect()->back()->withErrors(['error' => 'Erreur lors de la suppression de l\'équipe : ' . $e->getMessage()]);
+        report($e);
+        return redirect()->back()->withErrors(['error' => 'Impossible de supprimer cette équipe. Réessayez.']);
     }
 }
 }

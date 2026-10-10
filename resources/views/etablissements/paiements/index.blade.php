@@ -169,7 +169,10 @@
                     // Afficher le modal d'édition
                     new bootstrap.Modal(document.getElementById('editPaiementModal')).show();
                 })
-                .catch(error => console.error('Error:', error));
+                .catch(error => {
+                    console.error(error);
+                    window.BisikaAlerts.error('Les informations du paiement n’ont pas pu être chargées.');
+                });
         }
 
         function deletePaiement(id) {
@@ -183,10 +186,17 @@
                     })
                     .then(response => response.json())
                     .then(data => {
-                        alert(data.message);
+                        if (data.success === false) {
+                            window.BisikaAlerts.error('Le paiement n’a pas pu être supprimé. Réessayez.');
+                            return;
+                        }
+                        window.BisikaAlerts.success('Paiement supprimé.');
                         location.reload();
                     })
-                    .catch(error => console.error('Error:', error));
+                    .catch(error => {
+                        console.error(error);
+                        window.BisikaAlerts.error('Le paiement n’a pas pu être supprimé. Vérifiez votre connexion.');
+                    });
             }
         }
 

@@ -6,6 +6,8 @@ use App\Mail\UserCreatedMail;
 use App\Models\Etablissement;
 use App\Models\Photo;
 use App\Models\Paiement;
+use App\Models\Order;
+use App\Models\Stock;
 use App\Models\Promotion;
 use App\Models\TypeEtablissement;
 use App\Models\User;
@@ -55,8 +57,8 @@ class EtablissementController extends Controller
 
         }
         catch (\Exception $e) {
-
-            return redirect()->back()->withErrors(['error' => 'Erreur lors de la récupération des utilisateurs.']);
+            report($e);
+            return redirect()->back()->withErrors(['error' => 'Impossible de charger les utilisateurs de cet établissement. Réessayez.']);
         }
     }
 
@@ -141,18 +143,23 @@ class EtablissementController extends Controller
            $etablissement = \App\Models\Etablissement::with('typeEtablissement')->findOrFail($etablissement);
             $typesEtablissement =TypeEtablissement::all();
         if (!$etablissement) {
-            return redirect()->back()->with('error', 'Etablissement not found.');
+            return redirect()->back()->with('error', 'Établissement introuvable.');
         }
 
     return view('admins.etablissements.show', compact('etablissement', 'typesEtablissement'));
     }
      public function showOne( $etablissement)
     {
-           $etablissement = \App\Models\Etablissement::with('typeEtablissement')->findOrFail($etablissement);
+           $etablissementRecord = Etablissement::with('typeEtablissement')
+                ->where('slug', $etablissement)
+                ->first();
+
+            if (!$etablissementRecord && is_numeric($etablissement)) {
+                $etablissementRecord = Etablissement::with('typeEtablissement')->findOrFail($etablissement);
+            }
+            abort_unless($etablissementRecord, 404);
+            $etablissement = $etablissementRecord;
             $typesEtablissement =TypeEtablissement::all();
-        if (!$etablissement) {
-            return redirect()->back()->with('error', 'Etablissement not found.');
-        }
 
     return view('etablissements.partials.show', compact('etablissement', 'typesEtablissement'));
     }
@@ -216,7 +223,8 @@ public function note_moyenne(Request $request, Etablissement $etablissement)
 
             return redirect()->back()->with('success', 'Note ajoutée avec succès.');
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Erreur lors de l\'ajout de la note.']);
+            report($e);
+            return redirect()->back()->withErrors(['error' => 'Impossible d’enregistrer cette note. Réessayez.']);
         }
     }
 
@@ -254,7 +262,8 @@ public function note_moyenne(Request $request, Etablissement $etablissement)
             $etablissement->delete();
             return redirect()->back()->with('success', 'Établissement supprimé avec succès.');
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Erreur lors de la suppression de l\'établissement.']);
+            report($e);
+            return redirect()->back()->withErrors(['error' => 'Impossible de supprimer cet établissement. Réessayez.']);
         }
     }
     // EtablissementController.phpuse App\Models\Etablissement;
@@ -262,7 +271,10 @@ public function note_moyenne(Request $request, Etablissement $etablissement)
 public function dashboard()
 {
     $userId = auth()->id();
-    $now = now();
+    $now = now()->toImmutable();
+    $etablissementIds = Etablissement::whereHas('users', function ($query) use ($userId) {
+        $query->where('users.id', $userId);
+    })->pluck('id');
 
     // Statistiques de base
     $stats = [
@@ -296,6 +308,25 @@ public function dashboard()
         ->whereYear('created_at', $now->year)
         ->whereMonth('created_at', $now->month)
         ->sum('montant'),
+
+        'ventes_jour' => Order::whereIn('etablissement_id', $etablissementIds)
+            ->where('type', 'pos')
+            ->whereDate('order_date', $now->toDateString())
+            ->sum('total_amount'),
+
+        'nombre_ventes_jour' => Order::whereIn('etablissement_id', $etablissementIds)
+            ->where('type', 'pos')
+            ->whereDate('order_date', $now->toDateString())
+            ->count(),
+
+        'stock_faible' => Stock::whereIn('etablissement_id', $etablissementIds)
+            ->whereRaw('quantity <= minimum_stock')
+            ->where('quantity', '>', 0)
+            ->count(),
+
+        'stock_epuise' => Stock::whereIn('etablissement_id', $etablissementIds)
+            ->where('quantity', '<=', 0)
+            ->count(),
     ];
 
     // Données pour le graphique d'évolution mensuelle (6 derniers mois)
@@ -346,7 +377,9 @@ public function dashboard()
     return view('etablissements.dashboard', [
         'stats' => $stats,
         'monthlyData' => $monthlyData,
-        'paiementsParService' => $paiementsParService // Renommé pour correspondre à la vue
+        'paiementsParService' => $paiementsParService,
+        'etablissements' => Etablissement::whereIn('id', $etablissementIds)->get(['id', 'nom']),
+        'selectedEtablissementId' => $etablissementIds->first(),
     ]);
 }
     public function updatetitre(Request $request, Etablissement $etablissement)
@@ -388,11 +421,28 @@ public function dashboard()
 
     public function updateContact(Request $request, Etablissement $etablissement)
     {
+        $user = $request->user();
+        $isAdministrator = $user && in_array($user->role, ['admin', 'integrateur'], true);
+        $isAssignedManager = $user && $user->role === 'etablissement'
+            && DB::table('user_etablissements')
+                ->where('user_id', $user->id)
+                ->where('etablissement_id', $etablissement->id)
+                ->exists();
+
+        abort_unless($isAdministrator || $isAssignedManager, 403);
+
+        $whatsappNumber = preg_replace('/[\s()+.\-]/', '', (string) $request->input('whatsapp_number', ''));
+        if (str_starts_with($whatsappNumber, '0')) {
+            $whatsappNumber = '243' . substr($whatsappNumber, 1);
+        }
+        $request->merge(['whatsapp_number' => $whatsappNumber ?: null]);
 
         $validated = $request->validate([
             'telephone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
-            'website' => 'nullable|url|max:255'
+            'website' => 'nullable|url|max:255',
+            'whatsapp_number' => ['nullable', 'regex:/^[1-9][0-9]{7,14}$/'],
+            'whatsapp_message' => 'nullable|string|max:500',
         ]);
 
         $etablissement->update($validated);
@@ -417,7 +467,8 @@ public function dashboard()
             'ville' => 'required|string|max:255',
             'commune' => 'required|string|max:255',
             'avenue' => 'required|string|max:255',
-            'numero' => 'required|string|max:20'
+            'numero' => 'required|string|max:20',
+            'itineraire' => 'nullable|url|max:2048',
         ]);
 
         $etablissement->update($validated);

@@ -8,6 +8,8 @@ use App\Models\Stock;
 use App\Models\Product;
 use App\Models\Movement;
 use App\Models\Inventory;
+use App\Models\TauxDeChange;
+use App\Services\PurchasePrice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -240,7 +242,9 @@ class ClientStockController extends Controller
                 'product_id' => 'required|exists:products,id',
                 'quantity' => 'required|integer|min:1',
                 'purchase_price' => 'required|numeric|min:0',
+                'purchase_currency' => 'required|in:CDF,USD',
                 'selling_price' => 'required|numeric|min:0',
+                'selling_currency' => 'required|in:CDF,USD',
                 'note' => 'nullable|string|max:500',
             ]);
 
@@ -248,19 +252,35 @@ class ClientStockController extends Controller
                 ->where('product_id', $request->product_id)
                 ->first();
 
+            [$purchasePriceCdf, $exchangeRate] = PurchasePrice::normalize(
+                (float) $request->purchase_price,
+                $request->purchase_currency
+            );
+            [$sellingPriceCdf, $sellingExchangeRate] = PurchasePrice::normalize(
+                (float) $request->selling_price,
+                $request->selling_currency,
+                'selling_currency'
+            );
+
             DB::beginTransaction();
             try {
                 if ($stock) {
                     $oldQuantity = $stock->quantity;
                     $oldPurchasePrice = $stock->purchase_price;
 
-                    $totalCost = ($oldQuantity * $oldPurchasePrice) + ($request->quantity * $request->purchase_price);
+                    $totalCost = ($oldQuantity * $oldPurchasePrice) + ($request->quantity * $purchasePriceCdf);
                     $newQuantity = $oldQuantity + $request->quantity;
                     $newPurchasePrice = $totalCost / $newQuantity;
 
                     $stock->quantity = $newQuantity;
                     $stock->purchase_price = $newPurchasePrice;
-                    $stock->selling_price = $request->selling_price;
+                    $stock->purchase_price_original = $request->purchase_price;
+                    $stock->purchase_currency = $request->purchase_currency;
+                    $stock->purchase_exchange_rate = $exchangeRate;
+                    $stock->selling_price = $sellingPriceCdf;
+                    $stock->selling_price_original = $request->selling_price;
+                    $stock->selling_currency = $request->selling_currency;
+                    $stock->selling_exchange_rate = $sellingExchangeRate;
                     $stock->save();
 
                     $movementType = 'stock_in_update';
@@ -269,8 +289,14 @@ class ClientStockController extends Controller
                         'etablissement_id' => $request->etablissement_id,
                         'product_id' => $request->product_id,
                         'quantity' => $request->quantity,
-                        'purchase_price' => $request->purchase_price,
-                        'selling_price' => $request->selling_price,
+                        'purchase_price' => $purchasePriceCdf,
+                        'purchase_price_original' => $request->purchase_price,
+                        'purchase_currency' => $request->purchase_currency,
+                        'purchase_exchange_rate' => $exchangeRate,
+                        'selling_price' => $sellingPriceCdf,
+                        'selling_price_original' => $request->selling_price,
+                        'selling_currency' => $request->selling_currency,
+                        'selling_exchange_rate' => $sellingExchangeRate,
                         'minimum_stock' => 0,
                     ]);
 
@@ -285,8 +311,14 @@ class ClientStockController extends Controller
                     'quantity' => $request->quantity,
                     'before' => $oldQuantity,
                     'after' => $stock->quantity,
-                    'purchase_price' => $request->purchase_price,
-                    'selling_price' => $request->selling_price,
+                    'purchase_price' => $purchasePriceCdf,
+                    'purchase_price_original' => $request->purchase_price,
+                    'purchase_currency' => $request->purchase_currency,
+                    'purchase_exchange_rate' => $exchangeRate,
+                    'selling_price' => $sellingPriceCdf,
+                    'selling_price_original' => $request->selling_price,
+                    'selling_currency' => $request->selling_currency,
+                    'selling_exchange_rate' => $sellingExchangeRate,
                     'note' => $request->note ?? 'Approvisionnement',
                     'user_id' => Auth::id(),
                 ]);
@@ -297,7 +329,8 @@ class ClientStockController extends Controller
                     ->with('success', 'Stock ajouté avec succès !');
             } catch (\Exception $e) {
                 DB::rollBack();
-                return back()->with('error', 'Erreur: ' . $e->getMessage());
+                report($e);
+                return back()->with('error', 'Impossible d’enregistrer cette entrée de stock. Réessayez.');
             }
         }
 
@@ -313,13 +346,15 @@ class ClientStockController extends Controller
         $existingProducts = Stock::where('etablissement_id', $selectedEtablissementId)
             ->with('product')
             ->get();
+        $usdCdfRate = TauxDeChange::orderByDesc('date')->value('usd_cdf');
 
         return view('client.stocks.stock-in', compact(
             'etablissement',
             'etablissements',
             'selectedEtablissementId',
             'products',
-            'existingProducts'
+            'existingProducts',
+            'usdCdfRate'
         ));
     }
 
@@ -377,7 +412,8 @@ class ClientStockController extends Controller
                     ->with('success', 'Sortie de stock effectuée avec succès !');
             } catch (\Exception $e) {
                 DB::rollBack();
-                return back()->with('error', 'Erreur: ' . $e->getMessage());
+                report($e);
+                return back()->with('error', 'Impossible d’effectuer cette sortie de stock. Réessayez.');
             }
 
         }
@@ -491,7 +527,8 @@ public function outOfStock(Request $request)
                     ->with('success', 'Stock ajusté avec succès !');
             } catch (\Exception $e) {
                 DB::rollBack();
-                return back()->with('error', 'Erreur: ' . $e->getMessage());
+                report($e);
+                return back()->with('error', 'Impossible d’ajuster le stock. Réessayez.');
             }
         }
 
@@ -978,7 +1015,8 @@ public function valuation(Request $request)
                     ->with('success', 'Inventaire physique réalisé avec succès !');
             } catch (\Exception $e) {
                 DB::rollBack();
-                return back()->with('error', 'Erreur: ' . $e->getMessage());
+                report($e);
+                return back()->with('error', 'Impossible d’enregistrer cet inventaire. Réessayez.');
             }
         }
 

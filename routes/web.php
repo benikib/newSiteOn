@@ -15,7 +15,12 @@ use App\Http\Controllers\EquipeController;
 use App\Http\Controllers\IntegrateurController;
 use Illuminate\Support\Facades\Mail;
 
-Route::get('/', [PhotoController::class, 'index'])->name('welcome');
+Route::get('/', function () {
+    $photos = \App\Models\Publicite::actives()->latest('id')->get();
+
+    return view('welcome.simple', compact('photos'));
+})->name('welcome');
+Route::get('/produits', [PhotoController::class, 'products'])->name('products.index');
 //integrateur 
 Route::get('/integrateur',[IntegrateurController::class,'index'])->name('index');
 Route::get('/grilles', function() {
@@ -27,12 +32,13 @@ Route::get('/results', [UserController::class,'search'])->
 name('search');
 
 Route::get('/contact', function() {
-    // Vous pouvez implémenter la logique de contact ici
-    return view('contact');
+    return view('contact.public');
 })->name('contact');
 Route::post('/contact', [UserController::class, 'sendContact'])->name('contact.submit');
 
 Route::post('/reservations', [ReservationController::class, 'store'])->name('reservations.store');
+Route::post('/reservations/articles', [ReservationController::class, 'storeArticles'])->name('reservations.articles.store');
+Route::post('/livraisons', [ReservationController::class, 'storeDelivery'])->name('livraisons.store');
 Route::post('/paiements/reservation', [PaiementController::class, 'paiementReservation'])->name('paiements.store');
 
 // Route::get('/search', function() {
@@ -66,7 +72,9 @@ Route::prefix('etablissements')->group(function () {
     Route::post('/{etablissement}/update-photo', [EtablissementController::class, 'updatePhoto'])->name('etablissements.updatePhoto');
 
     // Mettre à jour les contacts
-    Route::put('/{etablissement}/update-contact', [EtablissementController::class, 'updateContact'])->name('etablissements.updateContact');
+    Route::put('/{etablissement}/update-contact', [EtablissementController::class, 'updateContact'])
+        ->middleware('auth')
+        ->name('etablissements.updateContact');
 
     // Mettre à jour la description
     Route::put('/{etablissement}/update-description', [EtablissementController::class, 'updateDescription'])->name('etablissements.updateDescription');

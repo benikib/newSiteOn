@@ -48,6 +48,10 @@ Route::get('users/etablissments', [UserEtablissementController::class, 'index'])
 Route::get('users/dashboard', [EtablissementController::class, 'dashboard'])->name('dashboard_ets');
 Route::get('users/promotion/', [UserEtablissementController::class, 'promotion'])->name('users.promotions');
 Route::post('/reservations/{id}/statut', [App\Http\Controllers\ReservationController::class, 'changerStatut']);
+Route::post('/reservations/articles/{id}/statut', [ReservationController::class, 'changerStatutArticles'])
+    ->name('etablissements.reservation.articles.statut');
+Route::post('/livraisons/{id}/action', [ReservationController::class, 'manageDelivery'])
+    ->name('etablissements.livraisons.action');
 
 Route::get('/reservation/ets', [ReservationController::class, 'index'])->name('etablissements.reservation.index');
 

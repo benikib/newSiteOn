@@ -39,6 +39,22 @@
                                        class="form-control" value="{{ $service->prix }}" required>
                             </div>
 
+                            <div class="mb-3">
+                                <label for="edit_icone{{ $service->id }}" class="form-label">Icône</label>
+                                <select name="icone" id="edit_icone{{ $service->id }}" class="form-select">
+                                    <option value="calendar" @selected(($service->icone ?? 'calendar') === 'calendar')>Réservation</option>
+                                    <option value="truck" @selected($service->icone === 'truck')>Livraison</option>
+                                    <option value="phone" @selected($service->icone === 'phone')>Contact</option>
+                                    <option value="star" @selected($service->icone === 'star')>Autre service</option>
+                                </select>
+                            </div>
+
+                            <input type="hidden" name="disponibilite" value="0">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="disponibilite" id="edit_disponibilite{{ $service->id }}" value="1" @checked($service->disponibilite)>
+                                <label class="form-check-label" for="edit_disponibilite{{ $service->id }}">Service actif sur le site public</label>
+                            </div>
+
                             <input type="hidden" name="etablissement_id" value="{{ $service->etablissement_id }}">
 
                             <div class="d-flex justify-content-end">

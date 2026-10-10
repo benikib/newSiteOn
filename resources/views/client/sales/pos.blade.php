@@ -300,7 +300,7 @@ window.openProductModal = function(id, name, price, stock, tva) {
     console.log('🛒 Clic sur produit:', { id, name, price, stock, tva });
     
     if (stock <= 0) {
-        alert('Ce produit est en rupture de stock !');
+        window.BisikaAlerts.error('Ce produit est en rupture de stock.');
         return;
     }
 
@@ -331,7 +331,7 @@ window.updateQuantity = function(delta) {
 // ===== AJOUTER AU PANIER =====
 window.addToCart = function() {
     if (!window.selectedProductData) {
-        alert('Aucun produit sélectionné');
+        window.BisikaAlerts.error('Sélectionnez un produit avant de continuer.');
         return;
     }
 
@@ -341,7 +341,7 @@ window.addToCart = function() {
     const product = window.selectedProductData;
 
     if (quantity > product.stock) {
-        alert('Stock insuffisant !');
+        window.BisikaAlerts.error('La quantité demandée dépasse le stock disponible.');
         return;
     }
 
@@ -349,7 +349,7 @@ window.addToCart = function() {
     const existing = window.cart.find(item => item.id === product.id);
     if (existing) {
         if (existing.quantity + quantity > product.stock) {
-            alert('Stock insuffisant !');
+            window.BisikaAlerts.error('La quantité demandée dépasse le stock disponible.');
             return;
         }
         existing.quantity += quantity;
@@ -524,7 +524,7 @@ window.searchProducts = function(search) {
 // ===== VALIDER LA VENTE =====
 window.validateSale = function() {
     if (window.cart.length === 0) {
-        alert('Le panier est vide');
+        window.BisikaAlerts.error('Ajoutez au moins un produit avant de valider la vente.');
         return;
     }
 
@@ -554,7 +554,7 @@ window.validateSale = function() {
     
     if (!btn) {
         console.error('❌ Bouton validateSaleBtn non trouvé !');
-        alert('Erreur: bouton de validation non trouvé');
+        window.BisikaAlerts.error('La validation est momentanément indisponible. Rechargez la page.');
         return;
     }
 
@@ -589,12 +589,12 @@ window.validateSale = function() {
             document.getElementById('customerPhone').value = '';
             document.getElementById('notes').value = '';
         } else {
-            alert(data.message || 'Erreur lors de l\'enregistrement');
+            window.BisikaAlerts.error(data.message || 'La vente n’a pas pu être enregistrée. Réessayez.');
         }
     })
     .catch(error => {
-        console.error('❌ Erreur:', error);
-        alert('Erreur: ' + error.message);
+        console.error(error);
+        window.BisikaAlerts.error('La vente n’a pas pu être enregistrée. Vérifiez votre connexion et réessayez.');
     })
     .finally(() => {
         btn.disabled = false;
@@ -607,7 +607,7 @@ window.printInvoice = function() {
     if (window.currentOrderId) {
         window.open('/client/sales/print/' + window.currentOrderId, '_blank');
     } else {
-        alert('Aucune commande à imprimer');
+        window.BisikaAlerts.error('Aucune facture n’est disponible pour l’impression.');
     }
 };
 
@@ -616,7 +616,7 @@ window.pdfInvoice = function() {
     if (window.currentOrderId) {
         window.open('/client/sales/pdf/' + window.currentOrderId, '_blank');
     } else {
-        alert('Aucune commande à générer en PDF');
+        window.BisikaAlerts.error('Aucune facture n’est disponible au format PDF.');
     }
 };
 

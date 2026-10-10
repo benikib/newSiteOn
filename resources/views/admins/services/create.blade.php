@@ -22,6 +22,20 @@
             <label for="prix" class="form-label">Prix</label>
             <input type="number" name="prix" id="prix" class="form-control" placeholder="Ex: 1000" required>
             </div>
+            <div class="mb-3">
+              <label for="service_icone" class="form-label">Icône</label>
+              <select name="icone" id="service_icone" class="form-select">
+                <option value="calendar">Réservation</option>
+                <option value="truck">Livraison</option>
+                <option value="phone">Contact</option>
+                <option value="star">Autre service</option>
+              </select>
+            </div>
+            <input type="hidden" name="disponibilite" value="0">
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" name="disponibilite" id="service_disponibilite" value="1" checked>
+              <label class="form-check-label" for="service_disponibilite">Service actif sur le site public</label>
+            </div>
             <div id="statusMessage" class="alert alert-danger d-none" role="alert">
                 <p class="mb-0"></p>
             </div>
