@@ -144,6 +144,7 @@
                 <th>Produit</th>
                 <th>Code</th>
                 <th>Qté</th>
+                <th>Prix initial HT</th>
                 <th>Prix HT</th>
                 <th>TVA %</th>
                 <th>Total HT</th>
@@ -157,6 +158,7 @@
                     <td>{{ $item->product->name }}</td>
                     <td>{{ $item->product->code }}</td>
                     <td>{{ $item->quantity }}</td>
+                    <td class="text-right">{{ number_format($item->original_price_ht ?? $item->price_ht, 2, ',', ' ') }} Fc</td>
                     <td class="text-right">{{ number_format($item->price_ht, 2, ',', ' ') }} Fc</td>
                     <td class="text-right">{{ $item->tva_rate }}%</td>
                     <td class="text-right">{{ number_format($item->subtotal_ht, 2, ',', ' ') }} Fc</td>
@@ -180,8 +182,8 @@
             <span>{{ number_format($order->initial_amount ?? $order->total_amount, 2, ',', ' ') }} CDF</span>
         </div>
         <div class="row">
-            <span>Réduction @if($order->discount_type === 'percentage')({{ number_format($order->discount_value, 2, ',', ' ') }}%)@endif</span>
-            <span>- {{ number_format($order->discount_amount ?? 0, 2, ',', ' ') }} CDF</span>
+            <span>{{ ($order->discount_amount ?? 0) < 0 ? 'Majoration' : 'Réduction' }} @if($order->discount_type === 'percentage')({{ number_format($order->discount_value, 2, ',', ' ') }}%)@endif</span>
+            <span>{{ ($order->discount_amount ?? 0) < 0 ? '+' : '-' }} {{ number_format(abs($order->discount_amount ?? 0), 2, ',', ' ') }} CDF</span>
         </div>
         <div class="row total">
             <span>Total net TTC</span>

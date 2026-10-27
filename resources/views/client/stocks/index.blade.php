@@ -13,6 +13,12 @@
             </p>
         </div>
         <div class="d-flex gap-2 mt-2 mt-sm-0">
+            <a href="{{ route('client.stocks.print', request()->except('page')) }}" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-print me-1"></i> Imprimer
+            </a>
+            <a href="{{ route('client.stocks.pdf', request()->except('page')) }}" class="btn btn-outline-danger btn-sm">
+                <i class="fas fa-file-pdf me-1"></i> Télécharger en PDF
+            </a>
             <a href="{{ route('client.stocks.stock-in') }}" class="btn btn-success btn-sm">
                 <i class="fas fa-plus-circle me-1"></i> Entrée
             </a>

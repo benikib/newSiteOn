@@ -7,7 +7,6 @@ use App\Models\Category;
 use App\Models\Etablissement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
@@ -35,10 +34,7 @@ class CategoryController extends Controller
                 ->with('error', 'Vous n\'avez aucun établissement actif.');
         }
 
-        $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
-
-        $query = Category::withCount('products')
-            ->where('etablissement_id', $selectedEtablissementId);
+        $query = Category::withCount('products');
 
         // Recherche
         if ($request->filled('search')) {
@@ -47,18 +43,12 @@ class CategoryController extends Controller
 
         // Filtre par statut
         if ($request->filled('statut')) {
-            $query->where('statut', $request->statut === 'actif' ? 1 : 0);
+            $query->where('status', $request->statut === 'actif');
         }
 
         $categories = $query->orderBy('nom')->paginate(12);
 
-        $etablissements = Etablissement::whereIn('id', $etablissementIds)->get();
-
-        return view('client.categories.index', compact(
-            'categories',
-            'etablissements',
-            'selectedEtablissementId'
-        ));
+        return view('client.categories.index', compact('categories'));
     }
 
     /**
@@ -73,13 +63,7 @@ class CategoryController extends Controller
                 ->with('error', 'Vous n\'avez aucun établissement actif.');
         }
 
-        $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
-        $etablissements = Etablissement::whereIn('id', $etablissementIds)->get();
-
-        return view('client.categories.create', compact(
-            'etablissements',
-            'selectedEtablissementId'
-        ));
+        return view('client.categories.create');
     }
 
     /**
@@ -95,10 +79,9 @@ class CategoryController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'etablissement_id' => 'required|in:' . $etablissementIds->implode(','),
             'nom' => 'required|string|max:255|unique:categories,nom',
             'description' => 'nullable|string|max:1000',
-            'statut' => 'nullable|boolean',
+            'status' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -106,13 +89,12 @@ class CategoryController extends Controller
         }
 
         $category = Category::create([
-            'etablissement_id' => $request->etablissement_id,
             'nom' => $request->nom,
             'description' => $request->description,
-            'statut' => $request->has('statut') ? $request->statut : true,
+            'status' => $request->boolean('status', true),
         ]);
 
-        return redirect()->route('client.categories.index', ['etablissement_id' => $request->etablissement_id])
+        return redirect()->route('client.categories.index')
             ->with('success', 'Catégorie "' . $category->nom . '" créée avec succès !');
     }
 
@@ -128,10 +110,9 @@ class CategoryController extends Controller
                 ->with('error', 'Vous n\'avez aucun établissement actif.');
         }
 
-        $category = Category::whereIn('etablissement_id', $etablissementIds)->findOrFail($id);
-        $etablissements = Etablissement::whereIn('id', $etablissementIds)->get();
+        $category = Category::findOrFail($id);
 
-        return view('client.categories.edit', compact('category', 'etablissements'));
+        return view('client.categories.edit', compact('category'));
     }
 
     /**
@@ -146,12 +127,12 @@ class CategoryController extends Controller
                 ->with('error', 'Vous n\'avez aucun établissement actif.');
         }
 
-        $category = Category::whereIn('etablissement_id', $etablissementIds)->findOrFail($id);
+        $category = Category::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
             'nom' => 'required|string|max:255|unique:categories,nom,' . $category->id,
             'description' => 'nullable|string|max:1000',
-            'statut' => 'nullable|boolean',
+            'status' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -161,10 +142,10 @@ class CategoryController extends Controller
         $category->update([
             'nom' => $request->nom,
             'description' => $request->description,
-            'statut' => $request->has('statut') ? $request->statut : false,
+            'status' => $request->boolean('status'),
         ]);
 
-        return redirect()->route('client.categories.index', ['etablissement_id' => $category->etablissement_id])
+        return redirect()->route('client.categories.index')
             ->with('success', 'Catégorie "' . $category->nom . '" mise à jour avec succès !');
     }
 
@@ -180,7 +161,7 @@ class CategoryController extends Controller
                 ->with('error', 'Vous n\'avez aucun établissement actif.');
         }
 
-        $category = Category::whereIn('etablissement_id', $etablissementIds)->findOrFail($id);
+        $category = Category::findOrFail($id);
 
         // Vérifier si la catégorie contient des produits
         if ($category->products()->count() > 0) {
@@ -188,10 +169,9 @@ class CategoryController extends Controller
         }
 
         $categoryName = $category->nom;
-        $etablissementId = $category->etablissement_id;
         $category->delete();
 
-        return redirect()->route('client.categories.index', ['etablissement_id' => $etablissementId])
+        return redirect()->route('client.categories.index')
             ->with('success', 'Catégorie "' . $categoryName . '" supprimée avec succès !');
     }
 
@@ -207,9 +187,9 @@ class CategoryController extends Controller
                 ->with('error', 'Vous n\'avez aucun établissement actif.');
         }
 
-        $category = Category::whereIn('etablissement_id', $etablissementIds)->findOrFail($id);
-        $newStatus = !$category->statut;
-        $category->update(['statut' => $newStatus]);
+        $category = Category::findOrFail($id);
+        $newStatus = !$category->status;
+        $category->update(['status' => $newStatus]);
 
         return back()->with('success', 'Catégorie "' . $category->nom . '" ' . ($newStatus ? 'activée' : 'désactivée') . ' avec succès !');
     }

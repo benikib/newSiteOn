@@ -163,6 +163,8 @@
                             <th>Client</th>
                             <th>Total HT</th>
                             <th>TVA</th>
+                            <th>Montant initial TTC</th>
+                            <th>Écart</th>
                             <th>Total TTC</th>
                             <th>Paiement</th>
                             <th>Statut</th>
@@ -190,6 +192,19 @@
                                 </td>
                                 <td>
                                     {{ number_format($order->total_tva, 2, ',', ' ') }} Fc
+                                </td>
+                                <td>
+                                    {{ number_format($order->initial_amount ?? $order->total_amount, 2, ',', ' ') }} Fc
+                                </td>
+                                <td>
+                                    @if(($order->discount_amount ?? 0) != 0)
+                                        <span class="{{ $order->discount_amount < 0 ? 'text-success' : 'text-danger' }}">
+                                            {{ $order->discount_amount < 0 ? 'Majoration +' : 'Réduction -' }}
+                                            {{ number_format(abs($order->discount_amount), 2, ',', ' ') }} Fc
+                                        </span>
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
                                 </td>
                                 <td class="fw-bold">
                                     {{ number_format($order->total_amount, 2, ',', ' ') }} Fc
@@ -229,7 +244,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="text-center py-4">
+                                <td colspan="11" class="text-center py-4">
                                     <i class="fas fa-receipt fa-3x text-muted mb-3 d-block"></i>
                                     <h5>Aucune vente enregistrée</h5>
                                     <p class="text-muted">Commencez par faire une vente</p>

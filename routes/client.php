@@ -10,6 +10,8 @@ Route::prefix('client')->name('client.')->middleware(['auth'])->group(function (
     Route::get('dashboard', [ClientStockController::class, 'dashboard'])->name('dashboard');
 
     // ===== STOCKS =====
+    Route::get('stocks/print', [ClientStockController::class, 'printStocks'])->name('stocks.print');
+    Route::get('stocks/pdf', [ClientStockController::class, 'pdfStocks'])->name('stocks.pdf');
     Route::get('stocks', [ClientStockController::class, 'index'])->name('stocks.index');
 
     // ===== ENTRÉE DE STOCK =====
@@ -46,6 +48,8 @@ Route::prefix('client')->name('client.')->middleware(['auth'])->group(function (
     
     // ===== PRODUITS =====
     Route::get('products', [App\Http\Controllers\Client\ProductController::class, 'index'])->name('products.index');
+    Route::get('products/print', [App\Http\Controllers\Client\ProductController::class, 'printProducts'])->name('products.print');
+    Route::get('products/pdf', [App\Http\Controllers\Client\ProductController::class, 'pdfProducts'])->name('products.pdf');
     Route::get('products/create', [App\Http\Controllers\Client\ProductController::class, 'create'])->name('products.create');
     Route::post('products', [App\Http\Controllers\Client\ProductController::class, 'store'])->name('products.store');
     Route::get('products/{product}/edit', [App\Http\Controllers\Client\ProductController::class, 'edit'])->name('products.edit');

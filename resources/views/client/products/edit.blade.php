@@ -133,6 +133,28 @@
                                 @enderror
                             </div>
 
+                            <div class="col-md-6">
+                                <label for="selling_price" class="form-label fw-semibold">Prix de vente par défaut</label>
+                                <div class="input-group">
+                                    <input type="number" name="selling_price" id="selling_price"
+                                           class="form-control @error('selling_price') is-invalid @enderror"
+                                           value="{{ old('selling_price', $product->stock->selling_price_original ?? $product->stock->selling_price ?? '') }}"
+                                           min="0" step="0.01">
+                                    <select name="selling_currency" id="selling_currency"
+                                            class="form-select @error('selling_currency') is-invalid @enderror"
+                                            aria-label="Devise du prix de vente">
+                                        <option value="CDF" {{ old('selling_currency', $product->stock->selling_currency ?? 'CDF') === 'CDF' ? 'selected' : '' }}>CDF</option>
+                                        <option value="USD" {{ old('selling_currency', $product->stock->selling_currency ?? 'CDF') === 'USD' ? 'selected' : '' }}>USD</option>
+                                    </select>
+                                </div>
+                                @error('selling_price')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                                @error('selling_currency')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+
                             <!-- ===== DESCRIPTION ===== -->
                             <div class="col-12">
                                 <label for="description" class="form-label fw-semibold">

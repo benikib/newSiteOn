@@ -13,6 +13,12 @@
             </p>
         </div>
         <div class="d-flex gap-2 mt-2 mt-sm-0">
+            <a href="{{ route('client.products.print', request()->except('page')) }}" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-print me-1"></i> Imprimer
+            </a>
+            <a href="{{ route('client.products.pdf', request()->except('page')) }}" class="btn btn-outline-danger btn-sm">
+                <i class="fas fa-file-pdf me-1"></i> Télécharger en PDF
+            </a>
             <a href="{{ route('client.products.create') }}" class="btn btn-primary btn-sm">
                 <i class="fas fa-plus me-1"></i> Ajouter un produit
             </a>
@@ -92,6 +98,7 @@
                             <th>Code</th>
                             <th>Catégorie</th>
                             <th>Unité</th>
+                            <th>Prix de vente</th>
                             <th>Stock</th>
                             <th style="width: 100px">Statut</th>
                             <th style="width: 150px" class="text-end">Actions</th>
@@ -121,6 +128,10 @@
                                 </td>
                                 <td>{{ $product->category->nom ?? 'N/A' }}</td>
                                 <td>{{ $product->unit->name ?? 'N/A' }}</td>
+                                <td>
+                                    {{ number_format($product->stock->selling_price_original ?? $product->stock->selling_price ?? 0, 2, ',', ' ') }}
+                                    {{ $product->stock->selling_currency ?? 'CDF' }}
+                                </td>
                                 <td>
                                     @php
                                         $stockQty = $product->stock->quantity ?? 0;
@@ -162,7 +173,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="text-center py-4">
+                                <td colspan="10" class="text-center py-4">
                                     <i class="fas fa-boxes fa-3x text-muted mb-3 d-block"></i>
                                     <h5>Aucun produit</h5>
                                     <p class="text-muted">Commencez par ajouter votre premier produit</p>

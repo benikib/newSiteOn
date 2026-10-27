@@ -10,6 +10,7 @@ class OrderItem extends Model
         'order_id',
         'product_id',
         'quantity',
+        'original_price_ht',
         'price_ht',
         'tva_rate',
         'tva_amount',
@@ -19,6 +20,7 @@ class OrderItem extends Model
 
     protected $casts = [
         'quantity' => 'integer',
+        'original_price_ht' => 'decimal:2',
         'price_ht' => 'decimal:2',
         'tva_rate' => 'decimal:2',
         'tva_amount' => 'decimal:2',

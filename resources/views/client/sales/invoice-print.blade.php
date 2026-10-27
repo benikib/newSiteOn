@@ -369,6 +369,7 @@
                     <th>Produit</th>
                     <th style="width: 80px;">Code</th>
                     <th style="width: 50px; text-align: center;">Qté</th>
+                    <th style="width: 90px; text-align: right;">Prix initial HT</th>
                     <th style="width: 90px; text-align: right;">Prix HT</th>
                     <th style="width: 60px; text-align: center;">TVA</th>
                     <th style="width: 90px; text-align: right;">Total HT</th>
@@ -382,6 +383,7 @@
                         <td>{{ $item->product->name }}</td>
                         <td>{{ $item->product->code }}</td>
                         <td class="text-center">{{ $item->quantity }}</td>
+                        <td class="text-right">{{ number_format($item->original_price_ht ?? $item->price_ht, 2, ',', ' ') }} Fc</td>
                         <td class="text-right">{{ number_format($item->price_ht, 2, ',', ' ') }} Fc</td>
                         <td class="text-center">{{ $item->tva_rate }}%</td>
                         <td class="text-right">{{ number_format($item->subtotal_ht, 2, ',', ' ') }} Fc</td>
@@ -406,8 +408,8 @@
                 <span>{{ number_format($order->initial_amount ?? $order->total_amount, 2, ',', ' ') }} CDF</span>
             </div>
             <div class="row">
-                <span>Réduction @if($order->discount_type === 'percentage')({{ number_format($order->discount_value, 2, ',', ' ') }}%)@endif</span>
-                <span>- {{ number_format($order->discount_amount ?? 0, 2, ',', ' ') }} CDF</span>
+                <span>{{ ($order->discount_amount ?? 0) < 0 ? 'Majoration' : 'Réduction' }} @if($order->discount_type === 'percentage')({{ number_format($order->discount_value, 2, ',', ' ') }}%)@endif</span>
+                <span>{{ ($order->discount_amount ?? 0) < 0 ? '+' : '-' }} {{ number_format(abs($order->discount_amount ?? 0), 2, ',', ' ') }} CDF</span>
             </div>
             <div class="row total">
                 <span>Total net TTC</span>

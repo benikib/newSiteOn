@@ -113,12 +113,15 @@
                             <span id="cartInitialTTC">0,00 {{ $usdCdfRate ? 'USD' : 'CDF' }}</span>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <span class="text-muted">Réduction</span>
-                            <span id="cartDiscountAmount">0,00 {{ $usdCdfRate ? 'USD' : 'CDF' }}</span>
+                            <span class="text-muted">Écart de prix</span>
+                            <span id="cartPriceDifference">0,00 {{ $usdCdfRate ? 'USD' : 'CDF' }}</span>
                         </div>
                         <div class="d-flex justify-content-between fw-bold fs-5">
-                            <span>Total net TTC</span>
-                            <span id="cartTotalTTC">0,00 {{ $usdCdfRate ? 'USD' : 'CDF' }}</span>
+                            <label for="invoiceTotalInput">Total TTC vendu</label>
+                            <div class="input-group input-group-sm" style="width: 170px">
+                                <input type="number" id="invoiceTotalInput" class="form-control text-end" min="0" step="0.01" value="0">
+                                <span class="input-group-text" id="invoiceTotalCurrency">{{ $usdCdfRate ? 'USD' : 'CDF' }}</span>
+                            </div>
                         </div>
                     </div>
 
@@ -150,20 +153,6 @@
                                     Taux USD/CDF indisponible; seul le paiement en CDF est possible.
                                 @endif
                             </small>
-                        </div>
-                        <div class="col-5">
-                            <label class="form-label small mb-1" for="discountType">Réduction</label>
-                            <select id="discountType" class="form-select form-select-sm">
-                                <option value="amount">Montant</option>
-                                <option value="percentage">Pourcentage</option>
-                            </select>
-                        </div>
-                        <div class="col-7">
-                            <label class="form-label small mb-1" for="discountValue">Valeur</label>
-                            <div class="input-group input-group-sm">
-                                <input type="number" id="discountValue" class="form-control" min="0" step="0.01" value="0">
-                                <span class="input-group-text" id="discountUnit">{{ $usdCdfRate ? 'USD' : 'CDF' }}</span>
-                            </div>
                         </div>
                         <div class="col-12">
                             <select id="paymentMethod" class="form-select form-select-sm">
@@ -357,6 +346,7 @@ window.addToCart = function() {
         window.cart.push({
             id: product.id,
             name: product.name,
+            originalPrice: product.price,
             price: product.price,
             quantity: quantity,
             stock: product.stock,
@@ -378,8 +368,8 @@ window.updateCartDisplay = function() {
     const totalHTSpan = document.getElementById('cartTotalHT');
     const totalTVASpan = document.getElementById('cartTotalTVA');
     const initialTTCSpan = document.getElementById('cartInitialTTC');
-    const discountAmountSpan = document.getElementById('cartDiscountAmount');
-    const totalTTCSpan = document.getElementById('cartTotalTTC');
+    const priceDifferenceSpan = document.getElementById('cartPriceDifference');
+    const invoiceTotalInput = document.getElementById('invoiceTotalInput');
 
     if (window.cart.length === 0) {
         container.innerHTML = `
@@ -391,8 +381,8 @@ window.updateCartDisplay = function() {
         totalHTSpan.textContent = window.formatCurrency(0);
         totalTVASpan.textContent = window.formatCurrency(0);
         initialTTCSpan.textContent = window.formatCurrency(0);
-        discountAmountSpan.textContent = window.formatCurrency(0);
-        totalTTCSpan.textContent = window.formatCurrency(0);
+        priceDifferenceSpan.textContent = window.formatCurrency(0);
+        invoiceTotalInput.value = '0.00';
         return;
     }
 
@@ -416,7 +406,10 @@ window.updateCartDisplay = function() {
                     <div>
                         <strong>${item.name}</strong>
                         <br>
-                        <small class="text-muted">${item.quantity} x ${window.formatCurrency(item.price)}</small>
+                        <small class="text-muted">Prix initial HT: ${window.formatCurrency(item.originalPrice)}</small>
+                        <br>
+                        <label class="small text-muted" for="soldPrice${index}">Prix vendu HT</label>
+                        <input type="number" id="soldPrice${index}" class="form-control form-control-sm sold-price-input" data-index="${index}" min="0" step="0.01" value="${(item.price / (document.getElementById('paymentCurrency').value === 'USD' ? window.usdCdfRate : 1)).toFixed(2)}">
                     </div>
                     <div>
                         <span class="fw-bold">${window.formatCurrency(subtotalTTC)}</span>
@@ -429,20 +422,41 @@ window.updateCartDisplay = function() {
         `;
     });
 
-    const discountType = document.getElementById('discountType').value;
-    const discountValue = Math.max(0, parseFloat(document.getElementById('discountValue').value) || 0);
-    let discountAmount = discountType === 'percentage'
-        ? totalTTC * Math.min(discountValue, 100) / 100
-        : discountValue * (document.getElementById('paymentCurrency').value === 'USD' ? window.usdCdfRate : 1);
-    discountAmount = Math.min(totalTTC, discountAmount);
-    const finalTotal = totalTTC - discountAmount;
-
     container.innerHTML = html;
     totalHTSpan.textContent = window.formatCurrency(totalHT);
     totalTVASpan.textContent = window.formatCurrency(totalTVA);
-    initialTTCSpan.textContent = window.formatCurrency(totalTTC);
-    discountAmountSpan.textContent = window.formatCurrency(discountAmount);
-    totalTTCSpan.textContent = window.formatCurrency(finalTotal);
+    const originalTotal = window.cart.reduce((sum, item) => {
+        const subtotal = item.originalPrice * item.quantity;
+        return sum + subtotal + subtotal * item.tva / 100;
+    }, 0);
+    initialTTCSpan.textContent = window.formatCurrency(originalTotal);
+    priceDifferenceSpan.textContent = window.formatCurrency(originalTotal - totalTTC);
+    invoiceTotalInput.value = (totalTTC / (document.getElementById('paymentCurrency').value === 'USD' ? window.usdCdfRate : 1)).toFixed(2);
+
+    container.querySelectorAll('.sold-price-input').forEach(input => {
+        input.addEventListener('change', function() {
+            const multiplier = document.getElementById('paymentCurrency').value === 'USD' ? window.usdCdfRate : 1;
+            window.cart[Number(this.dataset.index)].price = Math.max(0, Number(this.value) || 0) * multiplier;
+            window.updateCartDisplay();
+        });
+    });
+};
+
+window.setInvoiceTotal = function(value) {
+    const multiplier = document.getElementById('paymentCurrency').value === 'USD' ? window.usdCdfRate : 1;
+    const targetTotal = Math.max(0, Number(value) || 0) * multiplier;
+    const currentTotal = window.cart.reduce((sum, item) => {
+        const subtotal = item.price * item.quantity;
+        return sum + subtotal + subtotal * item.tva / 100;
+    }, 0);
+
+    if (currentTotal > 0) {
+        const factor = targetTotal / currentTotal;
+        window.cart.forEach(item => {
+            item.price = Math.round(item.price * factor * 100) / 100;
+        });
+    }
+    window.updateCartDisplay();
 };
 
 // ===== SUPPRIMER UN ARTICLE =====
@@ -531,7 +545,7 @@ window.validateSale = function() {
     const items = window.cart.map(item => ({
         product_id: parseInt(item.id),
         quantity: item.quantity,
-        price: item.price,
+        sold_price_ht: item.price,
         tva_rate: item.tva
     }));
 
@@ -542,8 +556,6 @@ window.validateSale = function() {
         customer_phone: document.getElementById('customerPhone').value,
         payment_method: document.getElementById('paymentMethod').value,
         payment_currency: document.getElementById('paymentCurrency').value,
-        discount_type: document.getElementById('discountType').value,
-        discount_value: parseFloat(document.getElementById('discountValue').value) || 0,
         notes: document.getElementById('notes')?.value || '',
         items: items
     };
@@ -580,9 +592,6 @@ window.validateSale = function() {
             
             // Réinitialiser
             window.cart = [];
-            document.getElementById('discountType').value = 'amount';
-            document.getElementById('discountValue').value = '0';
-            document.getElementById('discountUnit').textContent = document.getElementById('paymentCurrency').value;
             window.updateCartDisplay();
             document.getElementById('customerSelect').value = '';
             document.getElementById('customerName').value = '';
@@ -623,17 +632,13 @@ window.pdfInvoice = function() {
 // ===== INITIALISATION =====
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('paymentCurrency').addEventListener('change', function() {
-        document.getElementById('discountUnit').textContent = document.getElementById('discountType').value === 'percentage' ? '%' : this.value;
+        document.getElementById('invoiceTotalCurrency').textContent = this.value;
         window.updateCartDisplay();
         window.updateProductPriceLabels();
     });
-    document.getElementById('discountType').addEventListener('change', function() {
-        const isPercentage = this.value === 'percentage';
-        document.getElementById('discountUnit').textContent = isPercentage ? '%' : document.getElementById('paymentCurrency').value;
-        document.getElementById('discountValue').max = isPercentage ? 100 : '';
-        window.updateCartDisplay();
+    document.getElementById('invoiceTotalInput').addEventListener('change', function() {
+        window.setInvoiceTotal(this.value);
     });
-    document.getElementById('discountValue').addEventListener('input', window.updateCartDisplay);
     console.log('✅ POS chargé !');
     console.log('📦 Nombre de produits:', document.querySelectorAll('.product-col').length);
     

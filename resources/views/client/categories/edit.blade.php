@@ -52,11 +52,11 @@
                         <!-- Statut -->
                         <div class="mb-3">
                             <div class="form-check form-switch">
-                                <input type="checkbox" name="statut" class="form-check-input" id="statut" value="1" 
-                                       {{ old('statut', $category->statut) ? 'checked' : '' }}>
+                                <input type="checkbox" name="status" class="form-check-input" id="statut" value="1"
+                                       {{ old('status', $category->status) ? 'checked' : '' }}>
                                 <label class="form-check-label fw-semibold" for="statut">
-                                    <span class="badge {{ old('statut', $category->statut) ? 'bg-success' : 'bg-danger' }}" id="statutBadge">
-                                        {{ old('statut', $category->statut) ? 'Actif' : 'Inactif' }}
+                                    <span class="badge {{ old('status', $category->status) ? 'bg-success' : 'bg-danger' }}" id="statutBadge">
+                                        {{ old('status', $category->status) ? 'Actif' : 'Inactif' }}
                                     </span>
                                 </label>
                             </div>
