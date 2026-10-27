@@ -28,26 +28,6 @@
                     <form action="{{ route('client.categories.store') }}" method="POST">
                         @csrf
 
-                        <!-- Établissement -->
-                        @if(isset($etablissements) && $etablissements->count() > 1)
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Établissement <span class="text-danger">*</span></label>
-                                <select name="etablissement_id" class="form-select @error('etablissement_id') is-invalid @enderror" required>
-                                    <option value="">Sélectionnez un établissement</option>
-                                    @foreach($etablissements as $etab)
-                                        <option value="{{ $etab->id }}" {{ old('etablissement_id', $selectedEtablissementId ?? '') == $etab->id ? 'selected' : '' }}>
-                                            {{ $etab->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('etablissement_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        @elseif(isset($selectedEtablissementId))
-                            <input type="hidden" name="etablissement_id" value="{{ $selectedEtablissementId }}">
-                        @endif
-
                         <!-- Nom -->
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Nom <span class="text-danger">*</span></label>
@@ -71,11 +51,11 @@
                         <!-- Statut -->
                         <div class="mb-3">
                             <div class="form-check form-switch">
-                                <input type="checkbox" name="statut" class="form-check-input" id="statut" value="1" 
-                                       {{ old('statut', true) ? 'checked' : '' }}>
+                                <input type="checkbox" name="status" class="form-check-input" id="statut" value="1"
+                                       {{ old('status', true) ? 'checked' : '' }}>
                                 <label class="form-check-label fw-semibold" for="statut">
-                                    <span class="badge {{ old('statut', true) ? 'bg-success' : 'bg-danger' }}" id="statutBadge">
-                                        {{ old('statut', true) ? 'Actif' : 'Inactif' }}
+                                    <span class="badge {{ old('status', true) ? 'bg-success' : 'bg-danger' }}" id="statutBadge">
+                                        {{ old('status', true) ? 'Actif' : 'Inactif' }}
                                     </span>
                                 </label>
                             </div>

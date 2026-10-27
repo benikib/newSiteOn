@@ -9,12 +9,14 @@ use App\Models\Unit;
 use App\Models\Etablissement;
 use App\Models\Stock;
 use App\Models\Movement;
+use App\Services\PurchasePrice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ProductController extends Controller
 {
@@ -28,6 +30,15 @@ class ProductController extends Controller
         })
         ->where('statut', 'actif')
         ->pluck('id');
+    }
+
+    private function resolveEtablissementId(Request $request, $etablissementIds)
+    {
+        $requestedId = $request->input('etablissement_id');
+
+        return $etablissementIds->contains($requestedId)
+            ? $requestedId
+            : $etablissementIds->first();
     }
 
     /**
@@ -57,71 +68,11 @@ class ProductController extends Controller
         }
 
         // Sélectionner un établissement
-        $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
-        
-        if (!$etablissementIds->contains($selectedEtablissementId)) {
-            $selectedEtablissementId = $etablissementIds->first();
-        }
-
-        // ===== QUERY DE BASE =====
-        $query = Product::with(['category', 'unit', 'etablissement', 'stock'])
-            ->where('etablissement_id', $selectedEtablissementId);
-
-        // ===== FILTRES =====
-        // Recherche par nom ou code
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'LIKE', '%' . $search . '%')
-                  ->orWhere('code', 'LIKE', '%' . $search . '%')
-                  ->orWhere('barcode', 'LIKE', '%' . $search . '%');
-            });
-        }
-
-        // Filtre par catégorie
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
-        }
-
-        // Filtre par statut
-        if ($request->filled('status')) {
-            $query->where('status', $request->status === 'active' ? 1 : 0);
-        }
-
-        // ===== TRI =====
-        switch ($request->sort) {
-            case 'name_asc':
-                $query->orderBy('name', 'asc');
-                break;
-            case 'name_desc':
-                $query->orderBy('name', 'desc');
-                break;
-            case 'code_asc':
-                $query->orderBy('code', 'asc');
-                break;
-            case 'code_desc':
-                $query->orderBy('code', 'desc');
-                break;
-            case 'stock_asc':
-                $query->orderBy(Stock::select('quantity')->whereColumn('stock.product_id', 'products.id'), 'asc');
-                break;
-            case 'stock_desc':
-                $query->orderBy(Stock::select('quantity')->whereColumn('stock.product_id', 'products.id'), 'desc');
-                break;
-            case 'created_desc':
-                $query->orderBy('created_at', 'desc');
-                break;
-            case 'created_asc':
-                $query->orderBy('created_at', 'asc');
-                break;
-            default:
-                $query->orderBy('created_at', 'desc');
-                break;
-        }
+        $selectedEtablissementId = $this->resolveEtablissementId($request, $etablissementIds);
 
         // ===== PAGINATION =====
         $perPage = $request->per_page ?? 15;
-        $products = $query->paginate($perPage);
+        $products = $this->filteredProductsQuery($request, $selectedEtablissementId)->paginate($perPage);
 
         // ===== DONNÉES POUR LES FILTRES =====
         $categories = Category::where('status', true)->orderBy('nom')->get();
@@ -163,11 +114,7 @@ class ProductController extends Controller
                 ->with('error', 'Vous n\'avez aucun établissement actif.');
         }
 
-        $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
-        
-        if (!$etablissementIds->contains($selectedEtablissementId)) {
-            $selectedEtablissementId = $etablissementIds->first();
-        }
+        $selectedEtablissementId = $this->resolveEtablissementId($request, $etablissementIds);
 
         $categories = Category::where('status', true)->orderBy('nom')->get();
         $units = Unit::where('status', true)->orderBy('name')->get();
@@ -212,6 +159,8 @@ class ProductController extends Controller
             'barcode' => 'nullable|string|max:50|unique:products,barcode',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
+            'selling_price' => 'nullable|numeric|min:0',
+            'selling_currency' => 'nullable|in:CDF,USD',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'status' => 'nullable|boolean',
         ]);
@@ -224,6 +173,20 @@ class ProductController extends Controller
                 ], 422);
             }
             return back()->withErrors($validator)->withInput();
+        }
+
+        $sellingPrice = 0;
+        $sellingPriceOriginal = null;
+        $sellingCurrency = 'CDF';
+        $sellingExchangeRate = null;
+        if ($request->filled('selling_price')) {
+            $sellingPriceOriginal = (float) $request->input('selling_price');
+            $sellingCurrency = $request->input('selling_currency', 'CDF');
+            [$sellingPrice, $sellingExchangeRate] = PurchasePrice::normalize(
+                $sellingPriceOriginal,
+                $sellingCurrency,
+                'selling_currency'
+            );
         }
 
         // ===== TRAITEMENT DE L'IMAGE =====
@@ -255,7 +218,10 @@ class ProductController extends Controller
                 'product_id' => $product->id,
                 'quantity' => 0,
                 'purchase_price' => 0,
-                'selling_price' => 0,
+                'selling_price' => $sellingPrice,
+                'selling_price_original' => $sellingPriceOriginal,
+                'selling_currency' => $sellingCurrency,
+                'selling_exchange_rate' => $sellingExchangeRate,
                 'minimum_stock' => 0,
             ]);
 
@@ -345,6 +311,8 @@ class ProductController extends Controller
             'barcode' => 'nullable|string|max:50|unique:products,barcode,' . $product->id,
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
+            'selling_price' => 'nullable|numeric|min:0',
+            'selling_currency' => 'nullable|in:CDF,USD',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'status' => 'nullable|boolean',
         ]);
@@ -357,6 +325,20 @@ class ProductController extends Controller
                 ], 422);
             }
             return back()->withErrors($validator)->withInput();
+        }
+
+        $sellingPrice = null;
+        $sellingPriceOriginal = null;
+        $sellingCurrency = null;
+        $sellingExchangeRate = null;
+        if ($request->filled('selling_price')) {
+            $sellingPriceOriginal = (float) $request->input('selling_price');
+            $sellingCurrency = $request->input('selling_currency', 'CDF');
+            [$sellingPrice, $sellingExchangeRate] = PurchasePrice::normalize(
+                $sellingPriceOriginal,
+                $sellingCurrency,
+                'selling_currency'
+            );
         }
 
         // ===== TRAITEMENT DE L'IMAGE =====
@@ -372,17 +354,45 @@ class ProductController extends Controller
             $imagePath = $image->storeAs('products', $filename, 'public');
         }
 
-        // ===== MISE À JOUR =====
-        $product->update([
-            'category_id' => $request->category_id,
-            'unit_id' => $request->unit_id,
-            'code' => $request->code,
-            'barcode' => $request->barcode,
-            'name' => $request->name,
-            'description' => $request->description,
-            'image' => $imagePath,
-            'status' => $request->has('status') ? $request->status : false,
-        ]);
+        DB::beginTransaction();
+        try {
+            $product->update([
+                'category_id' => $request->category_id,
+                'unit_id' => $request->unit_id,
+                'code' => $request->code,
+                'barcode' => $request->barcode,
+                'name' => $request->name,
+                'description' => $request->description,
+                'image' => $imagePath,
+                'status' => $request->has('status') ? $request->status : false,
+            ]);
+
+            if ($request->filled('selling_price')) {
+                $stock = Stock::firstOrNew([
+                    'etablissement_id' => $product->etablissement_id,
+                    'product_id' => $product->id,
+                ]);
+                $stock->selling_price = $sellingPrice;
+                $stock->selling_price_original = $sellingPriceOriginal;
+                $stock->selling_currency = $sellingCurrency;
+                $stock->selling_exchange_rate = $sellingExchangeRate;
+                $stock->save();
+            }
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            report($e);
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Impossible de mettre à jour ce produit. Réessayez.',
+                ], 500);
+            }
+
+            return back()->withInput()->with('error', 'Impossible de mettre à jour ce produit. Réessayez.');
+        }
 
         $message = 'Produit "' . $product->name . '" mis à jour avec succès !';
 
@@ -520,7 +530,9 @@ class ProductController extends Controller
             ]);
         }
 
-        $products = Product::whereIn('etablissement_id', $etablissementIds)
+        $selectedEtablissementId = $this->resolveEtablissementId($request, $etablissementIds);
+
+        $products = Product::where('etablissement_id', $selectedEtablissementId)
             ->where(function($q) use ($request) {
                 $q->where('name', 'LIKE', '%' . $request->q . '%')
                   ->orWhere('code', 'LIKE', '%' . $request->q . '%')
@@ -548,11 +560,12 @@ class ProductController extends Controller
                 ->with('error', 'Vous n\'avez aucun établissement actif.');
         }
 
-        $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
+        $selectedEtablissementId = $this->resolveEtablissementId($request, $etablissementIds);
+        if (!$etablissementIds->contains($selectedEtablissementId)) {
+            $selectedEtablissementId = $etablissementIds->first();
+        }
 
-        $products = Product::with(['category', 'unit', 'stock'])
-            ->where('etablissement_id', $selectedEtablissementId)
-            ->get();
+        $products = $this->filteredProductsQuery($request, $selectedEtablissementId)->get();
 
         $filename = 'produits_' . date('Y-m-d_His') . '.csv';
         
@@ -620,5 +633,100 @@ class ProductController extends Controller
             'success' => true,
             'data' => $products
         ]);
+    }
+
+    public function printProducts(Request $request)
+    {
+        $data = $this->productListExportData($request);
+        if ($data === null) {
+            return redirect()->route('client.profile.edit')
+                ->with('error', 'Vous n\'avez aucun établissement actif.');
+        }
+
+        return view('client.products.export', $data + ['showPrintButton' => true]);
+    }
+
+    public function pdfProducts(Request $request)
+    {
+        $data = $this->productListExportData($request);
+        if ($data === null) {
+            return redirect()->route('client.profile.edit')
+                ->with('error', 'Vous n\'avez aucun établissement actif.');
+        }
+
+        return Pdf::loadView('client.products.export', $data + ['showPrintButton' => false])
+            ->setPaper('a4', 'landscape')
+            ->download('produits-' . $data['etablissement']->id . '.pdf');
+    }
+
+    private function productListExportData(Request $request): ?array
+    {
+        $etablissementIds = $this->getUserEtablissements();
+        if ($etablissementIds->isEmpty()) {
+            return null;
+        }
+
+        $selectedEtablissementId = $this->resolveEtablissementId($request, $etablissementIds);
+        if (!$etablissementIds->contains($selectedEtablissementId)) {
+            $selectedEtablissementId = $etablissementIds->first();
+        }
+
+        return [
+            'etablissement' => Etablissement::findOrFail($selectedEtablissementId),
+            'products' => $this->filteredProductsQuery($request, $selectedEtablissementId)->get(),
+            'printedAt' => now(),
+        ];
+    }
+
+    private function filteredProductsQuery(Request $request, $etablissementId)
+    {
+        $query = Product::with(['category', 'unit', 'etablissement', 'stock'])
+            ->where('etablissement_id', $etablissementId);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', '%' . $search . '%')
+                    ->orWhere('code', 'LIKE', '%' . $search . '%')
+                    ->orWhere('barcode', 'LIKE', '%' . $search . '%');
+            });
+        }
+
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status === 'active' ? 1 : 0);
+        }
+
+        switch ($request->sort) {
+            case 'name_asc':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'name_desc':
+                $query->orderBy('name', 'desc');
+                break;
+            case 'code_asc':
+                $query->orderBy('code', 'asc');
+                break;
+            case 'code_desc':
+                $query->orderBy('code', 'desc');
+                break;
+            case 'stock_asc':
+                $query->orderBy(Stock::select('quantity')->whereColumn('stock.product_id', 'products.id'), 'asc');
+                break;
+            case 'stock_desc':
+                $query->orderBy(Stock::select('quantity')->whereColumn('stock.product_id', 'products.id'), 'desc');
+                break;
+            case 'created_asc':
+                $query->orderBy('created_at', 'asc');
+                break;
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        return $query;
     }
 }

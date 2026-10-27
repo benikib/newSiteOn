@@ -11,6 +11,8 @@ use App\Models\Inventory;
 use App\Models\TauxDeChange;
 use App\Services\PurchasePrice;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -27,6 +29,15 @@ class ClientStockController extends Controller
         })
         ->where('statut', 'actif')
         ->pluck('id');
+    }
+
+    private function resolveEtablissementId(Request $request, $etablissementIds)
+    {
+        $requestedId = $request->input('etablissement_id');
+
+        return $etablissementIds->contains($requestedId)
+            ? $requestedId
+            : $etablissementIds->first();
     }
 
     /**
@@ -47,7 +58,7 @@ class ClientStockController extends Controller
         }
 
         $etablissementIds = $etablissements->pluck('id');
-        $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
+        $selectedEtablissementId = $this->resolveEtablissementId($request, $etablissementIds);
 
         if (!$etablissementIds->contains($selectedEtablissementId)) {
             $selectedEtablissementId = $etablissementIds->first();
@@ -172,25 +183,84 @@ class ClientStockController extends Controller
                 ->with('error', 'Vous n\'avez aucun établissement actif.');
         }
 
-        $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
+        $selectedEtablissementId = $this->resolveEtablissementId($request, $etablissementIds);
         
         if (!$etablissementIds->contains($selectedEtablissementId)) {
             $selectedEtablissementId = $etablissementIds->first();
         }
 
+        $stocks = $this->filteredStocksQuery($request, $selectedEtablissementId)
+            ->paginate(20);
+
+        $categories = \App\Models\Category::where('status', true)->get();
+        $etablissements = Etablissement::whereIn('id', $etablissementIds)->get();
+
+        return view('client.stocks.index', compact(
+            'stocks',
+            'categories',
+            'etablissements',
+            'selectedEtablissementId'
+        ));
+    }
+
+    public function printStocks(Request $request)
+    {
+        $data = $this->stockListExportData($request);
+        if ($data === null) {
+            return redirect()->route('client.profile.edit')
+                ->with('error', 'Vous n\'avez aucun établissement actif.');
+        }
+
+        return view('client.stocks.export', $data + ['showPrintButton' => true]);
+    }
+
+    public function pdfStocks(Request $request)
+    {
+        $data = $this->stockListExportData($request);
+        if ($data === null) {
+            return redirect()->route('client.profile.edit')
+                ->with('error', 'Vous n\'avez aucun établissement actif.');
+        }
+
+        return Pdf::loadView('client.stocks.export', $data + ['showPrintButton' => false])
+            ->setPaper('a4', 'landscape')
+            ->download('stocks-' . $data['etablissement']->id . '.pdf');
+    }
+
+    private function stockListExportData(Request $request): ?array
+    {
+        $etablissementIds = $this->getUserEtablissements();
+        if ($etablissementIds->isEmpty()) {
+            return null;
+        }
+
+        $selectedEtablissementId = $this->resolveEtablissementId($request, $etablissementIds);
+        if (!$etablissementIds->contains($selectedEtablissementId)) {
+            $selectedEtablissementId = $etablissementIds->first();
+        }
+
+        return [
+            'etablissement' => Etablissement::findOrFail($selectedEtablissementId),
+            'stocks' => $this->filteredStocksQuery($request, $selectedEtablissementId)->get(),
+            'printedAt' => now(),
+        ];
+    }
+
+    private function filteredStocksQuery(Request $request, $etablissementId)
+    {
         $query = Stock::with(['product', 'product.category', 'product.unit'])
-            ->where('etablissement_id', $selectedEtablissementId);
+            ->where('etablissement_id', $etablissementId);
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('product', function($q) use ($search) {
+            $query->whereHas('product', function ($q) use ($search) {
                 $q->where('name', 'LIKE', '%' . $search . '%')
-                  ->orWhere('code', 'LIKE', '%' . $search . '%');
+                    ->orWhere('code', 'LIKE', '%' . $search . '%');
             });
         }
 
         if ($request->filled('category_id')) {
-            $query->whereHas('product', function($q) use ($request) {
+            $query->whereHas('product', function ($q) use ($request) {
                 $q->where('category_id', $request->category_id);
             });
         }
@@ -205,17 +275,7 @@ class ClientStockController extends Controller
             }
         }
 
-        $stocks = $query->orderBy('quantity', 'asc')->paginate(20);
-
-        $categories = \App\Models\Category::where('status', true)->get();
-        $etablissements = Etablissement::whereIn('id', $etablissementIds)->get();
-
-        return view('client.stocks.index', compact(
-            'stocks', 
-            'categories', 
-            'etablissements', 
-            'selectedEtablissementId'
-        ));
+        return $query->orderBy('quantity', 'asc');
     }
 
     /**
@@ -230,106 +290,146 @@ class ClientStockController extends Controller
                 ->with('error', 'Vous n\'avez aucun établissement actif.');
         }
 
-        $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
+        $selectedEtablissementId = $this->resolveEtablissementId($request, $etablissementIds);
         
         if (!$etablissementIds->contains($selectedEtablissementId)) {
             $selectedEtablissementId = $etablissementIds->first();
         }
 
         if ($request->isMethod('post')) {
-            $request->validate([
+            if (!$request->has('items')) {
+                $request->merge([
+                    'items' => [[
+                        'product_id' => $request->input('product_id'),
+                        'quantity' => $request->input('quantity'),
+                        'purchase_price' => $request->input('purchase_price'),
+                        'purchase_currency' => $request->input('purchase_currency'),
+                        'selling_price' => $request->input('selling_price'),
+                        'selling_currency' => $request->input('selling_currency'),
+                    ]],
+                ]);
+            }
+
+            $validated = $request->validate([
                 'etablissement_id' => 'required|in:' . $etablissementIds->implode(','),
-                'product_id' => 'required|exists:products,id',
-                'quantity' => 'required|integer|min:1',
-                'purchase_price' => 'required|numeric|min:0',
-                'purchase_currency' => 'required|in:CDF,USD',
-                'selling_price' => 'required|numeric|min:0',
-                'selling_currency' => 'required|in:CDF,USD',
+                'items' => 'required|array|min:1',
+                'items.*.product_id' => [
+                    'required',
+                    'distinct',
+                    Rule::exists('products', 'id')->where('etablissement_id', $request->input('etablissement_id')),
+                ],
+                'items.*.quantity' => 'required|integer|min:1',
+                'items.*.purchase_price' => 'required|numeric|min:0',
+                'items.*.purchase_currency' => 'required|in:CDF,USD',
+                'items.*.selling_price' => 'nullable|numeric|min:0',
+                'items.*.selling_currency' => 'nullable|in:CDF,USD',
                 'note' => 'nullable|string|max:500',
             ]);
 
-            $stock = Stock::where('etablissement_id', $request->etablissement_id)
-                ->where('product_id', $request->product_id)
-                ->first();
-
-            [$purchasePriceCdf, $exchangeRate] = PurchasePrice::normalize(
-                (float) $request->purchase_price,
-                $request->purchase_currency
-            );
-            [$sellingPriceCdf, $sellingExchangeRate] = PurchasePrice::normalize(
-                (float) $request->selling_price,
-                $request->selling_currency,
-                'selling_currency'
-            );
-
-            DB::beginTransaction();
             try {
-                if ($stock) {
-                    $oldQuantity = $stock->quantity;
-                    $oldPurchasePrice = $stock->purchase_price;
+                DB::transaction(function () use ($validated, $request) {
+                    foreach ($validated['items'] as $item) {
+                        $stock = Stock::where('etablissement_id', $validated['etablissement_id'])
+                            ->where('product_id', $item['product_id'])
+                            ->lockForUpdate()
+                            ->first();
 
-                    $totalCost = ($oldQuantity * $oldPurchasePrice) + ($request->quantity * $purchasePriceCdf);
-                    $newQuantity = $oldQuantity + $request->quantity;
-                    $newPurchasePrice = $totalCost / $newQuantity;
+                        [$purchasePriceCdf, $exchangeRate] = PurchasePrice::normalize(
+                            (float) $item['purchase_price'],
+                            $item['purchase_currency']
+                        );
+                        if (isset($item['selling_price']) && $item['selling_price'] !== '') {
+                            $sellingPriceOriginal = (float) $item['selling_price'];
+                            $sellingCurrency = $item['selling_currency'] ?? 'CDF';
+                            [$sellingPriceCdf, $sellingExchangeRate] = PurchasePrice::normalize(
+                                $sellingPriceOriginal,
+                                $sellingCurrency,
+                                'selling_currency'
+                            );
+                        } else {
+                            $sellingPriceCdf = (float) ($stock->selling_price ?? 0);
+                            $sellingPriceOriginal = (float) ($stock->selling_price_original ?? $sellingPriceCdf);
+                            $sellingCurrency = $stock->selling_currency ?? 'CDF';
+                            $sellingExchangeRate = $stock->selling_exchange_rate ?? null;
+                        }
 
-                    $stock->quantity = $newQuantity;
-                    $stock->purchase_price = $newPurchasePrice;
-                    $stock->purchase_price_original = $request->purchase_price;
-                    $stock->purchase_currency = $request->purchase_currency;
-                    $stock->purchase_exchange_rate = $exchangeRate;
-                    $stock->selling_price = $sellingPriceCdf;
-                    $stock->selling_price_original = $request->selling_price;
-                    $stock->selling_currency = $request->selling_currency;
-                    $stock->selling_exchange_rate = $sellingExchangeRate;
-                    $stock->save();
+                        if ($stock) {
+                            $oldQuantity = $stock->quantity;
+                            $oldPurchasePrice = $stock->purchase_price;
+                            $newQuantity = $oldQuantity + (int) $item['quantity'];
+                            $stock->quantity = $newQuantity;
+                            $stock->purchase_price = (($oldQuantity * $oldPurchasePrice)
+                                + ((int) $item['quantity'] * $purchasePriceCdf)) / $newQuantity;
+                            $stock->purchase_price_original = $item['purchase_price'];
+                            $stock->purchase_currency = $item['purchase_currency'];
+                            $stock->purchase_exchange_rate = $exchangeRate;
+                            $stock->selling_price = $sellingPriceCdf;
+                            $stock->selling_price_original = $sellingPriceOriginal;
+                            $stock->selling_currency = $sellingCurrency;
+                            $stock->selling_exchange_rate = $sellingExchangeRate;
+                            $stock->save();
+                        } else {
+                            $oldQuantity = 0;
+                            $stock = Stock::create([
+                                'etablissement_id' => $validated['etablissement_id'],
+                                'product_id' => $item['product_id'],
+                                'quantity' => $item['quantity'],
+                                'purchase_price' => $purchasePriceCdf,
+                                'purchase_price_original' => $item['purchase_price'],
+                                'purchase_currency' => $item['purchase_currency'],
+                                'purchase_exchange_rate' => $exchangeRate,
+                                'selling_price' => $sellingPriceCdf,
+                                'selling_price_original' => $sellingPriceOriginal,
+                                'selling_currency' => $sellingCurrency,
+                                'selling_exchange_rate' => $sellingExchangeRate,
+                                'minimum_stock' => 0,
+                            ]);
+                        }
 
-                    $movementType = 'stock_in_update';
-                } else {
-                    $stock = Stock::create([
-                        'etablissement_id' => $request->etablissement_id,
-                        'product_id' => $request->product_id,
-                        'quantity' => $request->quantity,
-                        'purchase_price' => $purchasePriceCdf,
-                        'purchase_price_original' => $request->purchase_price,
-                        'purchase_currency' => $request->purchase_currency,
-                        'purchase_exchange_rate' => $exchangeRate,
-                        'selling_price' => $sellingPriceCdf,
-                        'selling_price_original' => $request->selling_price,
-                        'selling_currency' => $request->selling_currency,
-                        'selling_exchange_rate' => $sellingExchangeRate,
-                        'minimum_stock' => 0,
-                    ]);
+                        Movement::create([
+                            'etablissement_id' => $validated['etablissement_id'],
+                            'product_id' => $item['product_id'],
+                            'type' => 'in',
+                            'quantity' => $item['quantity'],
+                            'before' => $oldQuantity,
+                            'after' => $stock->quantity,
+                            'purchase_price' => $purchasePriceCdf,
+                            'purchase_price_original' => $item['purchase_price'],
+                            'purchase_currency' => $item['purchase_currency'],
+                            'purchase_exchange_rate' => $exchangeRate,
+                            'selling_price' => $sellingPriceCdf,
+                            'selling_price_original' => $sellingPriceOriginal,
+                            'selling_currency' => $sellingCurrency,
+                            'selling_exchange_rate' => $sellingExchangeRate,
+                            'note' => $request->input('note') ?? 'Approvisionnement',
+                            'user_id' => Auth::id(),
+                        ]);
+                    }
+                });
 
-                    $oldQuantity = 0;
-                    $movementType = 'stock_in_create';
+                $message = count($validated['items']) > 1
+                    ? 'Les stocks ont été enregistrés avec succès !'
+                    : 'Stock ajouté avec succès !';
+
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => true, 'message' => $message]);
                 }
 
-                Movement::create([
-                    'etablissement_id' => $request->etablissement_id,
-                    'product_id' => $request->product_id,
-                    'type' => 'in',
-                    'quantity' => $request->quantity,
-                    'before' => $oldQuantity,
-                    'after' => $stock->quantity,
-                    'purchase_price' => $purchasePriceCdf,
-                    'purchase_price_original' => $request->purchase_price,
-                    'purchase_currency' => $request->purchase_currency,
-                    'purchase_exchange_rate' => $exchangeRate,
-                    'selling_price' => $sellingPriceCdf,
-                    'selling_price_original' => $request->selling_price,
-                    'selling_currency' => $request->selling_currency,
-                    'selling_exchange_rate' => $sellingExchangeRate,
-                    'note' => $request->note ?? 'Approvisionnement',
-                    'user_id' => Auth::id(),
-                ]);
-
-                DB::commit();
-
-                return redirect()->route('client.stocks.index', ['etablissement_id' => $request->etablissement_id])
-                    ->with('success', 'Stock ajouté avec succès !');
+                return redirect()->route('client.stocks.stock-in', [
+                    'etablissement_id' => $validated['etablissement_id'],
+                ])->with('success', $message);
+            } catch (ValidationException $e) {
+                throw $e;
             } catch (\Exception $e) {
-                DB::rollBack();
                 report($e);
+
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Impossible d’enregistrer ces entrées de stock. Vérifiez le taux de change et réessayez.',
+                    ], 500);
+                }
+
                 return back()->with('error', 'Impossible d’enregistrer cette entrée de stock. Réessayez.');
             }
         }
@@ -337,14 +437,10 @@ class ClientStockController extends Controller
         $etablissements = Etablissement::whereIn('id', $etablissementIds)->get();
         $etablissement = $etablissements->firstWhere('id', $selectedEtablissementId);
 
-        $products = Product::where('status', true)
-            ->whereDoesntHave('stock', function($q) use ($selectedEtablissementId) {
-                $q->where('etablissement_id', $selectedEtablissementId);
-            })
-            ->get();
-
-        $existingProducts = Stock::where('etablissement_id', $selectedEtablissementId)
-            ->with('product')
+        $products = Product::where('etablissement_id', $selectedEtablissementId)
+            ->where('status', true)
+            ->with('stock')
+            ->orderBy('name')
             ->get();
         $usdCdfRate = TauxDeChange::orderByDesc('date')->value('usd_cdf');
 
@@ -353,7 +449,6 @@ class ClientStockController extends Controller
             'etablissements',
             'selectedEtablissementId',
             'products',
-            'existingProducts',
             'usdCdfRate'
         ));
     }
@@ -370,7 +465,7 @@ class ClientStockController extends Controller
                 ->with('error', 'Vous n\'avez aucun établissement actif.');
         }
 
-        $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
+        $selectedEtablissementId = $this->resolveEtablissementId($request, $etablissementIds);
 
         if ($request->isMethod('post')) {
             $request->validate([
@@ -446,7 +541,7 @@ public function outOfStock(Request $request)
             ->with('error', 'Vous n\'avez aucun établissement actif.');
     }
 
-    $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
+    $selectedEtablissementId = $this->resolveEtablissementId($request, $etablissementIds);
 
     $stocks = Stock::where('etablissement_id', $selectedEtablissementId)
         ->with(['product', 'product.category', 'product.unit'])
@@ -488,7 +583,7 @@ public function outOfStock(Request $request)
                 ->with('error', 'Vous n\'avez aucun établissement actif.');
         }
 
-        $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
+        $selectedEtablissementId = $this->resolveEtablissementId($request, $etablissementIds);
 
         if ($request->isMethod('post')) {
             $request->validate([
@@ -622,7 +717,7 @@ public function movements(Request $request)
             ->with('error', 'Vous n\'avez aucun établissement actif.');
     }
 
-    $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
+    $selectedEtablissementId = $this->resolveEtablissementId($request, $etablissementIds);
     if (!$etablissementIds->contains($selectedEtablissementId)) {
         $selectedEtablissementId = $etablissementIds->first();
     }
@@ -675,7 +770,7 @@ private function movementExportData(Request $request): ?array
         return null;
     }
 
-    $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
+    $selectedEtablissementId = $this->resolveEtablissementId($request, $etablissementIds);
     if (!$etablissementIds->contains($selectedEtablissementId)) {
         $selectedEtablissementId = $etablissementIds->first();
     }
@@ -751,7 +846,7 @@ public function alerts(Request $request)
             ->with('error', 'Vous n\'avez aucun établissement actif.');
     }
 
-    $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
+    $selectedEtablissementId = $this->resolveEtablissementId($request, $etablissementIds);
 
     // Stock bas
     $lowStock = Stock::where('etablissement_id', $selectedEtablissementId)
@@ -801,7 +896,7 @@ public function valuation(Request $request)
             ->with('error', 'Vous n\'avez aucun établissement actif.');
     }
 
-    $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
+    $selectedEtablissementId = $this->resolveEtablissementId($request, $etablissementIds);
 
     // ===== RÉSUMÉ GLOBAL =====
     $summary = Stock::where('etablissement_id', $selectedEtablissementId)
@@ -951,7 +1046,7 @@ public function valuation(Request $request)
                 ->with('error', 'Vous n\'avez aucun établissement actif.');
         }
 
-        $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
+        $selectedEtablissementId = $this->resolveEtablissementId($request, $etablissementIds);
 
         if ($request->isMethod('post')) {
             $request->validate([
@@ -1059,7 +1154,7 @@ public function valuation(Request $request)
     }
 
     $etablissementIds = $etablissements->pluck('id');
-    $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
+    $selectedEtablissementId = $this->resolveEtablissementId($request, $etablissementIds);
 
     if (!$etablissementIds->contains($selectedEtablissementId)) {
         $selectedEtablissementId = $etablissementIds->first();

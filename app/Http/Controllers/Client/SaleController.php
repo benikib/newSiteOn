@@ -31,6 +31,15 @@ class SaleController extends Controller
         ->pluck('id');
     }
 
+    private function resolveEtablissementId(Request $request, $etablissementIds)
+    {
+        $requestedId = $request->input('etablissement_id');
+
+        return $etablissementIds->contains($requestedId)
+            ? $requestedId
+            : $etablissementIds->first();
+    }
+
     /**
      * Point de vente - Nouvelle vente
      */
@@ -43,7 +52,7 @@ class SaleController extends Controller
                 ->with('error', 'Vous n\'avez aucun établissement actif.');
         }
 
-        $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
+        $selectedEtablissementId = $this->resolveEtablissementId($request, $etablissementIds);
         
         if (!$etablissementIds->contains($selectedEtablissementId)) {
             $selectedEtablissementId = $etablissementIds->first();
@@ -98,7 +107,7 @@ class SaleController extends Controller
             ]);
         }
 
-        $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
+        $selectedEtablissementId = $this->resolveEtablissementId($request, $etablissementIds);
 
         $query = Product::with(['stock', 'unit', 'category'])
             ->where('etablissement_id', $selectedEtablissementId)
@@ -145,6 +154,7 @@ class SaleController extends Controller
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
+            'items.*.sold_price_ht' => 'nullable|numeric|min:0',
             'items.*.tva_rate' => 'required|numeric|min:0',
             'payment_method' => 'required|in:cash,card,transfer,other',
             'payment_currency' => 'required|in:CDF,USD',
@@ -177,6 +187,10 @@ class SaleController extends Controller
         $totalHT = 0;
         $totalTVA = 0;
         $totalTTC = 0;
+        $initialTotalHT = 0;
+        $initialTotalTVA = 0;
+        $initialTotalTTC = 0;
+        $hasSoldPrices = collect($request->items)->contains(fn ($item) => isset($item['sold_price_ht']));
 
         // Vérifier les stocks et calculer les totaux
         foreach ($request->items as $item) {
@@ -206,7 +220,13 @@ class SaleController extends Controller
                 ], 422);
             }
 
-            $unitPrice = (float) ($product->stock->selling_price ?? 0);
+            $originalUnitPrice = (float) ($product->stock->selling_price ?? 0);
+            $unitPrice = isset($item['sold_price_ht'])
+                ? (float) $item['sold_price_ht']
+                : $originalUnitPrice;
+            $initialSubtotalHT = $item['quantity'] * $originalUnitPrice;
+            $initialTvaAmount = $initialSubtotalHT * ($item['tva_rate'] / 100);
+            $initialSubtotalTTC = $initialSubtotalHT + $initialTvaAmount;
             $subtotalHT = $item['quantity'] * $unitPrice;
             $tvaAmount = $subtotalHT * ($item['tva_rate'] / 100);
             $subtotalTTC = $subtotalHT + $tvaAmount;
@@ -214,10 +234,14 @@ class SaleController extends Controller
             $totalHT += $subtotalHT;
             $totalTVA += $tvaAmount;
             $totalTTC += $subtotalTTC;
+            $initialTotalHT += $initialSubtotalHT;
+            $initialTotalTVA += $initialTvaAmount;
+            $initialTotalTTC += $initialSubtotalTTC;
 
             $cartItems[] = [
                 'product' => $product,
                 'quantity' => $item['quantity'],
+                'original_price_ht' => $originalUnitPrice,
                 'price_ht' => $unitPrice,
                 'tva_rate' => $item['tva_rate'],
                 'tva_amount' => $tvaAmount,
@@ -226,30 +250,38 @@ class SaleController extends Controller
             ];
         }
 
-        $initialTotal = round($totalTTC, 2);
+        $initialTotal = round($initialTotalTTC, 2);
         $discountType = $request->input('discount_type', 'amount');
         $discountValue = (float) $request->input('discount_value', 0);
 
-        if ($discountType === 'percentage' && $discountValue > 100) {
+        if (!$hasSoldPrices && $discountType === 'percentage' && $discountValue > 100) {
             return response()->json([
                 'success' => false,
                 'message' => 'La réduction en pourcentage ne peut pas dépasser 100%.',
             ], 422);
         }
 
-        $discountAmount = $discountType === 'percentage'
-            ? round($initialTotal * ($discountValue / 100), 2)
-            : round($discountValue * ($request->payment_currency === 'USD' ? $usdCdfRate : 1), 2);
+        $discountAmount = $hasSoldPrices
+            ? round($initialTotal - $totalTTC, 2)
+            : ($discountType === 'percentage'
+                ? round($initialTotal * ($discountValue / 100), 2)
+                : round($discountValue * ($request->payment_currency === 'USD' ? $usdCdfRate : 1), 2));
 
-        if ($discountAmount > $initialTotal) {
+        if (!$hasSoldPrices && $discountAmount > $initialTotal) {
             return response()->json([
                 'success' => false,
                 'message' => 'La réduction ne peut pas dépasser le montant initial de la facture.',
             ], 422);
         }
 
-        $discountAmount = min($discountAmount, $initialTotal);
-        $finalTotal = round($initialTotal - $discountAmount, 2);
+        if (!$hasSoldPrices) {
+            $discountAmount = min($discountAmount, $initialTotal);
+        }
+        $finalTotal = $hasSoldPrices ? round($totalTTC, 2) : round($initialTotal - $discountAmount, 2);
+        if (!$hasSoldPrices && $discountAmount > 0) {
+            $totalHT = $initialTotalHT;
+            $totalTVA = $initialTotalTVA;
+        }
 
         DB::beginTransaction();
         try {
@@ -283,8 +315,8 @@ class SaleController extends Controller
                 'total_amount' => $finalTotal,
                 'initial_amount' => $initialTotal,
                 'discount_amount' => $discountAmount,
-                'discount_type' => $discountValue > 0 ? $discountType : null,
-                'discount_value' => $discountValue > 0 ? $discountValue : null,
+                'discount_type' => $discountAmount != 0 ? ($hasSoldPrices ? 'amount' : $discountType) : null,
+                'discount_value' => $discountAmount != 0 ? ($hasSoldPrices ? abs($discountAmount) : $discountValue) : null,
                 'payment_currency' => $request->payment_currency,
                 'payment_amount' => $request->payment_currency === 'USD'
                     ? round($finalTotal / $usdCdfRate, 2)
@@ -306,6 +338,7 @@ class SaleController extends Controller
                     'order_id' => $order->id,
                     'product_id' => $product->id,
                     'quantity' => $quantity,
+                    'original_price_ht' => $item['original_price_ht'],
                     'price_ht' => $item['price_ht'],
                     'tva_rate' => $item['tva_rate'],
                     'tva_amount' => $item['tva_amount'],
@@ -434,15 +467,11 @@ class SaleController extends Controller
                 ->with('error', 'Vous n\'avez aucun établissement actif.');
         }
 
-        $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
+        $selectedEtablissementId = $this->resolveEtablissementId($request, $etablissementIds);
 
         $query = Order::with(['items', 'items.product', 'user', 'customer'])
-            ->whereIn('etablissement_id', $etablissementIds)
+            ->where('etablissement_id', $selectedEtablissementId)
             ->whereIn('type', ['pos', 'direct']);
-
-        if ($request->filled('etablissement_id')) {
-            $query->where('etablissement_id', $request->etablissement_id);
-        }
 
         if ($request->filled('search')) {
             $query->where('order_number', 'LIKE', '%' . $request->search . '%');
@@ -481,7 +510,7 @@ class SaleController extends Controller
             ], 403);
         }
 
-        $selectedEtablissementId = $request->etablissement_id ?? $etablissementIds->first();
+        $selectedEtablissementId = $this->resolveEtablissementId($request, $etablissementIds);
 
         // Ventes du jour
         $todaySales = Order::where('etablissement_id', $selectedEtablissementId)

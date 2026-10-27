@@ -19,33 +19,10 @@
         </div>
     </div>
 
-    <!-- Sélecteur d'établissement -->
-    @if(isset($etablissements) && $etablissements->count() > 1)
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <form action="{{ route('client.categories.index') }}" method="GET" class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold">Établissement</label>
-                        <select name="etablissement_id" class="form-select" onchange="this.form.submit()">
-                            @foreach($etablissements as $etab)
-                                <option value="{{ $etab->id }}" {{ ($selectedEtablissementId ?? $etab->id) == $etab->id ? 'selected' : '' }}>
-                                    {{ $etab->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </form>
-            </div>
-        </div>
-    @endif
-
     <!-- Filtres -->
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <form action="{{ route('client.categories.index') }}" method="GET" class="row g-3">
-                @if(isset($selectedEtablissementId))
-                    <input type="hidden" name="etablissement_id" value="{{ $selectedEtablissementId }}">
-                @endif
                 <div class="col-md-4">
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-search"></i></span>
@@ -98,8 +75,8 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="badge {{ $category->statut ? 'bg-success' : 'bg-danger' }}">
-                                        {{ $category->statut ? 'Actif' : 'Inactif' }}
+                                    <span class="badge {{ $category->status ? 'bg-success' : 'bg-danger' }}">
+                                        {{ $category->status ? 'Actif' : 'Inactif' }}
                                     </span>
                                 </td>
                                 <td>
@@ -111,9 +88,9 @@
                                         <form action="{{ route('client.categories.toggle-status', $category->id) }}" 
                                               method="POST" class="d-inline">
                                             @csrf
-                                            <button type="submit" class="btn btn-sm {{ $category->statut ? 'btn-outline-success' : 'btn-outline-danger' }}" 
-                                                    title="{{ $category->statut ? 'Désactiver' : 'Activer' }}">
-                                                <i class="fas {{ $category->statut ? 'fa-check-circle' : 'fa-times-circle' }}"></i>
+                                            <button type="submit" class="btn btn-sm {{ $category->status ? 'btn-outline-success' : 'btn-outline-danger' }}"
+                                                    title="{{ $category->status ? 'Désactiver' : 'Activer' }}">
+                                                <i class="fas {{ $category->status ? 'fa-check-circle' : 'fa-times-circle' }}"></i>
                                             </button>
                                         </form>
                                         @if(($category->products_count ?? 0) == 0)

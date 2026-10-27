@@ -46,106 +46,152 @@
                         </div>
                     @endif
 
-                    <form action="{{ route('client.stocks.stock-in') }}" method="POST">
+                    @if(session('success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ session('success') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+                        </div>
+                    @endif
+                    @if(session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ session('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+                        </div>
+                    @endif
+                    <div id="stockInFeedback" class="alert d-none" role="alert" aria-live="polite"></div>
+
+                    <form id="stockInForm" action="{{ route('client.stocks.stock-in') }}" method="POST">
                         @csrf
                         @if(isset($selectedEtablissementId))
                             <input type="hidden" name="etablissement_id" value="{{ $selectedEtablissementId }}">
                         @endif
 
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Produit <span class="text-danger">*</span></label>
-                            <input type="search" id="stockInProductSearch" class="form-control mb-2"
-                                placeholder="Rechercher par nom ou code produit..." autocomplete="off">
-                            <select id="stockInProductSelect" name="product_id" class="form-select @error('product_id') is-invalid @enderror" required>
-                                <option value="">Sélectionnez un produit</option>
-                                @if(isset($products) && $products->count() > 0)
-                                    <optgroup label="Nouveaux produits">
-                                        @foreach($products as $product)
-                                            <option value="{{ $product->id }}" data-search="{{ $product->name }} {{ $product->code }}" {{ old('product_id') == $product->id ? 'selected' : '' }}>
-                                                {{ $product->name }} ({{ $product->code }})
-                                            </option>
-                                        @endforeach
-                                    </optgroup>
-                                @endif
-                                @if(isset($existingProducts) && $existingProducts->count() > 0)
-                                    <optgroup label="Produits existants">
-                                        @foreach($existingProducts as $stock)
-                                            <option value="{{ $stock->product_id }}" data-search="{{ $stock->product->name }} {{ $stock->product->code }}" {{ old('product_id') == $stock->product_id ? 'selected' : '' }}>
-                                                {{ $stock->product->name }} ({{ $stock->product->code }}) - Stock: {{ $stock->quantity }}
-                                            </option>
-                                        @endforeach
-                                    </optgroup>
-                                @endif
-                            </select>
-                            <small id="stockInProductNoResults" class="form-text text-muted d-none">Aucun produit correspondant.</small>
-                            @error('product_id')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                            <small class="text-muted">
-                                <i class="fas fa-info-circle me-1"></i>
-                                Sélectionnez un produit existant ou un nouveau produit
-                            </small>
+                        <div id="stockInItems" class="d-grid gap-3">
+                            <div class="stock-in-item border rounded p-3">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="mb-0">Produit <span class="stock-in-item-number">1</span></h6>
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-stock-in-item d-none" aria-label="Retirer ce produit">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">Rechercher un produit</label>
+                                        <input type="search" id="stockInProductSearch" class="form-control stock-in-product-search"
+                                               placeholder="Nom ou code produit..." autocomplete="off">
+                                        <select name="items[0][product_id]" class="form-select stock-in-product-select mt-2" required>
+                                            <option value="">Sélectionnez un produit</option>
+                                            @foreach($products as $product)
+                                                <option value="{{ $product->id }}"
+                                                        data-search="{{ $product->name }} {{ $product->code }}"
+                                                        data-selling-price="{{ $product->stock->selling_price_original ?? $product->stock->selling_price ?? '' }}"
+                                                        data-selling-currency="{{ $product->stock->selling_currency ?? 'CDF' }}">
+                                                    {{ $product->name }} ({{ $product->code }}){{ $product->stock ? ' - Stock: ' . number_format($product->stock->quantity) : '' }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <small class="form-text text-muted stock-in-product-no-results d-none">Aucun produit correspondant.</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold">Quantité <span class="text-danger">*</span></label>
+                                        <input type="number" name="items[0][quantity]" class="form-control stock-in-quantity" min="1" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold">Prix d'achat <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="number" name="items[0][purchase_price]" class="form-control stock-in-purchase-price" step="0.01" min="0" required>
+                                            <select name="items[0][purchase_currency]" class="form-select stock-in-purchase-currency" aria-label="Devise du prix d'achat">
+                                                <option value="CDF" selected>CDF</option>
+                                                <option value="USD">USD</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold">Prix de vente</label>
+                                        <div class="input-group">
+                                            <input type="number" name="items[0][selling_price]" class="form-control stock-in-selling-price" step="0.01" min="0">
+                                            <select name="items[0][selling_currency]" class="form-select stock-in-selling-currency" aria-label="Devise du prix de vente">
+                                                <option value="CDF" selected>CDF</option>
+                                                <option value="USD">USD</option>
+                                            </select>
+                                        </div>
+                                        <small class="text-muted">Le prix par défaut du produit est repris automatiquement; modifiable si besoin.</small>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Quantité <span class="text-danger">*</span></label>
-                                <input type="number" name="quantity" class="form-control @error('quantity') is-invalid @enderror" 
-                                       value="{{ old('quantity') }}" required min="1">
-                                @error('quantity')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Prix d'achat <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <input type="number" name="purchase_price" class="form-control @error('purchase_price') is-invalid @enderror" 
-                                           value="{{ old('purchase_price') }}" required step="0.01" min="0">
-                                    <select id="purchaseCurrency" name="purchase_currency" class="form-select @error('purchase_currency') is-invalid @enderror" aria-label="Devise du prix d'achat">
-                                        <option value="CDF" {{ old('purchase_currency', 'CDF') === 'CDF' ? 'selected' : '' }}>CDF</option>
-                                        <option value="USD" {{ old('purchase_currency') === 'USD' ? 'selected' : '' }}>USD</option>
-                                    </select>
+                        <template id="stockInItemTemplate">
+                            <div class="stock-in-item border rounded p-3">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="mb-0">Produit <span class="stock-in-item-number"></span></h6>
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-stock-in-item" aria-label="Retirer ce produit">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </div>
-                                @error('purchase_price')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                                @error('purchase_currency')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                                <small class="text-muted">
-                                    Le montant est converti en CDF pour calculer la valeur et le coût moyen du stock.
-                                    Taux USD/CDF : {{ $usdCdfRate ? number_format($usdCdfRate, 2, ',', ' ') : 'non configuré' }}.
-                                </small>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Prix de vente <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <input type="number" name="selling_price" class="form-control @error('selling_price') is-invalid @enderror" 
-                                           value="{{ old('selling_price') }}" required step="0.01" min="0">
-                                    <select id="sellingCurrency" name="selling_currency" class="form-select @error('selling_currency') is-invalid @enderror" aria-label="Devise du prix de vente">
-                                        <option value="CDF" {{ old('selling_currency', 'CDF') === 'CDF' ? 'selected' : '' }}>CDF</option>
-                                        <option value="USD" {{ old('selling_currency') === 'USD' ? 'selected' : '' }}>USD</option>
-                                    </select>
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">Rechercher un produit</label>
+                                        <input type="search" class="form-control stock-in-product-search"
+                                               placeholder="Nom ou code produit..." autocomplete="off">
+                                        <select class="form-select stock-in-product-select mt-2" required>
+                                            <option value="">Sélectionnez un produit</option>
+                                            @foreach($products as $product)
+                                                <option value="{{ $product->id }}"
+                                                        data-search="{{ $product->name }} {{ $product->code }}"
+                                                        data-selling-price="{{ $product->stock->selling_price_original ?? $product->stock->selling_price ?? '' }}"
+                                                        data-selling-currency="{{ $product->stock->selling_currency ?? 'CDF' }}">
+                                                    {{ $product->name }} ({{ $product->code }}){{ $product->stock ? ' - Stock: ' . number_format($product->stock->quantity) : '' }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <small class="form-text text-muted stock-in-product-no-results d-none">Aucun produit correspondant.</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold">Quantité <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control stock-in-quantity" min="1" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold">Prix d'achat <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control stock-in-purchase-price" step="0.01" min="0" required>
+                                            <select class="form-select stock-in-purchase-currency" aria-label="Devise du prix d'achat">
+                                                <option value="CDF" selected>CDF</option>
+                                                <option value="USD">USD</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold">Prix de vente</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control stock-in-selling-price" step="0.01" min="0">
+                                            <select class="form-select stock-in-selling-currency" aria-label="Devise du prix de vente">
+                                                <option value="CDF" selected>CDF</option>
+                                                <option value="USD">USD</option>
+                                            </select>
+                                        </div>
+                                        <small class="text-muted">Le prix par défaut du produit est repris automatiquement; modifiable si besoin.</small>
+                                    </div>
                                 </div>
-                                @error('selling_price')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                                @error('selling_currency')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                                <small class="text-muted">Le prix est converti en CDF pour les ventes. Taux USD/CDF : {{ $usdCdfRate ? number_format($usdCdfRate, 2, ',', ' ') : 'non configuré' }}.</small>
                             </div>
-                            <div class="col-12">
-                                <label class="form-label fw-semibold">Note</label>
-                                <textarea name="note" class="form-control @error('note') is-invalid @enderror" rows="2" placeholder="Motif de l'approvisionnement...">{{ old('note') }}</textarea>
-                                @error('note')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                            </div>
+                        </template>
+
+                        <div class="mt-3">
+                            <button type="button" id="addStockInItem" class="btn btn-outline-primary">
+                                <i class="fas fa-plus me-1"></i> Ajouter un autre produit
+                            </button>
                         </div>
+                        <div class="mt-3">
+                            <label class="form-label fw-semibold">Note commune (facultatif)</label>
+                            <textarea name="note" class="form-control" rows="2" placeholder="Motif de l'approvisionnement..."></textarea>
+                        </div>
+                        <small class="text-muted d-block mt-2">
+                            Les prix d'achat sont convertis en CDF pour calculer le coût moyen.
+                            Taux USD/CDF : {{ $usdCdfRate ? number_format($usdCdfRate, 2, ',', ' ') : 'non configuré' }}.
+                        </small>
 
                         <div class="mt-4 d-flex gap-2">
-                            <button type="submit" class="btn btn-success px-4">
+                            <button type="submit" id="submitStockIn" class="btn btn-success px-4">
                                 <i class="fas fa-save me-2"></i> Ajouter au stock
                             </button>
                             <button type="reset" class="btn btn-outline-secondary">
@@ -186,26 +232,26 @@
                 </div>
             </div>
 
-            @if(isset($existingProducts) && $existingProducts->count() > 0)
+            @if($products->contains(fn ($product) => $product->stock && $product->stock->quantity > 0))
                 <div class="card shadow-sm border-success mt-3">
                     <div class="card-header bg-success bg-opacity-10">
                         <h6 class="mb-0"><i class="fas fa-boxes me-2"></i> Produits en stock</h6>
                     </div>
                     <div class="card-body p-0">
                         <div class="list-group list-group-flush">
-                            @foreach($existingProducts->take(5) as $stock)
+                            @foreach($products->filter(fn ($product) => $product->stock && $product->stock->quantity > 0)->take(5) as $product)
                                 <div class="list-group-item d-flex justify-content-between align-items-center">
                                     <div>
-                                        <strong>{{ $stock->product->name }}</strong>
+                                        <strong>{{ $product->name }}</strong>
                                         <br>
-                                        <small class="text-muted">{{ $stock->product->code }}</small>
+                                        <small class="text-muted">{{ $product->code }}</small>
                                     </div>
-                                    <span class="badge bg-primary">{{ number_format($stock->quantity) }}</span>
+                                    <span class="badge bg-primary">{{ number_format($product->stock->quantity) }}</span>
                                 </div>
                             @endforeach
-                            @if($existingProducts->count() > 5)
+                            @if($products->filter(fn ($product) => $product->stock && $product->stock->quantity > 0)->count() > 5)
                                 <div class="list-group-item text-center text-muted">
-                                    <small>+ {{ $existingProducts->count() - 5 }} autres produits</small>
+                                    <small>+ {{ $products->filter(fn ($product) => $product->stock && $product->stock->quantity > 0)->count() - 5 }} autres produits</small>
                                 </div>
                             @endif
                         </div>
@@ -221,103 +267,132 @@
 @section('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('stockInForm');
+        const itemList = document.getElementById('stockInItems');
+        const itemTemplate = document.getElementById('stockInItemTemplate');
+        const feedback = document.getElementById('stockInFeedback');
+        const submitButton = document.getElementById('submitStockIn');
+        let nextItemIndex = 1;
 
-        const productSearch = document.getElementById('stockInProductSearch');
-        const productSelect = document.getElementById('stockInProductSelect');
-        const noProductResults = document.getElementById('stockInProductNoResults');
+        const updateRows = () => {
+            const rows = Array.from(itemList.querySelectorAll('.stock-in-item'));
+            rows.forEach((row, index) => {
+                row.querySelector('.stock-in-item-number').textContent = index + 1;
+                row.querySelector('.remove-stock-in-item').classList.toggle('d-none', rows.length === 1);
+            });
+        };
 
-        if (productSearch && productSelect) {
-            productSearch.addEventListener('input', function() {
+        const updateProductOptions = () => {
+            const selects = Array.from(itemList.querySelectorAll('.stock-in-product-select'));
+            const selectedIds = selects.map(select => select.value).filter(Boolean);
+
+            selects.forEach(select => {
+                Array.from(select.options).forEach(option => {
+                    option.disabled = Boolean(option.value && option.value !== select.value && selectedIds.includes(option.value));
+                });
+            });
+        };
+
+        const bindRow = row => {
+            const search = row.querySelector('.stock-in-product-search');
+            const select = row.querySelector('.stock-in-product-select');
+            const noResults = row.querySelector('.stock-in-product-no-results');
+
+            search.addEventListener('input', function() {
                 const term = this.value.trim().toLocaleLowerCase();
-                const options = Array.from(productSelect.options).filter(option => option.value);
-
+                const options = Array.from(select.options).filter(option => option.value);
                 options.forEach(option => {
                     const searchText = (option.dataset.search || option.textContent).toLocaleLowerCase();
                     option.hidden = term !== '' && !searchText.includes(term);
                 });
+                noResults.classList.toggle('d-none', term === '' || options.some(option => !option.hidden));
 
-                Array.from(productSelect.querySelectorAll('optgroup')).forEach(group => {
-                    group.hidden = Array.from(group.options).every(option => option.hidden);
-                });
-
-                const hasMatch = options.some(option => !option.hidden);
-                noProductResults?.classList.toggle('d-none', term === '' || hasMatch);
-
-                const selectedOption = productSelect.options[productSelect.selectedIndex];
-                if (term !== '' && selectedOption?.value && selectedOption.hidden) {
-                    productSelect.value = '';
+                if (select.selectedOptions[0]?.hidden) {
+                    select.value = '';
+                    updateProductOptions();
                 }
             });
-        }
 
-        // ===== AUTO-FERMETURE DES ALERTES =====
-        setTimeout(() => {
-            document.querySelectorAll('.alert .btn-close').forEach(btn => btn?.click());
-        }, 5000);
+            select.addEventListener('change', function() {
+                const option = this.selectedOptions[0];
+                const sellingPrice = row.querySelector('.stock-in-selling-price');
+                const sellingCurrency = row.querySelector('.stock-in-selling-currency');
 
-        // ===== VALIDATION EN TEMPS RÉEL =====
-        const form = document.querySelector('form');
-        const inputs = form?.querySelectorAll('input, select, textarea');
-
-        inputs?.forEach(input => {
-            input.addEventListener('input', function() {
-                this.classList.remove('is-invalid');
-                const feedback = this.closest('.mb-3, .col-md-4, .col-12')?.querySelector('.invalid-feedback');
-                if (feedback) {
-                    feedback.style.display = 'none';
+                if (option?.value) {
+                    sellingPrice.value = option.dataset.sellingPrice || '';
+                    sellingCurrency.value = option.dataset.sellingCurrency || 'CDF';
                 }
+                updateProductOptions();
             });
+        };
+
+        const addRow = () => {
+            const row = itemTemplate.content.firstElementChild.cloneNode(true);
+            row.querySelector('.stock-in-product-select').name = `items[${nextItemIndex}][product_id]`;
+            row.querySelector('.stock-in-quantity').name = `items[${nextItemIndex}][quantity]`;
+            row.querySelector('.stock-in-purchase-price').name = `items[${nextItemIndex}][purchase_price]`;
+            row.querySelector('.stock-in-purchase-currency').name = `items[${nextItemIndex}][purchase_currency]`;
+            row.querySelector('.stock-in-selling-price').name = `items[${nextItemIndex}][selling_price]`;
+            row.querySelector('.stock-in-selling-currency').name = `items[${nextItemIndex}][selling_currency]`;
+            nextItemIndex++;
+            itemList.appendChild(row);
+            bindRow(row);
+            updateRows();
+            updateProductOptions();
+        };
+
+        document.getElementById('addStockInItem').addEventListener('click', addRow);
+        itemList.addEventListener('click', function(event) {
+            const removeButton = event.target.closest('.remove-stock-in-item');
+            if (removeButton && itemList.querySelectorAll('.stock-in-item').length > 1) {
+                removeButton.closest('.stock-in-item').remove();
+                updateRows();
+                updateProductOptions();
+            }
         });
 
-        // ===== AUTO-UPPERCASE DU CODE (si présent) =====
-        const codeInput = document.querySelector('input[name="code"]');
-        if (codeInput) {
-            codeInput.addEventListener('blur', function() {
-                this.value = this.value.toUpperCase().trim();
-            });
-        }
+        bindRow(itemList.querySelector('.stock-in-item'));
 
-        // ===== CALCUL DE LA MARGE =====
-        const purchasePrice = document.querySelector('input[name="purchase_price"]');
-        const sellingPrice = document.querySelector('input[name="selling_price"]');
-        const purchaseCurrency = document.getElementById('purchaseCurrency');
-        const sellingCurrency = document.getElementById('sellingCurrency');
-        const usdCdfRate = Number(@json($usdCdfRate ?? 0));
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            feedback.classList.add('d-none');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Enregistrement...';
 
-        if (purchasePrice && sellingPrice) {
-            const showMargin = () => {
-            const enteredBuy = parseFloat(purchasePrice.value) || 0;
-            const buy = purchaseCurrency?.value === 'USD' ? enteredBuy * usdCdfRate : enteredBuy;
-                const enteredSell = parseFloat(sellingPrice.value) || 0;
-                const sell = sellingCurrency?.value === 'USD' ? enteredSell * usdCdfRate : enteredSell;
-                const margin = sell - buy;
-                const marginPercent = buy > 0 ? (margin / buy) * 100 : 0;
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value,
+                    },
+                    body: new FormData(form),
+                });
+                const result = await response.json();
 
-                let marginElement = document.getElementById('marginDisplay');
-                if (!marginElement) {
-                    marginElement = document.createElement('div');
-                    marginElement.id = 'marginDisplay';
-                    marginElement.className = 'mt-2 text-center';
-                    sellingPrice.closest('.col-md-4')?.appendChild(marginElement);
+                if (!response.ok || !result.success) {
+                    const messages = result.errors
+                        ? Object.values(result.errors).flat()
+                        : [result.message || 'Impossible d’enregistrer ces entrées de stock.'];
+                    throw new Error(messages.join(' '));
                 }
 
-                if (sell > 0 && buy > 0) {
-                    marginElement.innerHTML = `
-                        <span class="badge ${margin >= 0 ? 'bg-success' : 'bg-danger'}">
-                            Marge: ${margin.toFixed(2)} Fc (${marginPercent.toFixed(1)}%)
-                        </span>
-                    `;
-                } else {
-                    marginElement.innerHTML = '';
-                }
-            };
-
-            purchasePrice.addEventListener('input', showMargin);
-            sellingPrice.addEventListener('input', showMargin);
-            purchaseCurrency?.addEventListener('change', showMargin);
-            sellingCurrency?.addEventListener('change', showMargin);
-        }
-
+                feedback.className = 'alert alert-success';
+                feedback.textContent = result.message;
+                feedback.classList.remove('d-none');
+                itemList.innerHTML = '';
+                nextItemIndex = 0;
+                addRow();
+                form.querySelector('textarea[name="note"]').value = '';
+            } catch (error) {
+                feedback.className = 'alert alert-danger';
+                feedback.textContent = error.message || 'Une erreur est survenue pendant l’enregistrement.';
+                feedback.classList.remove('d-none');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-save me-2"></i> Ajouter au stock';
+            }
+        });
     });
 </script>
 @endsection

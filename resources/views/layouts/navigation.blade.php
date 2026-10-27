@@ -21,12 +21,7 @@
                         <span class="nav-link-underline"></span>
                     </a>
                 </li>
-                <li class="nav-item mx-1">
-                    <a class="nav-link position-relative" href="{{ route('products.index') }}">
-                        <i class="fas fa-box-open me-1"></i> Produits
-                        <span class="nav-link-underline"></span>
-                    </a>
-                </li>
+              
                 <li class="nav-item mx-1">
                     <a class="nav-link position-relative {{ request()->routeIs('products.*') ? 'active' : '' }}" href="{{ route('products.index') }}">
                         <i class="fas fa-box-open me-1"></i> Produits

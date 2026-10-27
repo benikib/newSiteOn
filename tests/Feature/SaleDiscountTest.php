@@ -138,3 +138,101 @@ it('convertit une réduction monétaire USD en CDF avant le calcul du net', func
     expect((float) $order->payment_amount)->toBe(3.0);
     expect((float) $stock->fresh()->selling_price)->toBe(10000.0);
 });
+
+it('enregistre un prix vendu inférieur sans modifier le prix catalogue', function () {
+    $context = createSaleDiscountTestContext();
+    $product = $context['product'];
+    $stock = $context['stock'];
+
+    $this->actingAs($context['user'])->postJson(route('client.sales.store'), [
+        'etablissement_id' => $context['etablissement']->id,
+        'payment_method' => 'cash',
+        'payment_currency' => 'CDF',
+        'items' => [[
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'sold_price_ht' => 90,
+            'tva_rate' => 0,
+        ]],
+    ])->assertOk()
+        ->assertJsonPath('initial_total', 100)
+        ->assertJsonPath('discount_amount', 10)
+        ->assertJsonPath('total_ttc', 90);
+
+    $order = \App\Models\Order::firstOrFail();
+    $item = $order->items->first();
+    expect((float) $item->original_price_ht)->toBe(100.0);
+    expect((float) $item->price_ht)->toBe(90.0);
+    expect((float) $stock->fresh()->selling_price)->toBe(100.0);
+
+    $this->get(route('client.sales.invoice', $order->id))
+        ->assertOk()
+        ->assertSee('100,00 Fc')
+        ->assertSee('90,00 Fc')
+        ->assertSee('Réduction');
+});
+
+it('enregistre un prix vendu supérieur sans modifier le prix catalogue', function () {
+    $context = createSaleDiscountTestContext();
+    $product = $context['product'];
+    $stock = $context['stock'];
+    $stock->update(['selling_price' => 90]);
+
+    $this->actingAs($context['user'])->postJson(route('client.sales.store'), [
+        'etablissement_id' => $context['etablissement']->id,
+        'payment_method' => 'cash',
+        'payment_currency' => 'CDF',
+        'items' => [[
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'sold_price_ht' => 100,
+            'tva_rate' => 0,
+        ]],
+    ])->assertOk()
+        ->assertJsonPath('initial_total', 90)
+        ->assertJsonPath('discount_amount', -10)
+        ->assertJsonPath('total_ttc', 100);
+
+    $order = \App\Models\Order::firstOrFail();
+    $item = $order->items->first();
+    expect((float) $item->original_price_ht)->toBe(90.0);
+    expect((float) $item->price_ht)->toBe(100.0);
+    expect((float) $order->total_amount)->toBe(100.0);
+    expect((float) $stock->fresh()->selling_price)->toBe(90.0);
+
+    $this->get(route('client.sales.invoice', $order->id))
+        ->assertOk()
+        ->assertSee('90,00 Fc')
+        ->assertSee('100,00 Fc')
+        ->assertSee('Majoration')
+        ->assertSee('+ 10,00 CDF');
+
+    $this->get(route('client.sales.history'))
+        ->assertOk()
+        ->assertSee('Montant initial TTC')
+        ->assertSee('Majoration +')
+        ->assertSee('100,00 Fc');
+});
+
+it('utilise le prix catalogue lorsqu’aucun prix vendu n’est fourni', function () {
+    $context = createSaleDiscountTestContext();
+
+    $this->actingAs($context['user'])->postJson(route('client.sales.store'), [
+        'etablissement_id' => $context['etablissement']->id,
+        'payment_method' => 'cash',
+        'payment_currency' => 'CDF',
+        'items' => [[
+            'product_id' => $context['product']->id,
+            'quantity' => 1,
+            'sold_price_ht' => null,
+            'tva_rate' => 0,
+        ]],
+    ])->assertOk()
+        ->assertJsonPath('initial_total', 100)
+        ->assertJsonPath('discount_amount', 0)
+        ->assertJsonPath('total_ttc', 100);
+
+    $item = \App\Models\Order::firstOrFail()->items->first();
+    expect((float) $item->original_price_ht)->toBe(100.0);
+    expect((float) $item->price_ht)->toBe(100.0);
+});

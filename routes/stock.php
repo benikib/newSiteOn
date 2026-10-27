@@ -31,7 +31,7 @@ Route::resource('units', UnitController::class);
 
 use App\Http\Controllers\ProductController;
 
-Route::prefix('stock')->name('stock.')->middleware(['auth'])->group(function () {
+Route::prefix('stock')->name('stock.')->middleware(['auth', 'admins'])->group(function () {
     
     // ===== ROUTES PRODUITS =====
     Route::get('products', [ProductController::class, 'index'])->name('products.index');
@@ -52,7 +52,7 @@ Route::prefix('stock')->name('stock.')->middleware(['auth'])->group(function () 
 
 use App\Http\Controllers\StockController;
 
-Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'admins'])->group(function () {
     
     // ===== ROUTES STOCKS =====
     Route::get('stocks/dashboard', [StockController::class, 'dashboard'])->name('stocks.dashboard');
