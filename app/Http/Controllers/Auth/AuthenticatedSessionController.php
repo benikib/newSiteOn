@@ -41,7 +41,7 @@ class AuthenticatedSessionController extends Controller
 
         return redirect()->route('dashboard'); // Remplace par ta vraie route
     }
-    return redirect()->route('/');
+    return redirect()->route('welcome');
 }
 
 
