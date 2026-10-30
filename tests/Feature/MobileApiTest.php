@@ -9,7 +9,9 @@ use App\Models\Service;
 use App\Models\Stock;
 use App\Models\Unit;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 function makeMobileApiContext(int $quantity = 8): array
 {
@@ -125,6 +127,124 @@ it('refuse l’accès mobile à un établissement qui n’appartient pas à l’
     $this->withToken($token)
         ->getJson('/api/v1/establishments/'.$other->id.'/stocks')
         ->assertNotFound();
+
+    $this->patchJson('/api/v1/establishments/'.$other->id, [
+        'latitude' => 4.05,
+        'longitude' => 9.70,
+    ])->assertNotFound();
+
+    $this->postJson('/api/v1/establishments/'.$other->id.'/photos', [])
+        ->assertNotFound();
+});
+
+it('met à jour les coordonnées avec les noms longs ou courts et les expose dans l’API publique', function () {
+    $context = makeMobileApiContext();
+    $token = $context['user']->createToken('test-device')->plainTextToken;
+    $url = '/api/v1/establishments/'.$context['etablissement']->id;
+
+    $this->withToken($token)
+        ->patchJson($url, ['latitude' => 4.05, 'longitude' => 9.70])
+        ->assertOk()
+        ->assertJsonPath('data.latitude', 4.05)
+        ->assertJsonPath('data.longitude', 9.7);
+
+    expect((float) $context['etablissement']->fresh()->latitude)->toBe(4.05)
+        ->and((float) $context['etablissement']->fresh()->longitude)->toBe(9.7);
+
+    $this->patchJson($url, ['lat' => -12.3, 'lng' => 45.6])
+        ->assertOk()
+        ->assertJsonPath('data.latitude', -12.3)
+        ->assertJsonPath('data.longitude', 45.6);
+
+    $this->getJson('/api/v1/public/etablissements/'.$context['etablissement']->id)
+        ->assertOk()
+        ->assertJsonPath('data.address.latitude', -12.3)
+        ->assertJsonPath('data.address.longitude', 45.6);
+});
+
+it('rejette les coordonnées mélangées ou hors limites', function () {
+    $context = makeMobileApiContext();
+    $token = $context['user']->createToken('test-device')->plainTextToken;
+
+    $this->withToken($token)
+        ->patchJson('/api/v1/establishments/'.$context['etablissement']->id, [
+            'lat' => 4.05,
+            'longitude' => 9.70,
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('coordinates');
+
+    $this->patchJson('/api/v1/establishments/'.$context['etablissement']->id, [
+        'latitude' => 91,
+        'longitude' => 9.70,
+    ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('latitude');
+});
+
+it('gère les images d’établissement, de produit et la galerie via des APIs réservées au gestionnaire', function () {
+    Storage::fake('public');
+    $context = makeMobileApiContext();
+    $token = $context['user']->createToken('test-device')->plainTextToken;
+    $baseUrl = '/api/v1/establishments/'.$context['etablissement']->id;
+
+    $this->withToken($token)
+        ->post($baseUrl.'/photo', ['photo' => UploadedFile::fake()->image('cover.jpg')], [
+            'Accept' => 'application/json',
+        ])
+        ->assertOk()
+        ->assertJsonPath('data.id', $context['etablissement']->id);
+    expect($context['etablissement']->fresh()->image_path)->not->toBeNull();
+
+    $galleryResponse = $this->post($baseUrl.'/photos', [
+        'photos' => [
+            UploadedFile::fake()->image('gallery-one.jpg'),
+            UploadedFile::fake()->image('gallery-two.jpg'),
+        ],
+        'titre' => 'Galerie',
+        'alt_text' => 'Photo de galerie',
+    ], ['Accept' => 'application/json'])
+        ->assertCreated()
+        ->assertJsonCount(2, 'data')
+        ->assertJsonPath('data.0.title', 'Galerie');
+    $this->getJson($baseUrl.'/photos')->assertOk()->assertJsonCount(2, 'data');
+
+    $secondPhotoId = $galleryResponse->json('data.1.id');
+    $this->patchJson($baseUrl.'/photos/'.$secondPhotoId, ['est_publique' => false])
+        ->assertOk()
+        ->assertJsonPath('data.id', $secondPhotoId);
+
+    $this->getJson('/api/v1/public/etablissements/'.$context['etablissement']->id.'/photos')
+        ->assertOk()
+        ->assertJsonCount(1, 'data');
+    $this->getJson($baseUrl.'/photos')->assertOk()->assertJsonCount(2, 'data');
+    $this->getJson('/api/v1/public/etablissements/'.$context['etablissement']->id)
+        ->assertOk()
+        ->assertJsonPath('data.image_url', asset('storage/'.$context['etablissement']->fresh()->image_path))
+        ->assertJsonCount(1, 'data.photos');
+
+    $this->deleteJson($baseUrl.'/photos/'.$secondPhotoId)
+        ->assertOk()
+        ->assertJsonPath('data.deleted', true);
+
+    $this->post($baseUrl.'/products/'.$context['product']->id.'/image', [
+        'image' => UploadedFile::fake()->image('product.jpg'),
+    ], ['Accept' => 'application/json'])
+        ->assertOk()
+        ->assertJsonPath('data.id', $context['product']->id);
+    expect($context['product']->fresh()->image)->not->toBeNull();
+
+    $this->getJson('/api/v1/public/etablissements/'.$context['etablissement']->id.'/products')
+        ->assertOk()
+        ->assertJsonPath('data.0.image_url', asset('storage/'.$context['product']->fresh()->image));
+
+    $this->deleteJson($baseUrl.'/photo')
+        ->assertOk()
+        ->assertJsonPath('data.image_url', null);
+
+    $this->deleteJson($baseUrl.'/products/'.$context['product']->id.'/image')
+        ->assertOk()
+        ->assertJsonPath('data.image_url', null);
 });
 
 it('retourne la disponibilité publique après prise en compte des réservations et livraisons en attente', function () {

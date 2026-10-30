@@ -9,6 +9,7 @@ use App\Models\DeliveryOrder;
 use App\Models\Etablissement;
 use App\Models\Inventory;
 use App\Models\Movement;
+use App\Models\Photo;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Reservation;
@@ -19,9 +20,12 @@ use App\Models\Unit;
 use App\Services\PurchasePrice;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use RuntimeException;
 
 class MobileController extends Controller
 {
@@ -75,7 +79,7 @@ class MobileController extends Controller
         $etablissement->load([
             'typeEtablissement:id,nom',
             'services',
-            'photos',
+            'photos' => fn ($query) => $query->where('status', 'actif')->where('est_publique', true),
             'promotions' => fn ($query) => $query
                 ->where('est_active', true)
                 ->where('date_debut', '<=', now())
@@ -85,6 +89,32 @@ class MobileController extends Controller
         ]);
 
         return response()->json(['data' => $this->establishmentData($etablissement, true)]);
+    }
+
+    public function publicEstablishmentPhotos(Etablissement $etablissement): JsonResponse
+    {
+        abort_unless($etablissement->statut === 'actif', 404);
+
+        return response()->json([
+            'data' => $etablissement->photos()
+                ->where('status', 'actif')
+                ->where('est_publique', true)
+                ->orderBy('ordre')
+                ->orderBy('id')
+                ->get()
+                ->map(fn ($photo) => $this->establishmentPhotoData($photo)),
+        ]);
+    }
+
+    public function establishmentPhotos(int $etablissement): JsonResponse
+    {
+        return response()->json([
+            'data' => Etablissement::findOrFail($etablissement)->photos()
+                ->orderBy('ordre')
+                ->orderBy('id')
+                ->get()
+                ->map(fn (Photo $photo) => $this->establishmentPhotoData($photo)),
+        ]);
     }
 
     public function publicServices(Etablissement $etablissement): JsonResponse
@@ -216,6 +246,166 @@ class MobileController extends Controller
         return response()->json([
             'data' => $items->map(fn (Etablissement $item) => $this->establishmentData($item)),
         ]);
+    }
+
+    public function updateCoordinates(Request $request, int $etablissement): JsonResponse
+    {
+        $shortKeys = $request->exists('lat') || $request->exists('lng');
+        $longKeys = $request->exists('latitude') || $request->exists('longitude');
+
+        if ($shortKeys && $longKeys) {
+            throw ValidationException::withMessages([
+                'coordinates' => 'Envoyez soit lat/lng, soit latitude/longitude.',
+            ]);
+        }
+
+        $fields = $shortKeys
+            ? [
+                'lat' => ['required', 'numeric', 'between:-90,90'],
+                'lng' => ['required', 'numeric', 'between:-180,180'],
+            ]
+            : [
+                'latitude' => ['required', 'numeric', 'between:-90,90'],
+                'longitude' => ['required', 'numeric', 'between:-180,180'],
+            ];
+        $coordinates = $request->validate($fields);
+        $etablissement = Etablissement::findOrFail($etablissement);
+
+        $etablissement->update([
+            'latitude' => $coordinates['latitude'] ?? $coordinates['lat'],
+            'longitude' => $coordinates['longitude'] ?? $coordinates['lng'],
+        ]);
+
+        return response()->json([
+            'data' => [
+                'id' => $etablissement->id,
+                'latitude' => $etablissement->latitude === null ? null : (float) $etablissement->latitude,
+                'longitude' => $etablissement->longitude === null ? null : (float) $etablissement->longitude,
+            ],
+        ]);
+    }
+
+    public function uploadEstablishmentPhoto(Request $request, int $etablissement): JsonResponse
+    {
+        $validated = $request->validate([
+            'photo' => ['required', 'image', 'max:5120'],
+        ]);
+        $etablissement = Etablissement::findOrFail($etablissement);
+        $oldPath = $etablissement->image_path;
+        $newPath = $this->storeImage($validated['photo'], 'establishments/'.$etablissement->id);
+
+        $etablissement->update(['image_path' => $newPath]);
+        $this->deleteStoredImage($oldPath);
+
+        return response()->json([
+            'data' => [
+                'id' => $etablissement->id,
+                'image_url' => asset('storage/'.$newPath),
+            ],
+        ]);
+    }
+
+    public function deleteEstablishmentPhoto(int $etablissement): JsonResponse
+    {
+        $etablissement = Etablissement::findOrFail($etablissement);
+        $oldPath = $etablissement->image_path;
+        $etablissement->update(['image_path' => null]);
+        $this->deleteStoredImage($oldPath);
+
+        return response()->json(['data' => ['id' => $etablissement->id, 'image_url' => null]]);
+    }
+
+    public function uploadEstablishmentPhotos(Request $request, int $etablissement): JsonResponse
+    {
+        $validated = $request->validate([
+            'photos' => ['required', 'array', 'min:1', 'max:10'],
+            'photos.*' => ['required', 'image', 'max:5120'],
+            'titre' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'alt_text' => ['nullable', 'string', 'max:255'],
+            'est_publique' => ['sometimes', 'boolean'],
+        ]);
+        $establishment = Etablissement::findOrFail($etablissement);
+        $photos = [];
+
+        foreach ($validated['photos'] as $image) {
+            $path = $this->storeImage($image, 'establishments/'.$etablissement.'/gallery');
+            $photo = $establishment->photos()->create([
+                'titre' => $validated['titre'] ?? 'Photo',
+                'description' => $validated['description'] ?? null,
+                'alt_text' => $validated['alt_text'] ?? null,
+                'image_path' => $path,
+                'est_publique' => $validated['est_publique'] ?? true,
+                'status' => 'actif',
+            ]);
+            $photos[] = $this->establishmentPhotoData($photo);
+        }
+
+        return response()->json(['data' => $photos], 201);
+    }
+
+    public function updateEstablishmentPhoto(Request $request, int $etablissement, int $photo): JsonResponse
+    {
+        $galleryPhoto = Etablissement::findOrFail($etablissement)->photos()->findOrFail($photo);
+        $validated = $request->validate([
+            'image' => ['sometimes', 'required', 'image', 'max:5120'],
+            'titre' => ['sometimes', 'required', 'string', 'max:255'],
+            'description' => ['sometimes', 'nullable', 'string'],
+            'alt_text' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'est_publique' => ['sometimes', 'boolean'],
+            'status' => ['sometimes', 'required', 'in:actif,inactif'],
+        ]);
+
+        $oldPath = $galleryPhoto->image_path;
+        if (isset($validated['image'])) {
+            $validated['image_path'] = $this->storeImage(
+                $validated['image'],
+                'establishments/'.$etablissement.'/gallery'
+            );
+            unset($validated['image']);
+        }
+
+        $galleryPhoto->update($validated);
+        if ($galleryPhoto->image_path !== $oldPath) {
+            $this->deleteStoredImage($oldPath);
+        }
+
+        return response()->json(['data' => $this->establishmentPhotoData($galleryPhoto)]);
+    }
+
+    public function deleteEstablishmentGalleryPhoto(int $etablissement, int $photo): JsonResponse
+    {
+        $galleryPhoto = Etablissement::findOrFail($etablissement)->photos()->findOrFail($photo);
+        $path = $galleryPhoto->image_path;
+        $galleryPhoto->delete();
+        $this->deleteStoredImage($path);
+
+        return response()->json(['data' => ['id' => $photo, 'deleted' => true]]);
+    }
+
+    public function uploadProductImage(Request $request, int $etablissement, Product $product): JsonResponse
+    {
+        $this->ensureProductBelongsToEstablishment($product, $etablissement);
+        $validated = $request->validate([
+            'image' => ['required', 'image', 'max:5120'],
+        ]);
+
+        $oldPath = $product->image;
+        $newPath = $this->storeImage($validated['image'], 'establishments/'.$etablissement.'/products');
+        $product->update(['image' => $newPath]);
+        $this->deleteStoredImage($oldPath);
+
+        return response()->json(['data' => $this->productImageData($product)]);
+    }
+
+    public function deleteProductImage(int $etablissement, Product $product): JsonResponse
+    {
+        $this->ensureProductBelongsToEstablishment($product, $etablissement);
+        $oldPath = $product->image;
+        $product->update(['image' => null]);
+        $this->deleteStoredImage($oldPath);
+
+        return response()->json(['data' => $this->productImageData($product)]);
     }
 
     public function products(Request $request, int $etablissement): JsonResponse
@@ -906,8 +1096,8 @@ class MobileController extends Controller
                 'neighborhood' => $item->quartier,
                 'avenue' => $item->avenue,
                 'number' => $item->numero,
-                'latitude' => $item->latitude,
-                'longitude' => $item->longitude,
+                'latitude' => $item->latitude === null ? null : (float) $item->latitude,
+                'longitude' => $item->longitude === null ? null : (float) $item->longitude,
                 'directions' => $item->itineraire,
             ],
             'rating' => $item->note_moyenne,
@@ -979,6 +1169,47 @@ class MobileController extends Controller
                 'selling_currency' => $product->stock->selling_currency,
             ] : null,
         ];
+    }
+
+    private function establishmentPhotoData(Photo $photo): array
+    {
+        return [
+            'id' => $photo->id,
+            'title' => $photo->titre,
+            'description' => $photo->description,
+            'alt_text' => $photo->alt_text,
+            'image_url' => asset('storage/'.$photo->image_path),
+        ];
+    }
+
+    private function productImageData(Product $product): array
+    {
+        return [
+            'id' => $product->id,
+            'image_url' => $product->image ? asset('storage/'.$product->image) : null,
+        ];
+    }
+
+    private function ensureProductBelongsToEstablishment(Product $product, int $etablissement): void
+    {
+        abort_unless((int) $product->etablissement_id === $etablissement, 404);
+    }
+
+    private function storeImage(UploadedFile $image, string $directory): string
+    {
+        $path = $image->store($directory, 'public');
+        if ($path === false) {
+            throw new RuntimeException('Impossible d’enregistrer le fichier image.');
+        }
+
+        return $path;
+    }
+
+    private function deleteStoredImage(?string $path): void
+    {
+        if ($path && Storage::disk('public')->exists($path) && ! Storage::disk('public')->delete($path)) {
+            throw new RuntimeException('Impossible de supprimer le fichier image.');
+        }
     }
 
     private function paginated($page, callable $transform): JsonResponse

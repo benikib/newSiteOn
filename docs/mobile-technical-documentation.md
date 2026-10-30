@@ -109,6 +109,9 @@ Tous les chemins ci-dessous sont relatifs à la base de l’application, avec le
 | `GET` | `/me` | Jeton | Profil minimal et établissements associés |
 | `GET` | `/establishments` | Jeton | Établissements actifs associés à l’utilisateur |
 
+Les endpoints publics des établissements exposent les coordonnées décimales dans `data.address.latitude` et `data.address.longitude` (valeurs `null` si elles ne sont pas renseignées).
+La photo principale est renvoyée par `data.image_url`, les images des produits par `data[].image_url`, et la galerie par `GET /api/v1/public/etablissements/{id}/photos` ou dans `data.photos` du détail public.
+
 Corps de connexion :
 
 ```json
@@ -166,11 +169,17 @@ Toutes les routes de cette section exigent l’authentification et le middleware
 | Méthode | Route | Paramètres principaux | Fonction |
 |---|---|---|---|
 | `GET` | `/establishments/{id}/dashboard` | — | Indicateurs de stock et 10 mouvements récents |
+| `PATCH` | `/establishments/{id}` | `latitude`/`longitude` ou `lat`/`lng` | Mise à jour des coordonnées géographiques |
+| `POST`, `DELETE` | `/establishments/{id}/photo` | `photo` (fichier image, max. 5 Mo) | Remplacement/suppression de la photo principale |
+| `GET` | `/establishments/{id}/photos` | — | Galerie complète du gestionnaire, y compris les photos masquées |
+| `POST` | `/establishments/{id}/photos` | `photos[]` (1 à 10 images, max. 5 Mo chacune), métadonnées facultatives | Ajout de photos à la galerie |
+| `PATCH`, `DELETE` | `/establishments/{id}/photos/{photo}` | `image?`, `titre?`, `description?`, `alt_text?`, `est_publique?`, `status?` | Modification/suppression d’une photo de galerie |
 | `GET` | `/establishments/{id}/categories` | — | Catégories actives (référentiel partagé) |
 | `GET` | `/establishments/{id}/units` | — | Unités actives (référentiel partagé) |
 | `GET` | `/establishments/{id}/products` | `search`, `status`, `per_page` (max. 100) | Catalogue paginé avec stock |
 | `POST` | `/establishments/{id}/products` | catégorie, unité, code, nom, etc. | Création d’un produit sans quantité initiale |
 | `PUT`, `PATCH` | `/establishments/{id}/products/{product}` | Champs produit à mettre à jour | Mise à jour limitée à l’établissement |
+| `POST`, `DELETE` | `/establishments/{id}/products/{product}/image` | `image` (fichier image, max. 5 Mo) | Ajout/remplacement ou suppression de l’image du produit |
 | `GET` | `/establishments/{id}/stocks` | `filter=low\|out`, `per_page` | Stocks et seuils |
 | `GET` | `/establishments/{id}/movements` | `product_id`, `type`, `date_from`, `date_to`, `per_page` | Historique paginé |
 | `POST` | `/establishments/{id}/movements` | `product_id`, `type`, `quantity`, prix/devises, `note?` | Entrée, sortie ou ajustement |
@@ -184,6 +193,22 @@ Toutes les routes de cette section exigent l’authentification et le middleware
 | `PATCH` | `/establishments/{id}/reservations/products/{id}` | `status=confirmed\|rejected` | Confirme/rejette; confirmation décrémente le stock |
 | `GET` | `/establishments/{id}/delivery-orders` | `status?`, `per_page` | Demandes de livraison |
 | `PATCH` | `/establishments/{id}/delivery-orders/{id}` | `action` | Paiement et progression de la livraison |
+
+La mise à jour des coordonnées accepte l’un des formats suivants, sans mélanger les clés :
+
+```json
+{"latitude": 4.05, "longitude": 9.70}
+```
+
+ou :
+
+```json
+{"lat": 4.05, "lng": 9.70}
+```
+
+La latitude doit être comprise entre `-90` et `90`, et la longitude entre `-180` et `180`. Les deux formats sont enregistrés dans les colonnes `latitude` et `longitude`.
+
+Les routes de modification/suppression d’images sont protégées par le jeton du gestionnaire associé à l’établissement et son abonnement valide. Les uploads utilisent `multipart/form-data`. Les photos publiques de galerie doivent avoir `status=actif` et `est_publique=true`.
 
 #### Mouvements de stock
 

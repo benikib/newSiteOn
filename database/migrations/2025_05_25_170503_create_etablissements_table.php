@@ -39,8 +39,8 @@ return new class extends Migration {
             $table->time('horaires_fermeture')->nullable();
             $table->string('jours_ouverture')->nullable();
             $table->json('services_additionnels')->nullable();
-            $table->float('latitude')->nullable();
-            $table->float('longitude')->nullable();
+            $table->decimal('latitude', 10, 7)->nullable();
+            $table->decimal('longitude', 11, 7)->nullable();
             $table->timestamps();
         });
     }

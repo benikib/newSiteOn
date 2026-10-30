@@ -13,12 +13,13 @@ class Photo extends Model
         'titre',
         'description',
         'image_path',
-       
+
         'alt_text',
         'status',
         'etablissement_id',
         'service_id',
-        'promotion_id'
+        'promotion_id',
+        'est_publique',
     ];
 
     // Relations
