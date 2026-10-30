@@ -100,8 +100,12 @@ public function store(Request $request)
         //'statut' => 'in:en_attente,confirme'
     ]);
 
+    $service = Service::where('disponibilite', true)
+        ->whereHas('etablissement', fn ($query) => $query->where('statut', 'actif'))
+        ->findOrFail($request->service_id);
+
     // Vérifier si la date est déjà réservée (optionnel)
-  $existe = Reservation::where('service_id', $request->service_id)
+  $existe = Reservation::where('service_id', $service->id)
     ->where('date', $request->date)
     ->where('statut', 'confirmé')
     ->exists();
@@ -111,15 +115,18 @@ if ($existe) {
 }
 
 
-    Reservation::create([
-        'service_id' => $request->service_id,
+    $reservation = Reservation::create([
+        'service_id' => $service->id,
         'client_name' => $request->client_name,
         'client_phone' => $request->client_phone,
-        'statut' => $request->statut ?? 'en_attente', // valeur par défaut si non fourni
+        'statut' => 'en_attente',
         'date' => $request->date
     ]);
 
-    return response()->json(['message' => 'Réservation créée avec succès.']);
+    return response()->json([
+        'data' => ['id' => $reservation->id, 'status' => $reservation->statut],
+        'message' => 'Réservation créée avec succès.',
+    ], 201);
 }
 
 public function storeArticles(Request $request)
@@ -138,7 +145,7 @@ public function storeArticles(Request $request)
     $etablissement = Etablissement::where('statut', 'actif')->findOrFail($validated['etablissement_id']);
     $selectedProductIds = collect($validated['product_ids'])->map(fn ($id) => (int) $id)->unique()->values();
 
-    DB::transaction(function () use ($request, $validated, $etablissement, $selectedProductIds) {
+    $reservation = DB::transaction(function () use ($validated, $etablissement, $selectedProductIds) {
         Etablissement::whereKey($etablissement->id)->lockForUpdate()->firstOrFail();
 
         $products = Product::with('stock')
@@ -195,7 +202,24 @@ public function storeArticles(Request $request)
                 'quantity' => (int) $validated['quantities'][$product->id],
             ]);
         }
+
+        return $reservation->load('items.product');
     });
+
+    if ($request->expectsJson()) {
+        return response()->json([
+            'data' => [
+                'id' => $reservation->id,
+                'status' => $reservation->statut,
+                'items' => $reservation->items->map(fn ($item) => [
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product?->name,
+                    'quantity' => $item->quantity,
+                ]),
+            ],
+            'message' => 'Votre demande de réservation a été envoyée à l’établissement.',
+        ], 201);
+    }
 
     return redirect()->route('ets.info', $etablissement->id)->with('success', 'Votre demande de réservation a été envoyée à l’établissement.');
 }
@@ -317,6 +341,25 @@ public function storeDelivery(Request $request)
         }
     }
 
+    if ($request->expectsJson()) {
+        return response()->json([
+            'data' => [
+                'id' => $deliveryOrder->id,
+                'status' => $deliveryOrder->statut,
+                'total_amount' => $deliveryOrder->total_amount,
+                'amount_paid' => $deliveryOrder->amount_paid,
+                'items' => $deliveryOrder->items->map(fn ($item) => [
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product_name,
+                    'quantity' => $item->quantity,
+                    'unit_price' => $item->unit_price,
+                    'line_total' => $item->line_total,
+                ]),
+            ],
+            'message' => 'Votre demande de livraison a été transmise à l’établissement.',
+        ], 201);
+    }
+
     return redirect()->route('welcome')->with('success', 'Votre demande de livraison a été transmise à l’établissement.');
 }
 
@@ -410,12 +453,21 @@ public function manageDelivery(Request $request, $id)
         $order->save();
     });
 
-    return back()->with('success', match ($validated['action']) {
+    $message = match ($validated['action']) {
         'confirm_payment' => 'Le paiement reçu a été enregistré.',
         'confirm_balance' => 'Le solde a été enregistré; la commande est payée.',
         'start_delivery' => 'La commande est en livraison et le stock a été mis à jour.',
         'mark_delivered' => 'La commande a été marquée comme livrée.',
-    });
+    };
+
+    if ($request->expectsJson()) {
+        return response()->json([
+            'data' => ['id' => $order->id, 'status' => $order->fresh()->statut],
+            'message' => $message,
+        ]);
+    }
+
+    return back()->with('success', $message);
 }
 
 public function changerStatutArticles(Request $request, $id)
@@ -470,10 +522,20 @@ public function changerStatutArticles(Request $request, $id)
         $reservation->statut = $validated['statut'];
         $reservation->save();
     });
+    $reservation->refresh();
 
-    return back()->with('success', $validated['statut'] === 'confirmé'
+    $message = $validated['statut'] === 'confirmé'
         ? 'Réservation confirmée et stock mis à jour.'
-        : 'Réservation refusée; les quantités sont de nouveau disponibles.');
+        : 'Réservation refusée; les quantités sont de nouveau disponibles.';
+
+    if ($request->expectsJson()) {
+        return response()->json([
+            'data' => ['id' => $reservation->id, 'status' => $reservation->statut],
+            'message' => $message,
+        ]);
+    }
+
+    return back()->with('success', $message);
 }
 
 }

@@ -52,6 +52,16 @@ class Product extends Model
         return $this->hasOne(Stock::class);
     }
 
+    public function reservationItems()
+    {
+        return $this->hasMany(ProductReservationItem::class);
+    }
+
+    public function deliveryItems()
+    {
+        return $this->hasMany(DeliveryOrderItem::class);
+    }
+
     // ===== SCOPES =====
     
     /**

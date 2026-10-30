@@ -48,7 +48,7 @@ it('exporte uniquement les mouvements qui correspondent aux filtres', function (
         ]);
     }
 
-    Movement::create([
+    $matchingMovement = Movement::create([
         'etablissement_id' => $etablissement->id,
         'product_id' => $matchingProduct->id,
         'type' => 'in',
@@ -57,9 +57,10 @@ it('exporte uniquement les mouvements qui correspondent aux filtres', function (
         'after' => 5,
         'note' => 'Correspondance',
         'user_id' => $user->id,
-        'created_at' => '2026-10-04 09:30:00',
     ]);
-    Movement::create([
+    $matchingMovement->forceFill(['created_at' => '2026-10-04 09:30:00'])->saveQuietly();
+
+    $otherMovement = Movement::create([
         'etablissement_id' => $etablissement->id,
         'product_id' => $otherProduct->id,
         'type' => 'out',
@@ -68,8 +69,8 @@ it('exporte uniquement les mouvements qui correspondent aux filtres', function (
         'after' => 8,
         'note' => 'À exclure',
         'user_id' => $user->id,
-        'created_at' => '2026-10-04 10:30:00',
     ]);
+    $otherMovement->forceFill(['created_at' => '2026-10-04 10:30:00'])->saveQuietly();
 
     $filters = [
         'etablissement_id' => $etablissement->id,
