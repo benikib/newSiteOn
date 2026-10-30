@@ -10,12 +10,16 @@ use App\Models\OrderItem;
 use App\Models\Etablissement;
 use App\Models\Movement;
 use App\Models\Customer;
+use App\Models\DeliveryOrderItem;
+use App\Models\ProductReservationItem;
 use App\Models\TauxDeChange;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Validation\ValidationException;
 
 class SaleController extends Controller
 {
@@ -150,7 +154,10 @@ class SaleController extends Controller
 
         $validator = Validator::make($request->all(), [
             'etablissement_id' => 'required|in:' . $etablissementIds->implode(','),
-            'customer_id' => 'nullable|exists:customers,id',
+            'customer_id' => [
+                'nullable',
+                Rule::exists('customers', 'id')->where('etablissement_id', $request->input('etablissement_id')),
+            ],
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
@@ -213,10 +220,18 @@ class SaleController extends Controller
             }
 
             $stockQty = $product->stock->quantity ?? 0;
-            if ($stockQty < $item['quantity']) {
+            $reservedForProducts = ProductReservationItem::where('product_id', $product->id)
+                ->whereHas('reservation', fn ($query) => $query->where('statut', 'en_attente'))
+                ->sum('quantity');
+            $reservedForDelivery = DeliveryOrderItem::where('product_id', $product->id)
+                ->whereHas('deliveryOrder', fn ($query) => $query->whereIn('statut', [
+                    'en_attente', 'payee_partiellement', 'payee',
+                ]))
+                ->sum('quantity');
+            if ($stockQty - $reservedForProducts - $reservedForDelivery < $item['quantity']) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Stock insuffisant pour ' . $product->name . ' (disponible: ' . $stockQty . ')'
+                    'message' => 'Stock disponible insuffisant pour ' . $product->name . '.'
                 ], 422);
             }
 
@@ -285,6 +300,8 @@ class SaleController extends Controller
 
         DB::beginTransaction();
         try {
+            Etablissement::whereKey($request->etablissement_id)->lockForUpdate()->firstOrFail();
+
             // Gérer le client
             $customerId = $request->customer_id;
             if (!$customerId && $request->customer_name) {
@@ -349,26 +366,44 @@ class SaleController extends Controller
                 // Mettre à jour le stock
                 $stock = Stock::where('product_id', $product->id)
                     ->where('etablissement_id', $request->etablissement_id)
+                    ->lockForUpdate()
                     ->first();
 
-                if ($stock) {
-                    $oldQuantity = $stock->quantity;
-                    $stock->quantity -= $quantity;
-                    $stock->save();
-
-                    Movement::create([
-                        'etablissement_id' => $request->etablissement_id,
-                        'product_id' => $product->id,
-                        'type' => 'out',
-                        'quantity' => $quantity,
-                        'before' => $oldQuantity,
-                        'after' => $stock->quantity,
-                        'purchase_price' => $stock->purchase_price,
-                        'selling_price' => $item['price_ht'],
-                        'note' => 'Vente POS #' . $order->order_number,
-                        'user_id' => Auth::id(),
+                if (!$stock || $stock->quantity < $quantity) {
+                    throw ValidationException::withMessages([
+                        'items' => 'Le stock disponible a changé. Actualisez le panier puis réessayez.',
                     ]);
                 }
+                $reservedForProducts = ProductReservationItem::where('product_id', $product->id)
+                    ->whereHas('reservation', fn ($query) => $query->where('statut', 'en_attente'))
+                    ->sum('quantity');
+                $reservedForDelivery = DeliveryOrderItem::where('product_id', $product->id)
+                    ->whereHas('deliveryOrder', fn ($query) => $query->whereIn('statut', [
+                        'en_attente', 'payee_partiellement', 'payee',
+                    ]))
+                    ->sum('quantity');
+                if ($stock->quantity - $reservedForProducts - $reservedForDelivery < $quantity) {
+                    throw ValidationException::withMessages([
+                        'items' => 'Une quantité de ce produit est réservée. Actualisez le panier puis réessayez.',
+                    ]);
+                }
+
+                $oldQuantity = $stock->quantity;
+                $stock->quantity -= $quantity;
+                $stock->save();
+
+                Movement::create([
+                    'etablissement_id' => $request->etablissement_id,
+                    'product_id' => $product->id,
+                    'type' => 'out',
+                    'quantity' => $quantity,
+                    'before' => $oldQuantity,
+                    'after' => $stock->quantity,
+                    'purchase_price' => $stock->purchase_price,
+                    'selling_price' => $item['price_ht'],
+                    'note' => 'Vente POS #' . $order->order_number,
+                    'user_id' => Auth::id(),
+                ]);
             }
 
             DB::commit();
@@ -388,6 +423,9 @@ class SaleController extends Controller
                 'invoice_url' => route('client.sales.invoice', $order->id)
             ]);
 
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            throw $e;
         } catch (\Exception $e) {
             DB::rollBack();
             report($e);
