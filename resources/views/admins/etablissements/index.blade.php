@@ -59,6 +59,9 @@
                                         </div>
                                         <div>
                                             <div class="fw-semibold">{{ $etablissement->nom }}</div>
+                                            <span class="badge {{ $etablissement->nature_entite === 'clandestine' ? 'bg-warning text-dark' : 'bg-success' }}">
+                                                {{ $etablissement->nature_entite === 'clandestine' ? 'Entité clandestine' : 'Entité formalisée' }}
+                                            </span>
                                         </div>
                                     </div>
                                 </td>

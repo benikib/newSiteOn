@@ -28,8 +28,8 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Image</label>
-                        <input type="file" name="image" class="form-control" accept="image/*" required>
-                        <small class="text-muted">Formats acceptés: JPG, PNG, GIF (Max: 2MB)</small>
+                        <input type="file" name="image" class="form-control" accept="image/*,video/mp4,video/webm,video/quicktime" required>
+                        <small class="text-muted">Images ou vidéos MP4, WebM, MOV (max. 50 Mo)</small>
                     </div>
                     <div class="mb-3">
                         <label for="etablissement_id" class="form-label">Établissement</label>

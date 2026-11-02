@@ -26,6 +26,7 @@
         .public-footer p { margin: 0; }
         .public-footer a { color: #fff; text-decoration-color: #91ab99; }
         .public-main .btn { min-height: 44px; }
+        .home-ad video { width: 100%; height: 100%; object-fit: cover; }
         @media (max-width: 991.98px) { #navbarNav { padding: .65rem 0 1rem; } #navbarNav .ms-auto { margin-top: .6rem; } }
         @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
     </style>

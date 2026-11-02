@@ -63,6 +63,16 @@ function makeMobileApiContext(int $quantity = 8): array
     return compact('user', 'etablissement', 'product', 'stock');
 }
 
+it('propose le taux de TVA de 16 pour cent pour les ventes mobiles', function () {
+    $context = makeMobileApiContext();
+    $token = $context['user']->createToken('test-device')->plainTextToken;
+
+    $this->withToken($token)
+        ->getJson('/api/v1/establishments/'.$context['etablissement']->id.'/sales/products')
+        ->assertOk()
+        ->assertJsonPath('meta.tva_rates', [0, 5.5, 10, 16, 20]);
+});
+
 it('authentifie un utilisateur mobile et permet de consulter son profil avec le jeton', function () {
     $user = User::factory()->gerant()->create([
         'email' => 'mobile@example.test',

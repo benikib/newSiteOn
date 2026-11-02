@@ -50,6 +50,14 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        if (!Auth::user()->is_approved) {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'Votre compte est en attente de validation par un administrateur.',
+            ]);
+        }
+
         if (!app(AbonnementService::class)->userHasValidSubscription(Auth::user())) {
             Auth::logout();
 

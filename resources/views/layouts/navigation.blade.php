@@ -29,6 +29,11 @@
                     </a>
                 </li>
                 <li class="nav-item mx-1">
+                    <a class="nav-link position-relative {{ request()->routeIs('publications.*') ? 'active' : '' }}" href="{{ route('publications.index') }}">
+                        <i class="fas fa-newspaper me-1"></i> Actualités
+                    </a>
+                </li>
+                <li class="nav-item mx-1">
                     <a class="nav-link position-relative {{ request()->routeIs('contact') ? 'active' : '' }}" href="{{ route('contact') }}">
                         <i class="fas fa-envelope me-1"></i> Contact
                         <span class="nav-link-underline"></span>
@@ -72,7 +77,7 @@
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item py-2" href="{{ route('dashboard') }}">
+                                <a class="dropdown-item py-2" href="{{ auth()->user()->role === 'organisation_patronale' ? route('organisation.dashboard') : (auth()->user()->role === 'etablissement' ? route('dashboard_ets') : route('dashboard')) }}">
                                     <i class="fas fa-tachometer-alt me-2 text-info"></i>Tableau de bord
                                 </a>
                             </li>
@@ -96,5 +101,4 @@
         </div>
     </div>
 </nav>
-
 

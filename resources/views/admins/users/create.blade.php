@@ -25,9 +25,11 @@
                         <select class="form-select" id="role" name="role" required>
                             <option value="" disabled selected>Choisir un rôle</option>
                             <option value="admin">Admin</option>
+                            <option value="client">Client</option>
 
                             <option value="etablissement">Etablissement</option>
                             <option value="integrateur">Integrateur</option>
+                            <option value="organisation_patronale">Organisation patronale</option>
 
                         </select>
                     </div>

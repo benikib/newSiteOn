@@ -5,7 +5,7 @@
                 <h5 class="modal-title" id="repportingModalLabel">Ajouter un établissement</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
             </div>
-            <form action="{{ route('etablissements.store') }}" method="POST">
+            <form action="{{ route('etablissements.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body">
                     <!-- Onglets de navigation -->
@@ -61,6 +61,34 @@
                                     <option value="" disabled selected>Sélectionnez un type</option>
                                     @foreach ($typeEtablissements as $type)
                                         <option value="{{ $type->id }}">{{ $type->nom }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="nature_entite" class="form-label">Statut de l’entité</label>
+                                <select name="nature_entite" id="nature_entite" class="form-select" required>
+                                    <option value="formalisee">Entité formalisée</option>
+                                    <option value="clandestine">Entité clandestine</option>
+                                </select>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3"><label class="form-label">RCCM</label><input name="rccm" class="form-control"></div>
+                                <div class="col-md-6 mb-3"><label class="form-label">Id Nat</label><input name="id_nat" class="form-control"></div>
+                                <div class="col-md-6 mb-3"><label class="form-label">CNSS</label><input name="cnss" class="form-control"></div>
+                                <div class="col-md-6 mb-3"><label class="form-label">INPP</label><input name="inpp" class="form-control"></div>
+                                <div class="col-md-6 mb-3"><label class="form-label">NIF</label><input name="nif" class="form-control"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="autorisation" class="form-label">Autorisation d’ouverture (PDF ou image)</label>
+                                <input type="file" name="autorisation" id="autorisation" class="form-control" accept=".pdf,image/*">
+                            </div>
+                            <div class="mb-3">
+                                <label for="organisation_patronale_id" class="form-label">Organisation patronale</label>
+                                <select name="organisation_patronale_id" id="organisation_patronale_id" class="form-select">
+                                    <option value="">Aucune affiliation</option>
+                                    @foreach ($organisations as $organisation)
+                                        <option value="{{ $organisation->id }}">{{ $organisation->nom }}</option>
                                     @endforeach
                                 </select>
                             </div>

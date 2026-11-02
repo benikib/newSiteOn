@@ -56,19 +56,22 @@ Route::post('/service/{service}', [\App\Http\Controllers\ServiceController::clas
 Route::get('/service/{service}/edit', [\App\Http\Controllers\ServiceController::class, 'edit'])->name('services.edit');
 Route::put('/service/{service}', [\App\Http\Controllers\ServiceController::class, 'update'])->name('services.update');
 Route::delete('/service/{service}', [\App\Http\Controllers\ServiceController::class, 'destroy'])->name('services.destroy');
+Route::get('/service/{service}/photos', [\App\Http\Controllers\ServiceController::class, 'gallery'])->name('services.photos');
+Route::post('/service/{service}/photos', [\App\Http\Controllers\ServiceController::class, 'storePhoto'])->name('services.photos.store');
+Route::delete('/service/{service}/photos/{photo}', [\App\Http\Controllers\ServiceController::class, 'destroyPhoto'])->name('services.photos.destroy');
 
 Route::get('/users',[UserController::class,'index'])->name("users.index");
 Route::delete('/users/{id}', [UserController::class, 'delete'])->name('users.destroy');
+Route::patch('/users/{user}/approval', [UserController::class, 'updateApproval'])->name('users.approval');
 Route::get('/users/admins', [UserController::class, 'admins'])->name('admins.index');
 Route::post('/users', [UserController::class,'store'])->name('users.store');
 Route::put( 'user/{user}',[UserController::class,'update'])->name('users.update');
 Route::get('/dashboard',[UserController::class, 'repportingAdmins'])->name('dashboard');
 
 Route::get('/publicites',[PubliciteController::class,'index'])->name("publicites.index");
-Route::post('/publicites', [PubliciteController::class,'store'])->name('publicites.store');
 Route::post('/publicite', [PubliciteController::class,'store'])->name('publicits.store');
 Route::put( 'publicites/{user}/etablissement',[PubliciteController::class,'update'])->name('publicites.update');
-Route::delete('/publicites/{publicite}', [PubliciteController::class, 'destroy'])->name('publicites.destroy');
+Route::delete('/publicite/{publicite}', [PubliciteController::class, 'destroy'])->name('publicites.destroy');
 
 
 Route::get('/users_ets/{ets}',[UserController::class,'users_ets'])->name("users_ets.index");
@@ -83,3 +86,12 @@ Route::delete('/taux/{taux}', [TauxController::class, 'destroy'])->name('taux.de
 
 });
 
+Route::middleware(['auth', 'organisation'])->prefix('organisation')->name('organisation.')->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\OrganisationPatronaleController::class, 'dashboard'])->name('dashboard');
+    Route::patch('/profil', [\App\Http\Controllers\OrganisationPatronaleController::class, 'updateProfile'])->name('profil.update');
+    Route::patch('/membres/{etablissement}/affiliation', [\App\Http\Controllers\OrganisationPatronaleController::class, 'updateAffiliation'])->name('membres.affiliation');
+    Route::delete('/membres/{etablissement}', [\App\Http\Controllers\OrganisationPatronaleController::class, 'destroyAffiliation'])->name('membres.destroy');
+    Route::post('/cotisations', [\App\Http\Controllers\OrganisationPatronaleController::class, 'storeCotisation'])->name('cotisations.store');
+    Route::post('/cotisations/{cotisation}/paiements', [\App\Http\Controllers\OrganisationPatronaleController::class, 'storePaiement'])->name('cotisations.paiements.store');
+    Route::post('/publications', [\App\Http\Controllers\OrganisationPatronaleController::class, 'storePublication'])->name('publications.store');
+});

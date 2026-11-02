@@ -14,6 +14,8 @@ use App\Models\User;
 use App\Models\UserEtablissement;
 use App\Models\Service;
 use App\Models\Publicite;
+use App\Models\OrganisationPatronale;
+use Illuminate\Support\Facades\Storage;
 use App\Services\AbonnementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -39,9 +41,9 @@ class EtablissementController extends Controller
         }
         $etablissements = $query->paginate(10)->withQueryString();
         $typeEtablissements = TypeEtablissement::all();
+        $organisations = OrganisationPatronale::orderBy('nom')->get();
 
-
-        return view('admins.etablissements.index', compact('etablissements', 'typeEtablissements'));
+        return view('admins.etablissements.index', compact('etablissements', 'typeEtablissements', 'organisations'));
     }
     public function users_ets()
     {
@@ -78,7 +80,7 @@ class EtablissementController extends Controller
         try {
 
 
-            $request->validate([
+            $validated = $request->validate([
                 'nom' => 'required|string|max:100',
                 'ville' => 'required|string|max:100',
                 'commune' => 'required|string|max:100',
@@ -90,7 +92,15 @@ class EtablissementController extends Controller
                 'longitude' => 'nullable|numeric',
                 'telephone' => 'nullable|string|max:20',
                 'type_etablissement_id' => 'required|exists:type_etablissements,id',
-                'user_name' => 'nuLlable|string|max:100',
+                'nature_entite' => 'nullable|in:formalisee,clandestine',
+                'rccm' => 'nullable|string|max:100',
+                'id_nat' => 'nullable|string|max:100',
+                'cnss' => 'nullable|string|max:100',
+                'inpp' => 'nullable|string|max:100',
+                'nif' => 'nullable|string|max:100',
+                'autorisation' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
+                'organisation_patronale_id' => 'nullable|exists:organisations_patronales,id',
+                'user_name' => 'nullable|string|max:100',
                 'user_email' => 'nullable|email|max:100|unique:users,email',
                 'user_password' => 'nullable|string|min:8',
                 'user_role' => 'nullable',
@@ -105,7 +115,13 @@ class EtablissementController extends Controller
                     'password' => Hash::make($request->user_password),
                     'role' => $request->user_role,
                 ]);
-                $etablissements = Etablissement::create($request->all());
+                $data = collect($validated)->except(['user_name', 'user_email', 'user_password', 'user_role', 'autorisation'])->all();
+                $data['nature_entite'] = $data['nature_entite'] ?? 'formalisee';
+                $data['affiliation_statut'] = $request->filled('organisation_patronale_id') ? 'en_attente' : 'aucune';
+                if ($request->hasFile('autorisation')) {
+                    $data['autorisation_path'] = $request->file('autorisation')->store('autorisations', 'public');
+                }
+                $etablissements = Etablissement::create($data);
                 UserEtablissement::create([
                     'user_id' => $user->id,
                     'etablissement_id' => $etablissements->id,
@@ -115,7 +131,14 @@ class EtablissementController extends Controller
         Mail::to($user->email)->send(new UserCreatedMail($user, $url));
             } elseif (Auth::user()->role === 'etablissement') {
 
-                $etablissements = Etablissement::create($request->all());
+                $data = collect($validated)->except(['user_name', 'user_email', 'user_password', 'user_role', 'autorisation'])->all();
+                $data['nature_entite'] = $data['nature_entite'] ?? 'formalisee';
+                unset($data['organisation_patronale_id']);
+                $data['affiliation_statut'] = 'aucune';
+                if ($request->hasFile('autorisation')) {
+                    $data['autorisation_path'] = $request->file('autorisation')->store('autorisations', 'public');
+                }
+                $etablissements = Etablissement::create($data);
                 UserEtablissement::create([
                     'user_id' => Auth::user()->id,
                     'etablissement_id' => $etablissements->id,
@@ -150,18 +173,57 @@ class EtablissementController extends Controller
     }
      public function showOne( $etablissement)
     {
-           $etablissementRecord = Etablissement::with('typeEtablissement')
+           $etablissementRecord = Etablissement::with('typeEtablissement', 'organisationPatronale')
                 ->where('slug', $etablissement)
                 ->first();
 
             if (!$etablissementRecord && is_numeric($etablissement)) {
-                $etablissementRecord = Etablissement::with('typeEtablissement')->findOrFail($etablissement);
+                $etablissementRecord = Etablissement::with('typeEtablissement', 'organisationPatronale')->findOrFail($etablissement);
             }
             abort_unless($etablissementRecord, 404);
             $etablissement = $etablissementRecord;
+            if (auth()->user()?->role === 'etablissement') {
+                abort_unless(auth()->user()->usersEtablissements()
+                    ->where('etablissement_id', $etablissement->id)->exists(), 404);
+            }
             $typesEtablissement =TypeEtablissement::all();
+            $organisations = OrganisationPatronale::orderBy('nom')->get();
 
-    return view('etablissements.partials.show', compact('etablissement', 'typesEtablissement'));
+    return view('etablissements.partials.show', compact('etablissement', 'typesEtablissement', 'organisations'));
+    }
+
+    public function updateIdentification(Request $request, Etablissement $etablissement)
+    {
+        abort_unless($request->user()->role === 'etablissement'
+            && $request->user()->usersEtablissements()
+                ->where('etablissement_id', $etablissement->id)->exists(), 404);
+
+        $validated = $request->validate([
+            'nature_entite' => 'required|in:formalisee,clandestine',
+            'rccm' => 'nullable|string|max:100',
+            'id_nat' => 'nullable|string|max:100',
+            'cnss' => 'nullable|string|max:100',
+            'inpp' => 'nullable|string|max:100',
+            'nif' => 'nullable|string|max:100',
+            'autorisation' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
+            'organisation_patronale_id' => 'nullable|exists:organisations_patronales,id',
+        ]);
+        unset($validated['autorisation']);
+        if ($request->hasFile('autorisation')) {
+            $newPath = $request->file('autorisation')->store('autorisations', 'public');
+            if ($etablissement->autorisation_path) {
+                Storage::disk('public')->delete($etablissement->autorisation_path);
+            }
+            $validated['autorisation_path'] = $newPath;
+        }
+        $validated['affiliation_statut'] = $request->filled('organisation_patronale_id')
+            ? ($etablissement->organisation_patronale_id == $request->organisation_patronale_id
+                ? $etablissement->affiliation_statut
+                : 'en_attente')
+            : 'aucune';
+        $etablissement->update($validated);
+
+        return back()->with('success', 'Identification et demande d’affiliation mises à jour.');
     }
 
     /**
@@ -180,7 +242,7 @@ class EtablissementController extends Controller
         try {
             $etablissement = Etablissement::findOrFail($id);
 
-            $request->validate([
+            $validated = $request->validate([
                 'nom' => 'required|string|max:100',
                 'ville' => 'required|string|max:100',
                 'commune' => 'required|string|max:100',
@@ -192,10 +254,36 @@ class EtablissementController extends Controller
                 'longitude' => 'nullable|numeric',
                 'telephone' => 'nullable|string|max:20',
                 'type_etablissement_id' => 'required|exists:type_etablissements,id',
-
+                'nature_entite' => 'sometimes|in:formalisee,clandestine',
+                'rccm' => 'sometimes|nullable|string|max:100',
+                'id_nat' => 'sometimes|nullable|string|max:100',
+                'cnss' => 'sometimes|nullable|string|max:100',
+                'inpp' => 'sometimes|nullable|string|max:100',
+                'nif' => 'sometimes|nullable|string|max:100',
+                'autorisation' => 'sometimes|nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
+                'organisation_patronale_id' => 'sometimes|nullable|exists:organisations_patronales,id',
             ]);
 
-            $etablissemen = $etablissement->update($request->all());
+            if ($request->user()->role === 'etablissement') {
+                abort_unless($request->user()->usersEtablissements()
+                    ->where('etablissement_id', $etablissement->id)->exists(), 404);
+                unset($validated['organisation_patronale_id']);
+            } elseif (array_key_exists('organisation_patronale_id', $validated)) {
+                $validated['affiliation_statut'] = $request->filled('organisation_patronale_id')
+                    ? ($etablissement->organisation_patronale_id == $request->organisation_patronale_id
+                        ? $etablissement->affiliation_statut
+                        : 'en_attente')
+                    : 'aucune';
+            }
+            unset($validated['autorisation']);
+            if ($request->hasFile('autorisation')) {
+                $newPath = $request->file('autorisation')->store('autorisations', 'public');
+                if ($etablissement->autorisation_path) {
+                    Storage::disk('public')->delete($etablissement->autorisation_path);
+                }
+                $validated['autorisation_path'] = $newPath;
+            }
+            $etablissement->update($validated);
 
 
             return redirect()->back()->with('success', 'Établissement mis à jour avec succès.');
@@ -489,4 +577,3 @@ public function dashboard()
         return back()->with('success', 'Réseaux sociaux mis à jour');
     }
 }
-

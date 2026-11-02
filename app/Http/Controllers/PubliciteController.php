@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Etablissement;
 use App\Models\Publicite;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class PubliciteController extends Controller
 {
@@ -19,12 +20,24 @@ class PubliciteController extends Controller
         return view('admins.publicites.index', compact('publicites', 'etablissements'));
     }
 
+    public function indexEtablissement(int $etablissement)
+    {
+        $this->authorizeManager($etablissement);
+        $etablissement = Etablissement::findOrFail($etablissement);
+        $publicites = Publicite::where('etablissement_id', $etablissement->id)->latest()->get();
+
+        return view('etablissements.publicites.index', compact('etablissement', 'publicites'));
+    }
+
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(int $etablissement)
     {
-        //
+        $this->authorizeManager($etablissement);
+        $etablissement = Etablissement::findOrFail($etablissement);
+
+        return view('etablissements.publicites.create', compact('etablissement'));
     }
 
     /**
@@ -32,35 +45,22 @@ class PubliciteController extends Controller
      */
     public function store(Request $request)
     {
+        $validated = $request->validate([
+            'titre' => 'required|string|max:100',
+            'description' => 'nullable|string|max:255',
+            'date' => 'required|date',
+            'etablissement_id' => 'required|exists:etablissements,id',
+            'dure' => 'required|integer|min:1',
+            'image' => 'required|file|mimes:jpg,jpeg,png,gif,webp,mp4,webm,mov|max:51200',
+            'status' => 'required|in:active,inactive,planned',
+        ]);
+        $this->authorizeManager((int) $validated['etablissement_id']);
+        $validated['image_path'] = $request->file('image')->store('publicites', 'public');
+        unset($validated['image']);
 
-        try {
+        Publicite::create($validated);
 
-         $validated =  $request->validate([
-                'titre' => 'required|string|max:100',
-                'description' => 'nullable|string|max:255',
-                'date' => 'required|date',
-                'etablissement_id' => 'required|exists:etablissements,id',
-                'dure' => 'required|integer|min:1',
-                'image' => 'required',
-                'status'    => 'required|', // Ajout de la validation pour le statut
-            ]);
-             $path = $request->file('image')->store('photos', 'public');
-
-    // Enregistrez le chemin RELATIF sans 'public/'
-    $validated['image_path'] = $path; // 'photos/filename.jpg'
-
-    // Solution 2 - Si vous préférez garder l'ancienne structure
-    // $path = $request->file('image')->store('photos'); // Sans 'public/'
-    // $validated['image_path'] = $path;
-
-
-            Publicite::create($validated);
-
-            return redirect()->back()->with('success', 'Publicité créée avec succès.');
-        } catch (\Exception $e) {
-            report($e);
-            return redirect()->back()->withErrors(['error' => 'Impossible de créer cette publicité. Vérifiez les informations et réessayez.']);
-        }
+        return redirect()->back()->with('success', 'Publicité créée avec succès.');
     }
 
     /**
@@ -76,7 +76,9 @@ class PubliciteController extends Controller
      */
     public function edit(Publicite $publicite)
     {
-        //
+        $this->authorizeManager((int) $publicite->etablissement_id);
+
+        return view('etablissements.publicites.edit', compact('publicite'));
     }
 
     /**
@@ -86,26 +88,30 @@ class PubliciteController extends Controller
 
     {
 
-        try {
-            $publicite = Publicite::findOrFail($id);
+        $publicite = Publicite::findOrFail($id);
+        $validated = $request->validate([
+            'titre' => 'required|string|max:100',
+            'description' => 'nullable|string|max:255',
+            'date' => 'required|date',
+            'etablissement_id' => 'required|exists:etablissements,id',
+            'dure' => 'required|integer|min:1',
+            'status' => 'required|in:active,inactive,planned',
+            'image' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,mp4,webm,mov|max:51200',
+        ]);
+        $this->authorizeManager((int) $publicite->etablissement_id);
+        $this->authorizeManager((int) $validated['etablissement_id']);
 
-            $request->validate([
-                'titre' => 'required|string|max:100',
-                'description' => 'nullable|string|max:255',
-                'date' => 'required|date',
-                'etablissement_id' => 'required|exists:etablissements,id',
-                'dure' => 'required|integer|min:1',
-                'status' => 'required|in:active,inactive,planned', // Validation pour le statut
-            ]);
-
-
-            $publicite->update($request->all());
-
-            return redirect()->back()->with('success', 'Publicité mise à jour avec succès.');
-        } catch (\Exception $e) {
-            report($e);
-            return redirect()->back()->withErrors(['error' => 'Impossible de mettre à jour cette publicité. Réessayez.']);
+        unset($validated['image']);
+        $oldPath = $publicite->image_path;
+        if ($request->hasFile('image')) {
+            $validated['image_path'] = $request->file('image')->store('publicites', 'public');
         }
+        $publicite->update($validated);
+        if (isset($validated['image_path'])) {
+            Storage::disk('public')->delete($oldPath);
+        }
+
+        return redirect()->back()->with('success', 'Publicité mise à jour avec succès.');
     }
 
     /**
@@ -113,12 +119,19 @@ class PubliciteController extends Controller
      */
     public function destroy(Publicite $publicite)
     {
-        try {
-            $publicite->delete();
-            return redirect()->back()->with('success', 'Publicité supprimée avec succès.');
-        } catch (\Throwable $th) {
-            report($th);
-            return redirect()->back()->withErrors(['error' => 'Impossible de supprimer cette publicité. Réessayez.']);
+        $this->authorizeManager((int) $publicite->etablissement_id);
+        $imagePath = $publicite->image_path;
+        $publicite->delete();
+        Storage::disk('public')->delete($imagePath);
+
+        return redirect()->back()->with('success', 'Publicité supprimée avec succès.');
+    }
+
+    private function authorizeManager(int $etablissementId): void
+    {
+        if (auth()->user()?->role === 'etablissement') {
+            abort_unless(auth()->user()->usersEtablissements()
+                ->where('etablissement_id', $etablissementId)->exists(), 404);
         }
     }
 }

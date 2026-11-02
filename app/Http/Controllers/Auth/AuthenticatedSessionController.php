@@ -35,6 +35,10 @@ class AuthenticatedSessionController extends Controller
         return redirect()->route('users.etablissements'); // Remplace par ta vraie route
     }
 
+    if (auth()->user()->role === 'organisation_patronale') {
+        return redirect()->route('organisation.dashboard');
+    }
+
 
    if (in_array(auth()->user()->role,['admin', 'integrateur'] )) {
          $id = auth()->user()->usersEtablissements();

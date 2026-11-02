@@ -997,7 +997,7 @@ class MobileController extends Controller
             'data' => $query->orderBy('name')->limit(20)->get()
                 ->map(fn (Product $product) => $this->productData($product)),
             'meta' => [
-                'tva_rates' => [0, 5.5, 10, 20],
+                'tva_rates' => [0, 5.5, 10, 16, 20],
             ],
         ]);
     }

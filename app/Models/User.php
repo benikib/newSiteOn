@@ -24,6 +24,7 @@ class User extends Authenticatable
         'password',
         'role',
         'telephone',
+        'is_approved',
     ];
 
     /**
@@ -46,6 +47,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_approved' => 'boolean',
         ];
     }
     public function etablissements()
@@ -57,6 +59,11 @@ class User extends Authenticatable
     public function usersEtablissements()
     {
         return $this->hasMany(UserEtablissement::class);
+    }
+
+    public function organisationPatronale()
+    {
+        return $this->hasOne(OrganisationPatronale::class);
     }
 
 }

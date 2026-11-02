@@ -52,7 +52,11 @@
                 <div class="home-ads-grid">
                     @foreach($photos as $photo)
                         <a class="home-ad" href="{{ route('ets.info', $photo->etablissement_id) }}">
-                            <img src="{{ asset('storage/' . ltrim(str_replace('public/', '', $photo->image_path), '/')) }}" alt="{{ $photo->titre ?: 'Publicité d’un établissement BISIKA' }}" loading="lazy">
+                            @if (in_array(strtolower(pathinfo($photo->image_path, PATHINFO_EXTENSION)), ['mp4', 'webm', 'mov']))
+                                <video src="{{ asset('storage/' . ltrim(str_replace('public/', '', $photo->image_path), '/')) }}" muted playsinline controls aria-label="{{ $photo->titre ?: 'Publicité vidéo' }}"></video>
+                            @else
+                                <img src="{{ asset('storage/' . ltrim(str_replace('public/', '', $photo->image_path), '/')) }}" alt="{{ $photo->titre ?: 'Publicité d’un établissement BISIKA' }}" loading="lazy">
+                            @endif
                             @if($photo->titre)<span class="home-ad-title">{{ $photo->titre }}</span>@endif
                         </a>
                     @endforeach
@@ -60,6 +64,12 @@
             @else
                 <p class="home-ads-empty">Les publicités des établissements apparaîtront ici.</p>
             @endif
+        </section>
+        <section class="container py-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div><p class="home-search-kicker mb-1">Organisations patronales</p><h2 class="h4 mb-0">Actualités et informations des membres</h2></div>
+                <a class="btn btn-outline-success" href="{{ route('publications.index') }}">Consulter les actualités</a>
+            </div>
         </section>
     </main>
 @endsection

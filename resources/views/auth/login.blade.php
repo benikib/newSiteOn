@@ -9,6 +9,7 @@
                 </div>
 
                 <div class="card-body p-4">
+                    <x-auth-session-status class="mb-4" :status="session('status')" />
                     <form method="POST" action="{{ route('login') }}" class="needs-validation" novalidate>
                         @csrf
 

@@ -4,12 +4,14 @@
 
 Ce document décrit l’architecture existante et le contrat de l’API mobile implémentée dans ce dépôt. Le backend Laravel et sa base de données restent la source de vérité; l’application mobile ne se connecte jamais directement à la base de données.
 
+Pour les parcours d’administration et les fonctionnalités Organisation patronale disponibles sur le site, consulter le [guide fonctionnel du site web](./web-functional-documentation.md).
+
 L’API couvre deux parcours :
 
 - **Public** : découverte d’établissements, services et produits; réservation d’un service ou d’articles; demande de livraison.
 - **Gestionnaire d’établissement** : authentification, consultation du tableau de bord, gestion de base du catalogue, stocks et mouvements, inventaire, ventes POS et traitement des demandes.
 
-Les fonctionnalités d’administration globale (abonnements, utilisateurs, taux et paramètres administratifs) restent accessibles depuis le site web et ne sont pas exposées par l’API mobile.
+Les fonctionnalités d’administration globale (abonnements, utilisateurs, taux et paramètres administratifs) restent accessibles depuis le site web et ne sont pas exposées par l’API mobile. Le site web comprend également la validation des comptes, la classification et l’identification légale des établissements, l’affiliation aux organisations patronales, la gestion des membres et de leurs cotisations, ainsi que la publication d’informations générales ou ciblées par type d’établissement.
 
 ## 2. Architecture du projet
 
@@ -251,7 +253,7 @@ Exemple de corps :
 }
 ```
 
-Valeurs de paiement : `cash`, `card`, `transfer`, `other`; devises : `CDF`, `USD`. Les informations client sont facultatives. Les taux de TVA doivent être transmis pour chaque ligne; la recherche POS propose actuellement `[0, 5.5, 10, 20]`. Le champ optionnel `sold_price_ht` permet de transmettre un prix unitaire HT négocié par le gestionnaire. Les montants finaux et conversions sont recalculés/validés par le serveur. La remise peut être `amount` ou `percentage`; une remise en pourcentage ne dépasse pas 100 % et une remise ne peut excéder le total initial.
+Valeurs de paiement : `cash`, `card`, `transfer`, `other`; devises : `CDF`, `USD`. Les informations client sont facultatives. Les taux de TVA proposés dans le POS web et renvoyés par `GET /establishments/{id}/sales/products` sont `[0, 5.5, 10, 16, 20]` (%). Le taux choisi doit être transmis pour chaque ligne; le serveur accepte les taux numériques supérieurs ou égaux à zéro. Le champ optionnel `sold_price_ht` permet de transmettre un prix unitaire HT négocié par le gestionnaire. Les montants finaux et conversions sont recalculés/validés par le serveur. La remise peut être `amount` ou `percentage`; une remise en pourcentage ne dépasse pas 100 % et une remise ne peut excéder le total initial.
 
 Pour une vente en USD, un taux USD/CDF valide doit être configuré. Le résultat contient `order_number`, totaux HT/TVA/TTC, réduction, devise, montant payé et une URL de facture web. Cette URL pointe vers une route web, pas vers une route de facture API dédiée.
 
@@ -270,7 +272,7 @@ Une transition invalide renvoie une erreur 422; les opérations sensibles au sto
 
 ## 5. Règles métier et conventions
 
-- Rôles présents dans l’application : `client`, `etablissement`, `admin`, `integrateur`. L’API mobile ne donne des fonctions de gestion qu’au rôle `etablissement`.
+- Rôles présents dans l’application : `client`, `etablissement`, `admin`, `integrateur`, `organisation_patronale`. L’API mobile ne donne des fonctions de gestion qu’au rôle `etablissement`; les fonctions organisation patronale restent web.
 - Les produits, stocks, clients, commandes, réservations et mouvements sont contextualisés par établissement.
 - État de stock : `quantity <= 0` signifie rupture; `0 < quantity <= minimum_stock` signifie stock bas.
 - Les écritures créent un journal `movements` avec quantité avant/après, type, auteur et note.

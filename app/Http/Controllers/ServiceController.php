@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Etablissement;
 use App\Models\Service;
+use App\Models\Photo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ServiceController extends Controller
 {
@@ -25,8 +27,11 @@ class ServiceController extends Controller
 
       public function indexEtablissement($etablissement)
     {
-
-        $services = Service::where('etablissement_id', $etablissement)->get();
+          if (auth()->user()?->role === 'etablissement') {
+              abort_unless(auth()->user()->usersEtablissements()
+                  ->where('etablissement_id', $etablissement)->exists(), 404);
+          }
+          $services = Service::where('etablissement_id', $etablissement)->get();
         $etablissement = Etablissement::findOrFail($etablissement);
         if (!$etablissement) {
             return redirect()->route('etablissements.index')->with('error', 'Établissement non trouvé.');
@@ -54,15 +59,22 @@ class ServiceController extends Controller
             $request->validate([
                 'nom' => 'required|string|max:100',
                 'description' => 'nullable|string|max:255',
+                'commentaire' => 'nullable|string|max:2000',
                 'etablissement_id' => 'required|exists:etablissements,id',
                 'prix' => 'nullable|numeric|min:0',
                 'icone' => 'nullable|in:calendar,truck,phone,star',
                 'disponibilite' => 'nullable|boolean',
             ]);
 
-            Service::create([
+                if ($request->user()->role === 'etablissement') {
+                    abort_unless($request->user()->usersEtablissements()
+                        ->where('etablissement_id', $request->input('etablissement_id'))->exists(), 404);
+                }
+
+                Service::create([
                 'nom' => $request->input('nom'),
                 'description' => $request->input('description'),
+                'commentaire' => $request->input('commentaire'),
                 'etablissement_id' => $request->input('etablissement_id'),
                 'prix' => $request->input('prix', null), // Default to null if not provided
                 'icone' => $request->input('icone', 'calendar'),
@@ -101,10 +113,15 @@ class ServiceController extends Controller
     {
         try {
             $service = Service::findOrFail($id);
+            if ($request->user()->role === 'etablissement') {
+                abort_unless($request->user()->usersEtablissements()
+                    ->where('etablissement_id', $service->etablissement_id)->exists(), 404);
+            }
 
             $validated = $request->validate([
                 'nom' => 'required|string|max:100',
                 'description' => 'nullable|string|max:255',
+                'commentaire' => 'nullable|string|max:2000',
                 'prix' => 'nullable|numeric|min:0',
                 'icone' => 'sometimes|in:calendar,truck,phone,star',
                 'disponibilite' => 'sometimes|boolean',
@@ -146,11 +163,59 @@ class ServiceController extends Controller
     public function destroy(Service $service)
     {
         try {
+            if (auth()->user()?->role === 'etablissement') {
+                abort_unless(auth()->user()->usersEtablissements()
+                    ->where('etablissement_id', $service->etablissement_id)->exists(), 404);
+            }
             $service->delete();
             return redirect()->back()->with('success', 'Service supprimé avec succès.');
         } catch (\Exception $e) {
             report($e);
             return redirect()->back()->withErrors(['error' => 'Impossible de supprimer ce service. Réessayez.']);
         }
+    }
+
+    public function gallery(Service $service)
+    {
+            if (auth()->user()?->role === 'etablissement') {
+                abort_unless(auth()->user()->usersEtablissements()
+                    ->where('etablissement_id', $service->etablissement_id)->exists(), 404);
+            }
+
+            return view('services.gallery', ['service' => $service->load('photos')]);
+    }
+
+    public function storePhoto(Request $request, Service $service)
+    {
+            if ($request->user()->role === 'etablissement') {
+                abort_unless($request->user()->usersEtablissements()
+                    ->where('etablissement_id', $service->etablissement_id)->exists(), 404);
+            }
+            $data = $request->validate([
+                'titre' => 'nullable|string|max:255',
+                'photo' => 'required|image|max:5120',
+            ]);
+            $path = $request->file('photo')->store('photos/services', 'public');
+            $service->photos()->create([
+                'titre' => $data['titre'] ?? $service->nom,
+                'image_path' => $path,
+                'etablissement_id' => $service->etablissement_id,
+                'est_publique' => true,
+            ]);
+
+            return back()->with('success', 'Photo ajoutée à la galerie du service.');
+    }
+
+    public function destroyPhoto(Service $service, Photo $photo)
+    {
+            if (auth()->user()?->role === 'etablissement') {
+                abort_unless(auth()->user()->usersEtablissements()
+                    ->where('etablissement_id', $service->etablissement_id)->exists(), 404);
+            }
+            abort_unless($photo->service_id === $service->id, 404);
+            Storage::disk('public')->delete($photo->image_path);
+            $photo->delete();
+
+            return back()->with('success', 'Photo supprimée de la galerie.');
     }
 }

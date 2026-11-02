@@ -54,6 +54,7 @@
             <td class="text-xs font-weight-bold">{{ $service->description }}</td>
             <td class="text-xs font-weight-bold">{{ $service->prix }}</td>
             <td class="align-middle">
+                <a class="btn btn-sm btn-outline-primary" href="{{ route('services.photos', $service) }}">Galerie</a>
                 <div class="d-flex">
                     <button class="btn btn-link text-secondary mb-0" data-bs-toggle="modal" data-bs-target="#editModal{{ $service->id }}">
                         <i class="fas fa-edit text-secondary"></i>

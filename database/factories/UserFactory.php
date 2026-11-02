@@ -30,6 +30,7 @@ class UserFactory extends Factory
             'password' => Hash::make('password'),
             'telephone' => fake()->phoneNumber(),
             'role' => fake()->randomElement(['client', 'admin', 'etablissement']),
+            'is_approved' => true,
             'remember_token' => Str::random(10),
         ];
     }
