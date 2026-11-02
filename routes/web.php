@@ -22,6 +22,7 @@ Route::get('/', function () {
 })->name('welcome');
 Route::get('/produits', [PhotoController::class, 'products'])->name('products.index');
 Route::get('/actualites', [\App\Http\Controllers\PublicationController::class, 'index'])->name('publications.index');
+Route::view('/confidentialite', 'legal.privacy')->name('privacy.policy');
 //integrateur 
 Route::get('/integrateur',[IntegrateurController::class,'index'])->name('index');
 Route::get('/grilles', function() {

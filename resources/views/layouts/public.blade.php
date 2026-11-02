@@ -41,7 +41,10 @@
     <footer class="public-footer">
         <div class="container public-footer-inner">
             <p>© {{ now()->year }} BISIKA · Établissements, produits et services.</p>
-            <a href="{{ route('contact') }}">Contacter BISIKA</a>
+            <div class="d-flex flex-wrap gap-3">
+                <a href="{{ route('privacy.policy') }}">Confidentialité</a>
+                <a href="{{ route('contact') }}">Contacter BISIKA</a>
+            </div>
         </div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
