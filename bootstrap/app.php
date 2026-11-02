@@ -21,11 +21,13 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->append(FrenchErrorLocale::class);
+        $middleware->appendToGroup('web', \App\Http\Middleware\EnsureAccountIsApproved::class);
 
             $middleware->alias([
         'admins' => AdminMiddleware::class,
         'etablissements' => EtablissementMiddleware::class,
         'mobile.establishment' => \App\Http\Middleware\MobileEstablishmentMiddleware::class,
+        'organisation' => \App\Http\Middleware\OrganisationPatronaleMiddleware::class,
     ]);
     })
 

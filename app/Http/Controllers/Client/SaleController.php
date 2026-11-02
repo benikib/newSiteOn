@@ -82,7 +82,7 @@ class SaleController extends Controller
             ->get();
 
         // Paramètres TVA
-        $tvaRates = [0, 5.5, 10, 20];
+        $tvaRates = [0, 5.5, 10, 16, 20];
         $usdCdfRate = TauxDeChange::orderByDesc('date')->value('usd_cdf');
         $usdCdfRate = $usdCdfRate !== null ? (float) $usdCdfRate : null;
 

@@ -22,6 +22,9 @@ Route::post('etablissement/service/{service}', [\App\Http\Controllers\ServiceCon
 Route::get('etablissement/service/{service}/edit', [\App\Http\Controllers\ServiceController::class, 'edit'])->name('etablissements.services.edit');
 Route::put('etablissement/service/{service}', [\App\Http\Controllers\ServiceController::class, 'update'])->name('etablissements.services.update');
 Route::delete('etablissement/service/{service}', [\App\Http\Controllers\ServiceController::class, 'destroy'])->name('etablissements.services.destroy');
+Route::get('etablissement/service/{service}/photos', [\App\Http\Controllers\ServiceController::class, 'gallery'])->name('etablissements.services.photos');
+Route::post('etablissement/service/{service}/photos', [\App\Http\Controllers\ServiceController::class, 'storePhoto'])->name('etablissements.services.photos.store');
+Route::delete('etablissement/service/{service}/photos/{photo}', [\App\Http\Controllers\ServiceController::class, 'destroyPhoto'])->name('etablissements.services.photos.destroy');
 
 Route::get('etablissement/publicites/{etablissement}', [\App\Http\Controllers\PubliciteController::class, 'indexEtablissement'])->name('etablissements.publicites.index');
 Route::get('etablissement/publicite/create/{etablissement}', [\App\Http\Controllers\PubliciteController::class, 'create'])->name('etablissements.publicites.create');
@@ -56,6 +59,7 @@ Route::post('/livraisons/{id}/action', [ReservationController::class, 'manageDel
 Route::get('/reservation/ets', [ReservationController::class, 'index'])->name('etablissements.reservation.index');
 
 Route::put('/ets/{id}', [EtablissementController::class, 'update'])->name('ets.update');
+Route::put('etablissement/{etablissement}/identification', [EtablissementController::class, 'updateIdentification'])->name('etablissements.identification.update');
 Route::post('/ets', [EtablissementController::class, 'store'])->name('ets.store');
 Route::post('/ets/services/', [ServiceController::class, 'store'])->name('service.store');
 Route::post('/glerys', [\App\Http\Controllers\PhotoController::class, 'store'])->name('galleries.store');
@@ -73,5 +77,3 @@ Route::put( 'publicites/{user}',[PubliciteController::class,'update'])->name('pu
 Route::delete('/publicites/{id}', [PubliciteController::class,'destroy'])->name('publicite.destroy');
 Route::resource('promotions', PromotionController::class)->except(['show']);
 });
-
-

@@ -31,7 +31,8 @@ class Etablissement extends Model
         'type_etablissement_id',
         'image_path',
         'facebook', 'twitter', 'instagram'
-
+        ,'nature_entite', 'rccm', 'id_nat', 'cnss', 'inpp', 'nif',
+        'autorisation_path', 'organisation_patronale_id', 'affiliation_statut'
     ];
     protected $table = 'etablissements';
 
@@ -143,6 +144,16 @@ public function scopeByCategory($query, $categoryId)
     public function abonnements()
     {
         return $this->hasMany(Abonnement::class)->orderByDesc('date_debut')->orderByDesc('id');
+    }
+
+    public function organisationPatronale()
+    {
+        return $this->belongsTo(OrganisationPatronale::class);
+    }
+
+    public function cotisations()
+    {
+        return $this->hasMany(Cotisation::class);
     }
 
     // ===== SCOPES =====

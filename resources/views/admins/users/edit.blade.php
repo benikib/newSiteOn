@@ -31,9 +31,11 @@
                             <select class="form-select" id="role" name="role" required>
                                 <option value="" disabled>Choisir un rôle</option>
                                 <option value="admin" {{ $user->role == 'admin' ? 'selected' : '' }}>Admin</option>
+                                <option value="client" {{ $user->role == 'client' ? 'selected' : '' }}>Client</option>
                                 <option value="etablissement" {{ $user->role == 'etablissement' ? 'selected' : '' }}>
                                     Etablissement</option>
                                 <option value="integrateur" {{ $user->role == 'integrateur' ? 'selected' : '' }}>Integrateur</option>
+                                <option value="organisation_patronale" {{ $user->role == 'organisation_patronale' ? 'selected' : '' }}>Organisation patronale</option>
                             </select>
                         </div>
                         <div class="mb-3">

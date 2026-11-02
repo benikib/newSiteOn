@@ -5,7 +5,7 @@
                 <h5 class="modal-title" id="editModalLabel{{ $publicite->id }}">Modifier la publicite</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
             </div>
-            <form action="{{ route('publicites.update', $publicite->id) }}" method="POST">
+            <form action="{{ route('publicites.update', $publicite->id) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 <div class="modal-body">
@@ -26,6 +26,11 @@
                         <input type="number" class="form-control" id="dure{{ $publicite->id }}" name="dure" value="{{ $publicite->dure }}" min="1" required>
                     </div>
                        <input type="hidden" name="status" value="active">
+                    <div class="mb-3">
+                        <label for="image{{ $publicite->id }}" class="form-label">Remplacer le média (facultatif)</label>
+                        <input type="file" name="image" id="image{{ $publicite->id }}" class="form-control" accept="image/*,video/mp4,video/webm,video/quicktime">
+                        <small class="text-muted">Images ou vidéos MP4, WebM, MOV (max. 50 Mo)</small>
+                    </div>
                     <div class="mb-3">
                         <label for="etablissement_id{{ $publicite->id }}" class="form-label">Établissement</label>
                         <select class="form-select" id="etablissement_id{{ $publicite->id }}" name="etablissement_id" required>

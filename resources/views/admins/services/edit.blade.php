@@ -6,7 +6,7 @@
                 <h5 class="modal-title" id="editModalLabel{{ $service->id }}">Modifier le Service</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
             </div>
-            <form action="{{ route('services.update', $service->id) }}" method="POST">
+            <form action="{{ request()->routeIs('etablissements.services.index') ? route('etablissements.services.update', $service->id) : route('services.update', $service->id) }}" method="POST">
                 @csrf
                 @method('PUT')
                 <div class="modal-body">
@@ -31,6 +31,10 @@
                                 <label for="edit_description{{ $service->id }}" class="form-label">Description</label>
                                 <textarea name="description" id="edit_description{{ $service->id }}" 
                                           class="form-control" rows="3">{{ $service->description }}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit_commentaire{{ $service->id }}" class="form-label">Commentaire</label>
+                                <textarea name="commentaire" id="edit_commentaire{{ $service->id }}" class="form-control" rows="2" maxlength="2000">{{ $service->commentaire }}</textarea>
                             </div>
                             
                             <div class="mb-3">

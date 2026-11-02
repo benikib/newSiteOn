@@ -27,6 +27,10 @@ class AdminMiddleware
             return redirect()->route('dashboard_ets'); // ou 'etablissement.dashboard' selon ta route
         }
 
+        if ($user && $user->role === 'organisation_patronale') {
+            return redirect()->route('organisation.dashboard');
+        }
+
         // ✅ Bloquer l’accès pour les autres
         abort(403, 'Accès refusé : réservé aux administrateurs et intégrateurs.');
     }

@@ -22,6 +22,11 @@ class TypeEtablissement extends Model
     {
         return $this->hasMany(Service::class, 'type_etablissement_id');
     }
+
+    public function publications()
+    {
+        return $this->belongsToMany(Publication::class, 'publication_type_etablissement');
+    }
   public function scopeAvecEtablissements($query)
 {
     return $query->whereHas('etablissements');

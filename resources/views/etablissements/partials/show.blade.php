@@ -203,6 +203,9 @@
                                                 <tr>
                                                     <td>{{ $service->nom }}</td>
                                                     <td>{{ $service->description ? Str::limit($service->description, 50, '...') : 'Aucune description' }}
+                                                        @if ($service->commentaire)
+                                                            <div class="small text-muted">{{ $service->commentaire }}</div>
+                                                        @endif
                                                     </td>
                                                     @php
                                                         $prixInitial = $service->prix;
@@ -244,10 +247,14 @@
                                                                 data-service-id="{{ $service->id }}"
                                                                 data-service-name="{{ $service->nom }}"
                                                                 data-service-desc="{{ $service->description }}"
+                                                                data-service-comment="{{ $service->commentaire }}"
                                                                 data-service-price="{{ $service->prix }}">
                                                                 <i class="fas fa-edit"></i>
 
                                                             </button>
+                                                            <a class="btn btn-sm btn-outline-info" href="{{ route('etablissements.services.photos', $service) }}" aria-label="Gérer la galerie de {{ $service->nom }}">
+                                                                <i class="fas fa-images"></i>
+                                                            </a>
 
                                                             <button class="btn btn-sm btn-outline-secondary"
                                                                 data-bs-toggle="modal"
@@ -432,6 +439,46 @@
     </div>
 
     <!-- =============== MODALS =============== -->
+    <section class="container mb-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h5">Identification et affiliation</h2>
+                <p class="text-muted">Les informations légales sont réservées à la gestion de l’établissement. Toute nouvelle affiliation doit être validée par l’organisation patronale.</p>
+                <form action="{{ route('etablissements.identification.update', $etablissement) }}" method="POST" enctype="multipart/form-data" class="row g-3">
+                    @csrf
+                    @method('PUT')
+                    <div class="col-md-4">
+                        <label class="form-label">Nature de l’entité</label>
+                        <select name="nature_entite" class="form-select" required>
+                            <option value="formalisee" @selected($etablissement->nature_entite === 'formalisee')>Entité formalisée</option>
+                            <option value="clandestine" @selected($etablissement->nature_entite === 'clandestine')>Entité clandestine</option>
+                        </select>
+                    </div>
+                    @foreach (['rccm' => 'RCCM', 'id_nat' => 'Id Nat', 'cnss' => 'CNSS', 'inpp' => 'INPP', 'nif' => 'NIF'] as $field => $label)
+                        <div class="col-md-4">
+                            <label class="form-label" for="identification_{{ $field }}">{{ $label }}</label>
+                            <input class="form-control" id="identification_{{ $field }}" name="{{ $field }}" value="{{ $etablissement->$field }}">
+                        </div>
+                    @endforeach
+                    <div class="col-md-6">
+                        <label class="form-label" for="autorisation">Autorisation d’ouverture (PDF ou image)</label>
+                        <input class="form-control" type="file" id="autorisation" name="autorisation" accept=".pdf,image/*">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="organisation_patronale_id">Organisation patronale</label>
+                        <select class="form-select" id="organisation_patronale_id" name="organisation_patronale_id">
+                            <option value="">Aucune affiliation</option>
+                            @foreach ($organisations as $organisation)
+                                <option value="{{ $organisation->id }}" @selected($etablissement->organisation_patronale_id === $organisation->id)>{{ $organisation->nom }}</option>
+                            @endforeach
+                        </select>
+                        <small class="text-muted">Statut actuel : {{ str_replace('_', ' ', $etablissement->affiliation_statut) }}</small>
+                    </div>
+                    <div class="col-12"><button class="btn btn-primary">Enregistrer</button></div>
+                </form>
+            </div>
+        </div>
+    </section>
 
     <!-- Edit Profile Modal -->
     <div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
@@ -655,6 +702,10 @@
                             <textarea class="form-control" name="description" rows="3"></textarea>
                         </div>
                         <div class="mb-3">
+                            <label class="form-label">Commentaire</label>
+                            <textarea class="form-control" name="commentaire" rows="2" maxlength="2000"></textarea>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">Prix (en $)</label>
                             <input type="number" step="0.01" class="form-control" name="prix" required>
                         </div>
@@ -687,6 +738,10 @@
                         <div class="mb-3">
                             <label class="form-label">Description</label>
                             <textarea class="form-control" name="description" id="serviceDesc" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Commentaire</label>
+                            <textarea class="form-control" name="commentaire" id="serviceComment" rows="2" maxlength="2000"></textarea>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Prix </label>
@@ -811,11 +866,13 @@
             const serviceId = button.getAttribute('data-service-id');
             const serviceName = button.getAttribute('data-service-name');
             const serviceDesc = button.getAttribute('data-service-desc');
+            const serviceComment = button.getAttribute('data-service-comment');
             const servicePrice = button.getAttribute('data-service-price');
 
             const modal = this;
             modal.querySelector('#serviceName').value = serviceName;
             modal.querySelector('#serviceDesc').value = serviceDesc;
+            modal.querySelector('#serviceComment').value = serviceComment || '';
             modal.querySelector('#servicePrice').value = servicePrice;
             modal.querySelector('#editServiceForm').action = `/services/ets/${serviceId}`;
         });

@@ -16,6 +16,7 @@ use App\Models\TauxDeChange;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -82,7 +83,7 @@ public function repportingAdmins()
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:6',
             'telephone' => 'required',
-            'role' => 'required|in:admin,integrateur,etablissement'
+            'role' => 'required|in:admin,client,integrateur,etablissement,organisation_patronale'
         ]);
 
      $user  = User::create([
@@ -91,7 +92,15 @@ public function repportingAdmins()
             'password' => bcrypt($request->password),
             'role' => $request->role,
             'telephone' => $request->telephone,
+            'is_approved' => true,
         ]);
+        if ($user->role === 'organisation_patronale') {
+            $user->organisationPatronale()->create([
+                'nom' => $user->name,
+                'telephone' => $user->telephone,
+                'email' => $user->email,
+            ]);
+        }
 
         $token = Password::createToken($user);
         $url = url("/reset-password/{$token}?email={$user->email}"); // Store the plain password for email
@@ -142,10 +151,10 @@ public function repportingAdmins()
 
         $request->validate([
             'name' => 'required',
-            'email' => 'required|email',
+            'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
             'password' => 'nullable|min:6',
             'telephone' => 'required',
-            'role' => 'required|in:admin,client,etablissement'
+            'role' => 'required|in:admin,client,etablissement,integrateur,organisation_patronale',
         ]);
 
         $user->name = $request->name;
@@ -155,10 +164,14 @@ public function repportingAdmins()
         }
         $user->telephone = $request->telephone;
         $user->role = $request->role;
-
-
-
-        $user->save(); // juste sauvegarder
+        $user->save();
+        if ($user->role === 'organisation_patronale') {
+            $user->organisationPatronale()->updateOrCreate([], [
+                'nom' => $user->name,
+                'telephone' => $user->telephone,
+                'email' => $user->email,
+            ]);
+        }
 $token = Password::createToken($user); // utiliser l’objet User
 $url = url("/reset-password/{$token}?email={$user->email}");
 
@@ -225,6 +238,17 @@ Mail::to($user->email)->send(new UserCreatedMail($user, $url));
     public function show(User $user)
     {
         return view('admins.users.show', compact('user'));
+    }
+
+    public function updateApproval(Request $request, User $user)
+    {
+        abort_if($request->user()->is($user), 422, 'Vous ne pouvez pas modifier votre propre validation.');
+        $data = $request->validate(['is_approved' => 'required|boolean']);
+        $user->update($data);
+
+        return back()->with('success', $data['is_approved']
+            ? 'Compte utilisateur validé.'
+            : 'Compte utilisateur désactivé.');
     }
     public function ets_info($etablissement_id)
     {

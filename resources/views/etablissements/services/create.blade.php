@@ -5,7 +5,7 @@
         <h5 class="modal-title" id="repportingModalLabel">Ajouter une session</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
       </div>
-      <form action="{{ route('services.store',$etablissement->id) }}" method="POST">
+      <form action="{{ route('etablissements.services.store', $etablissement->id) }}" method="POST">
         @csrf
         <div class="modal-body">
           <div class="mb-3">
@@ -16,6 +16,10 @@
             <label for="description" class="form-label">Description</label>
             <textarea name="description" id="description" class="form-control" rows="3" placeholder="Description du service"></textarea>
           </div>
+            <div class="mb-3">
+              <label for="commentaire" class="form-label">Commentaire</label>
+              <textarea name="commentaire" id="commentaire" class="form-control" rows="2" maxlength="2000"></textarea>
+            </div>
 <input type="hidden" name="etablissement_id" value="{{ $etablissement->id }}">
           <div class=""></div>
             <div class="mb-3">
@@ -35,4 +39,3 @@
     </div>
     </div>
   </div>
-

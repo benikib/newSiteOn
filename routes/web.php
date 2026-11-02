@@ -21,6 +21,7 @@ Route::get('/', function () {
     return view('welcome.simple', compact('photos'));
 })->name('welcome');
 Route::get('/produits', [PhotoController::class, 'products'])->name('products.index');
+Route::get('/actualites', [\App\Http\Controllers\PublicationController::class, 'index'])->name('publications.index');
 //integrateur 
 Route::get('/integrateur',[IntegrateurController::class,'index'])->name('index');
 Route::get('/grilles', function() {

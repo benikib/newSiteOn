@@ -7,7 +7,7 @@
                     <h5 class="modal-title" id="editModalLabel{{ $etablissement->id }}">Modifier l'établissement</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
                 </div>
-                <form action="{{ route('etablissements.update', $etablissement->id) }}" method="POST">
+                <form action="{{ route('etablissements.update', $etablissement->id) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
                     <div class="modal-body">
@@ -63,6 +63,34 @@
                                                 {{ $etablissement->type_etablissement_id == $type->id ? 'selected' : '' }}>
                                                 {{ $type->nom }}
                                             </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edit_nature{{ $etablissement->id }}" class="form-label">Statut de l’entité</label>
+                                    <select name="nature_entite" id="edit_nature{{ $etablissement->id }}" class="form-select" required>
+                                        <option value="formalisee" @selected($etablissement->nature_entite === 'formalisee')>Entité formalisée</option>
+                                        <option value="clandestine" @selected($etablissement->nature_entite === 'clandestine')>Entité clandestine</option>
+                                    </select>
+                                </div>
+                                <div class="row">
+                                    @foreach (['rccm' => 'RCCM', 'id_nat' => 'Id Nat', 'cnss' => 'CNSS', 'inpp' => 'INPP', 'nif' => 'NIF'] as $field => $label)
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label" for="edit_{{ $field }}{{ $etablissement->id }}">{{ $label }}</label>
+                                            <input name="{{ $field }}" id="edit_{{ $field }}{{ $etablissement->id }}" class="form-control" value="{{ $etablissement->$field }}">
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edit_autorisation{{ $etablissement->id }}" class="form-label">Autorisation d’ouverture (PDF ou image)</label>
+                                    <input type="file" name="autorisation" id="edit_autorisation{{ $etablissement->id }}" class="form-control" accept=".pdf,image/*">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edit_organisation{{ $etablissement->id }}" class="form-label">Organisation patronale</label>
+                                    <select name="organisation_patronale_id" id="edit_organisation{{ $etablissement->id }}" class="form-select">
+                                        <option value="">Aucune affiliation</option>
+                                        @foreach ($organisations as $organisation)
+                                            <option value="{{ $organisation->id }}" @selected($etablissement->organisation_patronale_id === $organisation->id)>{{ $organisation->nom }}</option>
                                         @endforeach
                                     </select>
                                 </div>
