@@ -35,6 +35,7 @@
 <body>
     @include('layouts.navigation')
     <main class="public-main">
+        <x-account-completion />
         <div class="container pt-3"><x-flash-alert /></div>
         @yield('content')
     </main>

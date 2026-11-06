@@ -266,6 +266,40 @@
 
             </li>
 
+            <li class="nav-item">
+
+                <a class="nav-link {{ request()->routeIs('messages.*') ? 'active' : '' }}"
+                href="{{ route('messages.index') }}">
+
+                    <div class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-info text-center me-2">
+                        <i class="fas fa-comments text-white"></i>
+                    </div>
+
+                    <span>
+                        Messagerie
+                    </span>
+
+                </a>
+
+            </li>
+
+            <li class="nav-item">
+
+                <a class="nav-link {{ request()->routeIs('notifications.*') ? 'active' : '' }}"
+                href="{{ route('notifications.index') }}">
+
+                    <div class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-warning text-center me-2">
+                        <i class="fas fa-bell text-white"></i>
+                    </div>
+
+                    <span>
+                        Notifications
+                    </span>
+
+                </a>
+
+            </li>
+
 
             <li class="nav-item">
 

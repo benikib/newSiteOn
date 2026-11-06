@@ -124,6 +124,7 @@
         @include('layouts.etablissements.nav')
 
         <x-flash-alert />
+        <x-account-completion />
 
         <!-- Modal déconnexion -->
         <div class="modal fade" id="logoutModal" tabindex="-1" aria-hidden="true">

@@ -230,6 +230,26 @@
             </li>
 
             <!-- ===== DÉCONNEXION ===== -->
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('messages.*') ? 'active' : '' }}" href="{{ route('messages.index') }}">
+                    <div class="icon icon-shape icon-sm shadow border-radius-md text-center me-2 d-flex align-items-center justify-content-center"
+                        style="background: #f1f5fa !important; border: 1px solid #e7edf4;">
+                        <i class="fas fa-comments" style="color: #1a1a2e;"></i>
+                    </div>
+                    <span class="nav-link-text" style="color: #1a1a2e; font-weight: 500;">Messagerie</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('notifications.*') ? 'active' : '' }}" href="{{ route('notifications.index') }}">
+                    <div class="icon icon-shape icon-sm shadow border-radius-md text-center me-2 d-flex align-items-center justify-content-center"
+                        style="background: #f1f5fa !important; border: 1px solid #e7edf4;">
+                        <i class="fas fa-bell" style="color: #1a1a2e;"></i>
+                    </div>
+                    <span class="nav-link-text" style="color: #1a1a2e; font-weight: 500;">Notifications</span>
+                </a>
+            </li>
+
             <li class="nav-item mt-2">
                 <hr class="horizontal dark mt-0 mb-2" style="border-color: rgba(0,0,0,0.08);">
             </li>

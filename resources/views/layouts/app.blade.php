@@ -282,6 +282,7 @@
 
     <!-- Main Content -->
     <main class="container mt-4">
+        <x-account-completion />
         <x-flash-alert />
         @yield('content')
     </main>

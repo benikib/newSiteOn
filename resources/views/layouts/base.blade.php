@@ -112,6 +112,7 @@
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
         @include('layouts.admins.nav')
         <x-flash-alert />
+        <x-account-completion />
         <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">

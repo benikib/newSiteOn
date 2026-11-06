@@ -77,6 +77,19 @@
                                 </a>
                             </li>
                             <li>
+                                <a class="dropdown-item py-2" href="{{ route('messages.index') }}">
+                                    <i class="fas fa-comments me-2 text-primary"></i>Messagerie
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2" href="{{ route('notifications.index') }}">
+                                    <i class="fas fa-bell me-2 text-warning"></i>Notifications
+                                    @if (Auth::user()->unreadNotifications()->exists())
+                                        <span class="badge bg-danger">{{ Auth::user()->unreadNotifications()->count() }}</span>
+                                    @endif
+                                </a>
+                            </li>
+                            <li>
                                 <a class="dropdown-item py-2" href="{{ auth()->user()->role === 'organisation_patronale' ? route('organisation.dashboard') : (auth()->user()->role === 'etablissement' ? route('dashboard_ets') : route('dashboard')) }}">
                                     <i class="fas fa-tachometer-alt me-2 text-info"></i>Tableau de bord
                                 </a>
@@ -101,4 +114,3 @@
         </div>
     </div>
 </nav>
-

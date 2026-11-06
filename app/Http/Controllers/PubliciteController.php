@@ -14,7 +14,7 @@ class PubliciteController extends Controller
      */
     public function index()
     {
-        $publicites = Publicite::all();
+        $publicites = Publicite::with('etablissement')->latest()->get();
         $etablissements = Etablissement::all();
 
         return view('admins.publicites.index', compact('publicites', 'etablissements'));
@@ -53,8 +53,18 @@ class PubliciteController extends Controller
             'dure' => 'required|integer|min:1',
             'image' => 'required|file|mimes:jpg,jpeg,png,gif,webp,mp4,webm,mov|max:51200',
             'status' => 'required|in:active,inactive,planned',
+            'ciblage' => 'nullable|in:generalisee,emplacement',
+            'ville' => 'required_if:ciblage,emplacement|required_with:commune|nullable|string|max:255',
+            'commune' => 'nullable|string|max:255',
         ]);
         $this->authorizeManager((int) $validated['etablissement_id']);
+        if (auth()->user()->role !== 'admin') {
+            $validated['ciblage'] = 'generalisee';
+            $validated['ville'] = null;
+            $validated['commune'] = null;
+        } else {
+            $validated['ciblage'] = $validated['ciblage'] ?? 'generalisee';
+        }
         $validated['image_path'] = $request->file('image')->store('publicites', 'public');
         unset($validated['image']);
 
@@ -97,9 +107,17 @@ class PubliciteController extends Controller
             'dure' => 'required|integer|min:1',
             'status' => 'required|in:active,inactive,planned',
             'image' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,mp4,webm,mov|max:51200',
+            'ciblage' => 'nullable|in:generalisee,emplacement',
+            'ville' => 'required_if:ciblage,emplacement|required_with:commune|nullable|string|max:255',
+            'commune' => 'nullable|string|max:255',
         ]);
         $this->authorizeManager((int) $publicite->etablissement_id);
         $this->authorizeManager((int) $validated['etablissement_id']);
+        if (auth()->user()->role !== 'admin') {
+            unset($validated['ciblage'], $validated['ville'], $validated['commune']);
+        } else {
+            $validated['ciblage'] = $validated['ciblage'] ?? 'generalisee';
+        }
 
         unset($validated['image']);
         $oldPath = $publicite->image_path;

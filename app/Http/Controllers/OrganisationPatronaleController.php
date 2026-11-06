@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PublicationRequest;
 use App\Models\Cotisation;
 use App\Models\Etablissement;
 use App\Models\OrganisationPatronale;
@@ -10,6 +11,7 @@ use App\Models\Publication;
 use App\Models\TypeEtablissement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\PublicationPublisher;
 
 class OrganisationPatronaleController extends Controller
 {
@@ -119,30 +121,10 @@ class OrganisationPatronaleController extends Controller
         return back()->with('success', 'Paiement de cotisation enregistré.');
     }
 
-    public function storePublication(Request $request)
+    public function storePublication(PublicationRequest $request, PublicationPublisher $publisher)
     {
         $organisation = $this->organisation($request);
-        $data = $request->validate([
-            'titre' => 'required|string|max:200',
-            'synopsis' => 'nullable|string|max:500',
-            'contenu' => 'required|string|max:20000',
-            'cible' => 'required|in:tous,domaines',
-            'types_etablissement' => 'required_if:cible,domaines|array',
-            'types_etablissement.*' => 'integer|distinct|exists:type_etablissements,id',
-            'publie_le' => 'nullable|date',
-            'expire_le' => 'nullable|date|after_or_equal:publie_le',
-        ]);
-        $publication = $organisation->publications()->create([
-            'titre' => $data['titre'],
-            'synopsis' => $data['synopsis'] ?? null,
-            'contenu' => $data['contenu'],
-            'cible' => $data['cible'],
-            'publie_le' => $data['publie_le'] ?? now(),
-            'expire_le' => $data['expire_le'] ?? null,
-        ]);
-        if ($publication->cible === 'domaines') {
-            $publication->typesEtablissement()->sync($data['types_etablissement']);
-        }
+        $publisher->publish($request->user(), $request->validated(), $organisation->id);
 
         return back()->with('success', 'Publication enregistrée.');
     }

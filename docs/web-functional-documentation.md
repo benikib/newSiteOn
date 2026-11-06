@@ -10,25 +10,31 @@ L’API mobile est documentée séparément dans [la documentation technique mob
 
 | Profil | Fonctions principales |
 |---|---|
-| Administrateur (`admin`) | Gérer les comptes et les établissements, valider ou désactiver les comptes, gérer les publicités et les référentiels du site. |
+| Administrateur (`admin`) | Gérer les comptes et les établissements, valider ou désactiver les comptes, accorder le droit de publication, gérer les publications, les publicités et les référentiels du site. |
 | Gestionnaire d’établissement (`etablissement`) | Gérer les établissements qui lui sont associés, leur identification, leurs services, leur galerie et leurs publicités. L’accès aux fonctions de gestion dépend également des règles d’abonnement existantes. |
 | Organisation patronale (`organisation_patronale`) | Gérer les demandes d’affiliation, les membres, les appels et paiements de cotisations et les publications. |
 | Intégrateur (`integrateur`) | Accéder aux fonctions prévues par son rôle pour créer et gérer des établissements. |
-| Client (`client`) | Utiliser les fonctions publiques du site auxquelles son compte donne accès. |
+| Client (`client`) | Utiliser les fonctions publiques du site auxquelles son compte donne accès et échanger avec les autres comptes. |
 
 Les contrôles d’accès sont appliqués par les routes et les middleware. Un gestionnaire d’établissement ne peut gérer que les établissements liés à son compte.
+
+Tout compte approuvé peut également échanger des messages privés avec un autre compte approuvé depuis la messagerie (`/messages`). Les conversations sont accessibles uniquement à leurs participants.
 
 ## 3. Comptes utilisateurs
 
 ### 3.1 Inscription et validation
 
-1. Une personne crée un compte depuis `/register`.
-2. Le nouveau compte reçoit le statut « en attente » et n’est pas connecté automatiquement.
-3. Tant que le compte n’est pas approuvé, la connexion est refusée et le site indique qu’une validation administrative est nécessaire.
-4. Un administrateur ouvre la gestion des utilisateurs (`/users`) et valide le compte.
-5. Après approbation, l’utilisateur peut se connecter. L’administrateur peut aussi désactiver un compte.
+1. Une personne choisit un compte client, une entité formalisée, une entité non formalisée ou une organisation patronale depuis `/register`.
+2. Pour une entité, l’inscription crée aussi sa fiche et l’association avec son gestionnaire. Pour une organisation patronale, elle crée son profil.
+3. Le système attribue à chaque compte un identifiant BISIKA. La connexion reste basée sur l’adresse e-mail et le mot de passe choisis lors de l’inscription.
+4. Le nouveau compte reçoit le statut « en attente » et n’est pas connecté automatiquement.
+5. Tant que le compte n’est pas approuvé, la connexion est refusée et le site indique qu’une validation administrative est nécessaire.
+6. Un administrateur ouvre la gestion des utilisateurs (`/users`) et valide le compte.
+7. Après approbation, l’utilisateur peut se connecter. L’administrateur peut aussi désactiver un compte ou accorder l’autorisation de publier.
 
 Les comptes créés par un administrateur depuis l’interface de gestion sont approuvés à leur création. La création d’un compte portant le rôle Organisation patronale initialise aussi son profil organisation, utilisé dans l’espace patronal.
+
+Un avis de complétion apparaît dans l’espace de chaque compte lorsque des coordonnées, informations d’établissement ou identifiants légaux sont absents. L’identifiant BISIKA est affiché dans le profil et l’administration.
 
 ## 4. Établissements
 
@@ -82,18 +88,18 @@ Le tableau de bord conserve l’historique des paiements associés à chaque app
 
 ### 5.3 Publications et fil d’actualité
 
-Une publication comprend un titre, un synopsis facultatif, un contenu et une cible :
+Les organisations patronales et les administrateurs peuvent publier. L’administrateur peut accorder le droit de publication aux autres comptes depuis la gestion des utilisateurs. Une publication comprend un titre, un synopsis facultatif, un contenu, une catégorie (`Vulgarisation`, `Rappel` ou `News`) et une cible :
 
 - `tous` : publication affichée sans restriction de domaine ;
 - `domaines` : publication affichée aux domaines d’activité sélectionnés (types d’établissement).
 
-Les dates de publication et d’expiration peuvent être définies. Une publication n’est affichée dans le fil que lorsque sa date de publication est atteinte et que sa date d’expiration n’est pas dépassée.
+Une publication peut aussi être limitée à une ville et, facultativement, une commune. Les dates de publication et d’expiration peuvent être définies. Une publication n’est affichée dans le fil que lorsque sa date de publication est atteinte, que sa date d’expiration n’est pas dépassée et que les filtres choisis correspondent à son audience.
 
-Le fil public est accessible à `/actualites`. Le paramètre `type_id` filtre le fil par domaine, par exemple `/actualites?type_id=3`. Les publications générales restent visibles lors de ce filtrage.
+Le fil public est accessible à `/actualites`. Les filtres `type_id`, `categorie`, `ville` et `commune` permettent de filtrer par domaine et emplacement. Les publications générales restent visibles avec ces filtres. Les comptes approuvés concernés reçoivent une notification enregistrée dans leur espace Notifications. Les publications programmées sont notifiées par la tâche planifiée `notifications:publish-due`; l’ordonnanceur Laravel doit être exécuté en continu en développement (`php artisan schedule:work`) ou appelé par cron en production.
 
 ## 6. Publicités
 
-Les publicités peuvent être créées et gérées depuis l’administration ou par le gestionnaire de l’établissement concerné. Une publicité comporte un titre, une description/synopsis facultative, une date, une durée en jours, un statut (`active`, `inactive` ou `planned`) et un média.
+Les publicités peuvent être créées et gérées depuis l’administration ou par le gestionnaire de l’établissement concerné. Une publicité comporte un titre, une description/synopsis facultative, une date, une durée en jours, un statut (`active`, `inactive` ou `planned`), un média et un mode de diffusion : généralisé ou ciblé sur une ville et, facultativement, une commune. Le ciblage géographique est géré par l’administration. La page d’accueil affiche les publicités généralisées et celles correspondant aux filtres d’emplacement fournis.
 
 Les médias acceptés sont les images JPG/JPEG, PNG, GIF, WebP et les vidéos MP4, WebM ou MOV, jusqu’à 50 Mo. Le média peut être remplacé lors de la modification ; sa suppression supprime également le fichier associé. Les publicités actives dont la durée n’est pas expirée peuvent être affichées sur le site.
 
@@ -106,7 +112,12 @@ Les routes ci-dessous sont relatives à la racine du site. Les actions de modifi
 | Inscription | `GET /register`, `POST /register` | Public |
 | Gestion des utilisateurs | `/users` et actions associées | Administrateur |
 | Approbation/désactivation d’un compte | `PATCH /users/{user}/approval` | Administrateur |
+| Autorisation de publication | `PATCH /users/{user}/publishing` | Administrateur |
 | Fil d’actualité | `GET /actualites` | Public |
+| Créer/gérer une publication | `GET /publications/create`, `GET /publications/manage`, `POST /publications` | Organisation patronale, administrateur ou compte autorisé |
+| Lire ses notifications | `GET /notifications` | Compte authentifié |
+| Messagerie et recherche de comptes | `GET /messages?q=nom` | Compte approuvé |
+| Envoi d’un message privé | `POST /messages/{user}` | Compte approuvé |
 | Espace Organisation patronale | `GET /organisation/dashboard` | Organisation patronale |
 | Modification du profil de l’organisation | `PATCH /organisation/profil` | Organisation patronale |
 | Décision sur une affiliation | `PATCH /organisation/membres/{etablissement}/affiliation` | Organisation patronale |
@@ -127,15 +138,21 @@ Les fonctionnalités organisationnelles reposent principalement sur les tables s
 | Table | Contenu |
 |---|---|
 | `users.is_approved` | État d’approbation du compte. |
+| `users.identifiant` | Identifiant BISIKA automatiquement attribué. |
+| `users.can_publish` | Autorisation de publier accordée par l’administrateur. |
 | `organisations_patronales` | Profil lié au compte utilisateur de l’organisation. |
 | `etablissements` | Nature, identifiants légaux, autorisation et affiliation patronale. |
 | `cotisations` | Appels de cotisation adressés à un établissement membre. |
 | `paiements_cotisations` | Paiements enregistrés pour une cotisation. |
-| `publications` | Informations publiées par les organisations. |
+| `publications` | Informations, catégories, auteurs et ciblage de domaine/emplacement. |
 | `publication_type_etablissement` | Domaines ciblés par une publication. |
+| `notifications` | Notifications BISIKA reçues par les comptes concernés. |
+| `publicites.ciblage` | Mode de diffusion et emplacement éventuel d’une publicité. |
+| `publications.notifications_envoyees` | Empêche l’envoi multiple des notifications à l’arrivée d’une publication programmée. |
+| `messages` | Messages privés entre deux comptes, avec date de lecture. |
 | `services.commentaire` | Commentaire associé à un service. |
 
-La migration qui ajoute ce schéma est `2026_11_02_000001_add_bisika_organization_features.php`. Les modifications de base doivent être appliquées avec les migrations Laravel du projet.
+Les migrations `2026_11_02_000001_add_bisika_organization_features.php`, `2026_11_04_000001_create_messages_table.php` et `2026_11_04_000002_add_remaining_bisika_features.php` ajoutent ces schémas. Les modifications de base doivent être appliquées avec les migrations Laravel du projet.
 
 ## 9. Mise en route et vérification
 

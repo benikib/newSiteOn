@@ -18,7 +18,10 @@ class Publicite extends Model
         'dure',
         'image_path',
         'status',
-        'promotion'
+        'promotion',
+        'ciblage',
+        'ville',
+        'commune',
     ];
     public function etablissement()
     {
@@ -39,9 +42,20 @@ public function scopeActives($query)
         ->whereRaw($dateExpression, [now()->toDateString()]);
 }
 
+public function scopeVisiblesDans($query, ?string $ville = null, ?string $commune = null)
+{
+    return $query->where(function ($target) use ($ville, $commune) {
+        $target->where('ciblage', 'generalisee');
+        if ($ville) {
+            $target->orWhere(function ($location) use ($ville, $commune) {
+                $location->where('ciblage', 'emplacement')
+                    ->whereRaw('LOWER(ville) = ?', [mb_strtolower($ville)]);
+                if ($commune) {
+                    $location->whereRaw('LOWER(commune) = ?', [mb_strtolower($commune)]);
+                }
+            });
+        }
+    });
+}
 
- 
-   
-    
-   
 }

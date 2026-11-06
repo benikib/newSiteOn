@@ -141,8 +141,11 @@
                 @csrf
                 <div class="col-md-6"><label class="form-label">Titre</label><input class="form-control" name="titre" required maxlength="200"></div>
                 <div class="col-md-6"><label class="form-label">Cible</label><select class="form-select" name="cible" id="publication-cible"><option value="tous">Tous les utilisateurs</option><option value="domaines">Domaines d’activité sélectionnés</option></select></div>
+                <div class="col-md-6"><label class="form-label">Catégorie</label><select class="form-select" name="categorie" required><option value="News">News</option><option value="Vulgarisation">Vulgarisation</option><option value="Rappel">Rappel</option></select></div>
                 <div class="col-12"><label class="form-label">Synopsis</label><input class="form-control" name="synopsis" maxlength="500"></div>
                 <div class="col-12"><label class="form-label">Contenu</label><textarea class="form-control" name="contenu" rows="4" required></textarea></div>
+                <div class="col-md-6"><label class="form-label">Ville (facultatif)</label><input class="form-control" name="ville" maxlength="255"></div>
+                <div class="col-md-6"><label class="form-label">Commune (facultatif)</label><input class="form-control" name="commune" maxlength="255"></div>
                 <div class="col-md-6"><label class="form-label">Publication à partir de</label><input class="form-control" type="datetime-local" name="publie_le"></div>
                 <div class="col-md-6"><label class="form-label">Expiration (facultative)</label><input class="form-control" type="datetime-local" name="expire_le"></div>
                 <fieldset class="col-12">

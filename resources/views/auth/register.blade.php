@@ -22,6 +22,54 @@
                     </div>
                 </div>
 
+                <div class="mb-3">
+                    <label class="form-label fw-bold" for="type_compte">Type de compte</label>
+                    <select class="form-select @error('type_compte') is-invalid @enderror" id="type_compte" name="type_compte">
+                        <option value="client" @selected(old('type_compte', 'client') === 'client')>Client</option>
+                        <option value="entite_formalisee" @selected(old('type_compte') === 'entite_formalisee')>Entité formalisée</option>
+                        <option value="entite_non_formalisee" @selected(old('type_compte') === 'entite_non_formalisee')>Entité non formalisée</option>
+                        <option value="organisation_patronale" @selected(old('type_compte') === 'organisation_patronale')>Organisation patronale</option>
+                    </select>
+                    @error('type_compte')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    <small class="text-muted">L’identifiant BISIKA du compte sera généré automatiquement.</small>
+                </div>
+
+                <div id="entity-registration-fields" class="border rounded p-3 mb-3 d-none">
+                    <h2 class="h6 mb-3">Informations sur la structure</h2>
+                    <div class="mb-3">
+                        <label class="form-label" for="nom_entite">Nom de la structure</label>
+                        <input class="form-control @error('nom_entite') is-invalid @enderror" id="nom_entite"
+                            name="nom_entite" value="{{ old('nom_entite') }}" maxlength="255">
+                        @error('nom_entite')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="mb-3" id="activity-type-field">
+                        <label class="form-label" for="type_etablissement_id">Domaine d’activité</label>
+                        <select class="form-select @error('type_etablissement_id') is-invalid @enderror" id="type_etablissement_id" name="type_etablissement_id">
+                            <option value="">Choisir un domaine</option>
+                            @foreach ($typesEtablissement as $type)
+                                <option value="{{ $type->id }}" @selected(old('type_etablissement_id') == $type->id)>{{ $type->nom }}</option>
+                            @endforeach
+                        </select>
+                        @error('type_etablissement_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="telephone">Téléphone</label>
+                        <input class="form-control @error('telephone') is-invalid @enderror" id="telephone" name="telephone"
+                            value="{{ old('telephone') }}" maxlength="25">
+                        @error('telephone')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="row">
+                        @foreach (['ville' => 'Ville', 'commune' => 'Commune', 'quartier' => 'Quartier', 'avenue' => 'Avenue', 'numero' => 'Numéro'] as $field => $label)
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label" for="{{ $field }}">{{ $label }}</label>
+                                <input class="form-control @error($field) is-invalid @enderror" id="{{ $field }}" name="{{ $field }}"
+                                    value="{{ old($field) }}" maxlength="255">
+                                @error($field)<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
                 <!-- Email Address -->
                 <div class="mb-3">
                     <div class="d-flex justify-content-between align-items-center">
@@ -106,6 +154,26 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const accountType = document.getElementById('type_compte');
+    const entityFields = document.getElementById('entity-registration-fields');
+    const activityTypeField = document.getElementById('activity-type-field');
+    const entityName = document.getElementById('nom_entite');
+    const entityPhone = document.getElementById('telephone');
+    const activityType = document.getElementById('type_etablissement_id');
+
+    const updateEntityFields = () => {
+        const type = accountType.value;
+        const isEntity = type !== 'client';
+        const hasActivity = type === 'entite_formalisee' || type === 'entite_non_formalisee';
+        entityFields.classList.toggle('d-none', !isEntity);
+        activityTypeField.classList.toggle('d-none', !hasActivity);
+        entityName.required = isEntity;
+        entityPhone.required = isEntity;
+        activityType.required = hasActivity;
+    };
+    accountType.addEventListener('change', updateEntityFields);
+    updateEntityFields();
+
     // Password visibility toggle
     document.querySelectorAll('.toggle-password').forEach(button => {
         button.addEventListener('click', function() {

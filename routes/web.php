@@ -13,10 +13,17 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\PersonnelController;
 use App\Http\Controllers\EquipeController;
 use App\Http\Controllers\IntegrateurController;
+use App\Http\Controllers\MessageController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PublicationController;
 use Illuminate\Support\Facades\Mail;
 
-Route::get('/', function () {
-    $photos = \App\Models\Publicite::actives()->latest('id')->get();
+Route::get('/', function (Illuminate\Http\Request $request) {
+    $photos = \App\Models\Publicite::actives()
+        ->visiblesDans($request->query('ville'), $request->query('commune'))
+        ->with('etablissement')
+        ->latest('id')
+        ->get();
 
     return view('welcome.simple', compact('photos'));
 })->name('welcome');
@@ -120,6 +127,16 @@ Route::fallback(function () {
     return abort(404);
 });
 Route::middleware('auth')->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/publications/manage', [PublicationController::class, 'adminIndex'])->name('publications.manage');
+    Route::get('/publications/create', [PublicationController::class, 'create'])->name('publications.create');
+    Route::post('/publications', [PublicationController::class, 'store'])->name('publications.store');
+    Route::delete('/publications/{publication}', [PublicationController::class, 'destroy'])->name('publications.destroy');
+    Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
+    Route::post('/messages/{user}', [MessageController::class, 'store'])
+        ->middleware('throttle:30,1')
+        ->name('messages.store');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
