@@ -106,6 +106,16 @@
                 </li>
 
                 <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('publications.manage') ? 'active' : '' }}"
+                        href="{{ route('publications.manage') }}">
+                        <div class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-info text-center me-2 d-flex align-items-center justify-content-center">
+                            <i class="fas fa-bullhorn text-white"></i>
+                        </div>
+                        <span class="nav-link-text ms-1">Publications</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('admins.*') ? 'active' : '' }}"
                         href="{{ route('admins.index') }}">
                         <div
@@ -130,6 +140,26 @@
                         <i class="fas fa-user-edit text-white"></i>
                     </div>
                     <span class="nav-link-text ms-1">Profil</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('messages.*') ? 'active' : '' }}"
+                    href="{{ route('messages.index') }}">
+                    <div class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-info text-center me-2 d-flex align-items-center justify-content-center">
+                        <i class="fas fa-comments text-white"></i>
+                    </div>
+                    <span class="nav-link-text ms-1">Messagerie</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('notifications.*') ? 'active' : '' }}"
+                    href="{{ route('notifications.index') }}">
+                    <div class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-warning text-center me-2 d-flex align-items-center justify-content-center">
+                        <i class="fas fa-bell text-white"></i>
+                    </div>
+                    <span class="nav-link-text ms-1">Notifications</span>
                 </a>
             </li>
 

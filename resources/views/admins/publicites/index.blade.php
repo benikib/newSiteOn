@@ -56,6 +56,7 @@
                                         <th
                                             class="text-uppercase text-secondary text-xxs font-weight-bolder text-center opacity-7 ps-2">
                                             etablissement</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Diffusion</th>
                                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                                             Actions</th>
                                     </tr>
@@ -70,6 +71,11 @@
                                                 {{ $publicite->dure }} </td>
                                             <td class="text-xs font-weight-bold text-center">
                                                 {{ $publicite->etablissement->nom }}</td>
+                                            <td class="text-xs font-weight-bold">
+                                                {{ ($publicite->ciblage ?? 'generalisee') === 'emplacement'
+                                                    ? 'Emplacement : '.($publicite->commune ? $publicite->commune.', ' : '').$publicite->ville
+                                                    : 'Généralisée' }}
+                                            </td>
                                             <td class="align-middle">
                                                 <a href="#" class="btn btn-sm btn-outline-primary"
                                                     data-bs-toggle="modal" data-bs-target="#editModal{{ $publicite->id }}">

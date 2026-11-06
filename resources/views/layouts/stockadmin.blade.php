@@ -111,6 +111,7 @@
         @include('layouts.stockadmins.nav')
 
         <x-flash-alert />
+        <x-account-completion />
 
         <!-- ===== MODAL DE DÉCONNEXION ===== -->
         <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">

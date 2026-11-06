@@ -9,6 +9,11 @@
         </p>
     </header>
 
+    <div class="mb-3">
+        <label class="form-label" for="identifiant">Identifiant BISIKA</label>
+        <input class="form-control" id="identifiant" value="{{ $user->identifiant }}" readonly>
+    </div>
+
     <form id="send-verification" method="post" action="{{ route('verification.send') }}">
         @csrf
     </form>
@@ -51,6 +56,15 @@
                     @endif
                 </div>
             @endif
+        </div>
+
+        <div class="mb-3">
+            <label for="telephone" class="form-label">Téléphone</label>
+            <input id="telephone" name="telephone" type="tel" class="form-control"
+                value="{{ old('telephone', $user->telephone) }}" maxlength="25" autocomplete="tel">
+            @error('telephone')
+                <div class="text-danger mt-1">{{ $message }}</div>
+            @enderror
         </div>
 
         <div class="d-flex align-items-center gap-3">

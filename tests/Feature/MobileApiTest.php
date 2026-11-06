@@ -90,7 +90,10 @@ it('authentifie un utilisateur mobile et permet de consulter son profil avec le 
     $this->withToken($login->json('data.token'))
         ->getJson('/api/v1/me')
         ->assertOk()
-        ->assertJsonPath('data.user.email', $user->email);
+        ->assertJsonPath('data.user.email', $user->email)
+        ->assertJsonPath('data.user.is_approved', true)
+        ->assertJsonPath('data.user.identifiant', $user->identifiant)
+        ->assertJsonPath('data.user.missing_fields', ['etablissement']);
 });
 
 it('protège les stocks par établissement et enregistre chaque mouvement transactionnellement', function () {
@@ -145,6 +148,33 @@ it('refuse l’accès mobile à un établissement qui n’appartient pas à l’
 
     $this->postJson('/api/v1/establishments/'.$other->id.'/photos', [])
         ->assertNotFound();
+});
+
+it('allows an establishment owner to complete profile and legal identification from mobile', function () {
+    Storage::fake('public');
+    $context = makeMobileApiContext();
+    $token = $context['user']->createToken('test-device')->plainTextToken;
+    $type = \App\Models\TypeEtablissement::factory()->create();
+
+    $this->withToken($token)
+        ->patch('/api/v1/establishments/'.$context['etablissement']->id.'/profile', [
+            'nom' => 'Etablissement mis à jour',
+            'description' => 'Description mobile',
+            'type_etablissement_id' => $type->id,
+            'ville' => 'Kinshasa',
+            'commune' => 'Gombe',
+            'rccm' => 'CD/KIN/RCCM/123',
+            'id_nat' => '01-A12345',
+            'autorisation' => UploadedFile::fake()->create('autorisation.pdf', 50, 'application/pdf'),
+        ], ['Accept' => 'application/json'])
+        ->assertOk()
+        ->assertJsonPath('data.name', 'Etablissement mis à jour')
+        ->assertJsonPath('data.identification.rccm', 'CD/KIN/RCCM/123')
+        ->assertJsonPath('data.identification.authorization_provided', true);
+
+    expect($context['etablissement']->fresh()->ville)->toBe('Kinshasa')
+        ->and($context['etablissement']->fresh()->autorisation_path)->not->toBeNull();
+    Storage::disk('public')->assertExists($context['etablissement']->fresh()->autorisation_path);
 });
 
 it('met à jour les coordonnées avec les noms longs ou courts et les expose dans l’API publique', function () {

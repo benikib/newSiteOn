@@ -41,6 +41,23 @@
                         </select>
                         <input type="hidden" name="status" value="active">
                     </div>
+                    <div class="mb-3">
+                        <label for="ciblage" class="form-label">Diffusion</label>
+                        <select class="form-select" id="ciblage" name="ciblage">
+                            <option value="generalisee">Publicité généralisée</option>
+                            <option value="emplacement">Publicité liée à un emplacement</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="ville" class="form-label">Ville ciblée</label>
+                            <input class="form-control" id="ville" name="ville" maxlength="255">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="commune" class="form-label">Commune ciblée</label>
+                            <input class="form-control" id="commune" name="commune" maxlength="255">
+                        </div>
+                    </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
                         <button type="submit" class="btn btn-primary">Ajouter</button>

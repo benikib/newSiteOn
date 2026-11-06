@@ -4,8 +4,10 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -25,6 +27,7 @@ class User extends Authenticatable
         'role',
         'telephone',
         'is_approved',
+        'can_publish',
     ];
 
     /**
@@ -48,12 +51,28 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_approved' => 'boolean',
+            'can_publish' => 'boolean',
         ];
     }
+
+    protected static function booted(): void
+    {
+        static::creating(function (User $user) {
+            if ($user->identifiant) {
+                return;
+            }
+
+            do {
+                $identifiant = 'BIS-' . Str::upper(Str::random(10));
+            } while (static::where('identifiant', $identifiant)->exists());
+
+            $user->identifiant = $identifiant;
+        });
+    }
+
     public function etablissements()
     {
-        return $this->belongsToMany(Etablissement::class, 'user_etablissement')
-            ->withPivot('role')
+        return $this->belongsToMany(Etablissement::class, 'user_etablissements')
             ->withTimestamps();
     }
     public function usersEtablissements()
@@ -64,6 +83,16 @@ class User extends Authenticatable
     public function organisationPatronale()
     {
         return $this->hasOne(OrganisationPatronale::class);
+    }
+
+    public function messagesSent(): HasMany
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    public function messagesReceived(): HasMany
+    {
+        return $this->hasMany(Message::class, 'receiver_id');
     }
 
 }

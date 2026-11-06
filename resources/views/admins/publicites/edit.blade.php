@@ -19,7 +19,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="date{{ $publicite->id }}" class="form-label">Date </label>
-                        <input type="date" class="form-control" id="date{{ $publicite->id }}" name="date" value="{{ \Carbon\Carbon::parse($publicite->date)->format('Y-m-d\TH:i') }}" required>
+                        <input type="date" class="form-control" id="date{{ $publicite->id }}" name="date" value="{{ \Carbon\Carbon::parse($publicite->date)->format('Y-m-d') }}" required>
                     </div>
                     <div class="mb-3">
                         <label for="dure{{ $publicite->id }}" class="form-label">Durée (en jours)</label>
@@ -41,6 +41,23 @@
                                 </option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="ciblage{{ $publicite->id }}" class="form-label">Diffusion</label>
+                        <select class="form-select" id="ciblage{{ $publicite->id }}" name="ciblage">
+                            <option value="generalisee" @selected(($publicite->ciblage ?? 'generalisee') === 'generalisee')>Publicité généralisée</option>
+                            <option value="emplacement" @selected($publicite->ciblage === 'emplacement')>Publicité liée à un emplacement</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="ville{{ $publicite->id }}" class="form-label">Ville ciblée</label>
+                            <input class="form-control" id="ville{{ $publicite->id }}" name="ville" value="{{ $publicite->ville }}" maxlength="255">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="commune{{ $publicite->id }}" class="form-label">Commune ciblée</label>
+                            <input class="form-control" id="commune{{ $publicite->id }}" name="commune" value="{{ $publicite->commune }}" maxlength="255">
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">

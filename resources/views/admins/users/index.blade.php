@@ -51,10 +51,12 @@
                                         <th
                                             class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
                                             télèphone</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Identifiant BISIKA</th>
                                         <th
                                             class="text-uppercase text-secondary text-xxs font-weight-bolder text-center opacity-7 ps-2">
                                             role</th>
                                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Validation</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Publication</th>
                                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                                             Actions</th>
                                     </tr>
@@ -66,6 +68,7 @@
                                             <td class="text-xs font-weight-bold">{{ $user->name }}</td>
                                             <td class="text-xs font-weight-bold">{{ $user->email }}</td>
                                             <td class="text-xs font-weight-bold">{{ $user->telephone }}</td>
+                                            <td class="text-xs font-weight-bold">{{ $user->identifiant }}</td>
                                             <td class="text-xs font-weight-bold text-center">{{ $user->role }}</td>
                                             <td>
                                                 <form action="{{ route('users.approval', $user) }}" method="POST">
@@ -74,6 +77,16 @@
                                                     <input type="hidden" name="is_approved" value="{{ $user->is_approved ? 0 : 1 }}">
                                                     <button class="btn btn-sm {{ $user->is_approved ? 'btn-success' : 'btn-warning' }}" type="submit">
                                                         {{ $user->is_approved ? 'Validé' : 'En attente — valider' }}
+                                                    </button>
+                                                </form>
+                                            </td>
+                                            <td>
+                                                <form action="{{ route('users.publishing', $user) }}" method="POST">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <input type="hidden" name="can_publish" value="{{ $user->can_publish ? 0 : 1 }}">
+                                                    <button class="btn btn-sm {{ $user->can_publish ? 'btn-info' : 'btn-outline-secondary' }}" type="submit">
+                                                        {{ $user->can_publish ? 'Autorisé — retirer' : 'Autoriser' }}
                                                     </button>
                                                 </form>
                                             </td>

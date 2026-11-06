@@ -48,6 +48,17 @@
             <div class="home-ads-heading">
                 <div><p>À la une</p><h2 id="home-ads-title">Publicités des établissements</h2></div>
             </div>
+            <form method="GET" action="{{ route('welcome') }}" class="row g-2 mb-3">
+                <div class="col-md-5">
+                    <label class="form-label" for="ad-ville">Ville</label>
+                    <input class="form-control" id="ad-ville" name="ville" value="{{ request('ville') }}" maxlength="255" placeholder="Ex. Kinshasa">
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label" for="ad-commune">Commune</label>
+                    <input class="form-control" id="ad-commune" name="commune" value="{{ request('commune') }}" maxlength="255">
+                </div>
+                <div class="col-md-2 align-self-end"><button class="btn btn-outline-success w-100">Filtrer</button></div>
+            </form>
             @if($photos->isNotEmpty())
                 <div class="home-ads-grid">
                     @foreach($photos as $photo)

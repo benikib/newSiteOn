@@ -2,12 +2,14 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\MobileController;
+use App\Http\Controllers\Api\V1\SocialController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Middleware\ForceJsonResponse;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(ForceJsonResponse::class)->prefix('v1')->group(function () {
     Route::post('auth/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+    Route::post('auth/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
 
     Route::prefix('public')->group(function () {
         Route::get('establishment-types', [MobileController::class, 'establishmentTypes']);
@@ -16,6 +18,7 @@ Route::middleware(ForceJsonResponse::class)->prefix('v1')->group(function () {
         Route::get('etablissements/{etablissement}/photos', [MobileController::class, 'publicEstablishmentPhotos']);
         Route::get('etablissements/{etablissement}/services', [MobileController::class, 'publicServices']);
         Route::get('etablissements/{etablissement}/products', [MobileController::class, 'publicProducts']);
+        Route::get('publicites', [SocialController::class, 'advertisements']);
         Route::post('reservations', [ReservationController::class, 'store'])->middleware('throttle:20,1');
         Route::post('product-reservations', [MobileController::class, 'createProductReservation'])->middleware('throttle:20,1');
         Route::post('delivery-orders', [MobileController::class, 'createDeliveryOrder'])->middleware('throttle:20,1');
@@ -24,7 +27,18 @@ Route::middleware(ForceJsonResponse::class)->prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
         Route::get('me', [AuthController::class, 'me']);
+        Route::patch('me', [AuthController::class, 'updateProfile']);
+        Route::get('feed', [SocialController::class, 'feed']);
+        Route::post('publications', [SocialController::class, 'publish'])->middleware('throttle:10,1');
+        Route::get('notifications', [SocialController::class, 'notifications']);
+        Route::patch('notifications/read-all', [SocialController::class, 'markAllNotificationsRead']);
+        Route::patch('notifications/{notification}/read', [SocialController::class, 'markNotificationRead']);
+        Route::get('messages/contacts', [SocialController::class, 'contacts']);
+        Route::get('messages/conversations', [SocialController::class, 'conversations']);
+        Route::get('messages/{user}', [SocialController::class, 'messages']);
+        Route::post('messages/{user}', [SocialController::class, 'sendMessage'])->middleware('throttle:30,1');
         Route::get('establishments', [MobileController::class, 'establishmentsForUser']);
+        Route::patch('establishments/{etablissement}/profile', [MobileController::class, 'updateEstablishmentProfile']);
         Route::patch('establishments/{etablissement}', [MobileController::class, 'updateCoordinates'])
             ->middleware('mobile.establishment');
 

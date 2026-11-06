@@ -250,6 +250,18 @@ Mail::to($user->email)->send(new UserCreatedMail($user, $url));
             ? 'Compte utilisateur validé.'
             : 'Compte utilisateur désactivé.');
     }
+
+    public function updatePublishingPermission(Request $request, User $user)
+    {
+        abort_if($request->user()->is($user), 422, 'Vous ne pouvez pas modifier vos propres autorisations.');
+        $data = $request->validate(['can_publish' => 'required|boolean']);
+        $user->update($data);
+
+        return back()->with('success', $data['can_publish']
+            ? 'Autorisation de publication accordée.'
+            : 'Autorisation de publication retirée.');
+    }
+
     public function ets_info($etablissement_id)
     {
          $photos = $publicitesActives = Publicite::actives()

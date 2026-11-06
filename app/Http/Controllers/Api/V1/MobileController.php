@@ -48,6 +48,9 @@ class MobileController extends Controller
         $request->validate([
             'search' => ['sometimes', 'string', 'max:255'],
             'type_id' => ['sometimes', 'integer', 'exists:type_etablissements,id'],
+            'service' => ['sometimes', 'string', 'max:255'],
+            'ville' => ['sometimes', 'string', 'max:255'],
+            'commune' => ['sometimes', 'string', 'max:255'],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
         ]);
         $query = Etablissement::query()
@@ -65,6 +68,19 @@ class MobileController extends Controller
 
         if ($request->filled('type_id')) {
             $query->where('type_etablissement_id', $request->integer('type_id'));
+        }
+
+        if ($request->filled('service')) {
+            $service = $request->string('service')->toString();
+            $query->whereHas('services', fn ($services) => $services
+                ->where('disponibilite', true)
+                ->where('nom', 'like', "%{$service}%"));
+        }
+
+        foreach (['ville', 'commune'] as $location) {
+            if ($request->filled($location)) {
+                $query->whereRaw('LOWER('.$location.') = ?', [mb_strtolower($request->string($location)->toString())]);
+            }
         }
 
         $page = $query->orderBy('nom')->paginate(max(1, min($request->integer('per_page', 20), 50)));
@@ -245,6 +261,77 @@ class MobileController extends Controller
 
         return response()->json([
             'data' => $items->map(fn (Etablissement $item) => $this->establishmentData($item)),
+        ]);
+    }
+
+    public function updateEstablishmentProfile(Request $request, Etablissement $etablissement): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless(
+            $user->role === 'etablissement'
+                && $user->etablissements()->whereKey($etablissement->id)->exists(),
+            404
+        );
+
+        $data = $request->validate([
+            'nom' => ['sometimes', 'required', 'string', 'max:255'],
+            'description' => ['sometimes', 'nullable', 'string', 'max:5000'],
+            'telephone' => ['sometimes', 'nullable', 'string', 'max:25'],
+            'type_etablissement_id' => ['sometimes', 'required', 'integer', 'exists:type_etablissements,id'],
+            'ville' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'commune' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'quartier' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'avenue' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'numero' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'email' => ['sometimes', 'nullable', 'email', 'max:255'],
+            'website' => ['sometimes', 'nullable', 'url', 'max:255'],
+            'rccm' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'id_nat' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'cnss' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'inpp' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'nif' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'autorisation' => ['sometimes', 'nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
+        ]);
+        $oldAuthorization = $etablissement->autorisation_path;
+        if ($request->hasFile('autorisation')) {
+            $path = $request->file('autorisation')->store('autorisations', 'public');
+            if ($path === false) {
+                throw new RuntimeException('Impossible d’enregistrer le document d’autorisation.');
+            }
+            $data['autorisation_path'] = $path;
+        }
+        unset($data['autorisation']);
+
+        $etablissement->update($data);
+        if (isset($data['autorisation_path']) && $oldAuthorization) {
+            $this->deleteStoredImage($oldAuthorization);
+        }
+
+        $etablissement->refresh();
+
+        return response()->json([
+            'data' => [
+                'id' => $etablissement->id,
+                'name' => $etablissement->nom,
+                'description' => $etablissement->description,
+                'phone' => $etablissement->telephone,
+                'type_id' => $etablissement->type_etablissement_id,
+                'address' => [
+                    'city' => $etablissement->ville,
+                    'commune' => $etablissement->commune,
+                    'neighborhood' => $etablissement->quartier,
+                    'avenue' => $etablissement->avenue,
+                    'number' => $etablissement->numero,
+                ],
+                'identification' => [
+                    'rccm' => $etablissement->rccm,
+                    'id_nat' => $etablissement->id_nat,
+                    'cnss' => $etablissement->cnss,
+                    'inpp' => $etablissement->inpp,
+                    'nif' => $etablissement->nif,
+                    'authorization_provided' => filled($etablissement->autorisation_path),
+                ],
+            ],
         ]);
     }
 

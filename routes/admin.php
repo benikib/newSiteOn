@@ -63,6 +63,7 @@ Route::delete('/service/{service}/photos/{photo}', [\App\Http\Controllers\Servic
 Route::get('/users',[UserController::class,'index'])->name("users.index");
 Route::delete('/users/{id}', [UserController::class, 'delete'])->name('users.destroy');
 Route::patch('/users/{user}/approval', [UserController::class, 'updateApproval'])->name('users.approval');
+Route::patch('/users/{user}/publishing', [UserController::class, 'updatePublishingPermission'])->name('users.publishing');
 Route::get('/users/admins', [UserController::class, 'admins'])->name('admins.index');
 Route::post('/users', [UserController::class,'store'])->name('users.store');
 Route::put( 'user/{user}',[UserController::class,'update'])->name('users.update');
